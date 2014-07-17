@@ -1,0 +1,43 @@
+<RCC>
+    <qresource prefix="/icon">
+        <file>icons/@.png</file>
+        <file>icons/add.png</file>
+        <file>icons/bin-3.png</file>
+        <file>icons/bullet.png</file>
+        <file>icons/next.png</file>
+        <file>icons/pause.png</file>
+        <file>icons/pencil.png</file>
+        <file>icons/play.png</file>
+        <file>icons/previous.png</file>
+        <file>icons/spam-2.png</file>
+        <file>icons/zoom-in-2.png</file>
+        <file>icons/zoom-out-2.png</file>
+        <file>icons/ellipsis.png</file>
+        <file>icons/expand-3.png</file>
+        <file>icons/stop.png</file>
+        <file>icons/draw.png</file>
+        <file>icons/appicon.png</file>
+        <file>icons/eraser.png</file>
+        <file>icons/browser-minimise-2.png</file>
+        <file>icons/browser-new-window-2.png</file>
+        <file>icons/browser-windows-2.png</file>
+        <file>icons/eye-2.png</file>
+        <file>icons/bg.png</file>
+        <file>icons/tool_draw.png</file>
+        <file>icons/tool_erase.png</file>
+        <file>icons/tool_pickcolour.png</file>
+        <file>icons/tool_none.png</file>
+        <file>icons/arrow-left.png</file>
+        <file>icons/arrow-right.png</file>
+        <file>icons/paragraph-justify-2.png</file>
+        <file>icons/flask-empty.png</file>
+        <file>icons/stamp.png</file>
+        <file>icons/stamp-2.png</file>
+    </qresource>
+    <qresource prefix="/palette">
+        <file>24bit.png</file>
+        <file>EGA.png</file>
+        <file>NES.png</file>
+        <file>db16.png</file>
+    </qresource>
+</RCC>
