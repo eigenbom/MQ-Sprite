@@ -101,7 +101,7 @@
         <string>...</string>
        </property>
        <property name="icon">
-        <iconset resource="icons.qrc">
+        <iconset resource="../icons.qrc">
          <normaloff>:/icon/icons/browser-new-window-2.png</normaloff>:/icon/icons/browser-new-window-2.png</iconset>
        </property>
       </widget>
@@ -115,7 +115,7 @@
         <string>...</string>
        </property>
        <property name="icon">
-        <iconset resource="icons.qrc">
+        <iconset resource="../icons.qrc">
          <normaloff>:/icon/icons/browser-new-window-2.png</normaloff>:/icon/icons/browser-new-window-2.png</iconset>
        </property>
       </widget>
@@ -142,7 +142,7 @@
         <string>...</string>
        </property>
        <property name="icon">
-        <iconset resource="icons.qrc">
+        <iconset resource="../icons.qrc">
          <normaloff>:/icon/icons/paragraph-justify-2.png</normaloff>:/icon/icons/paragraph-justify-2.png</iconset>
        </property>
       </widget>
@@ -156,7 +156,7 @@
         <string>...</string>
        </property>
        <property name="icon">
-        <iconset resource="icons.qrc">
+        <iconset resource="../icons.qrc">
          <normaloff>:/icon/icons/browser-windows-2.png</normaloff>:/icon/icons/browser-windows-2.png</iconset>
        </property>
       </widget>
@@ -170,7 +170,7 @@
         <string>...</string>
        </property>
        <property name="icon">
-        <iconset resource="icons.qrc">
+        <iconset resource="../icons.qrc">
          <normaloff>:/icon/icons/browser-minimise-2.png</normaloff>:/icon/icons/browser-minimise-2.png</iconset>
        </property>
       </widget>
@@ -187,7 +187,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="icons.qrc"/>
+  <include location="../icons.qrc"/>
  </resources>
  <connections/>
 </ui>

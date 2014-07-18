@@ -41,7 +41,8 @@ SOURCES += \
            src/projectmodel.cpp \
            src/resizemodedialog.cpp \
            src/tarball.cpp
-RESOURCES += icons.qrc
+RESOURCES += icons.qrc \
+    src/icons.qrc
 
 OTHER_FILES += \
     README.md \

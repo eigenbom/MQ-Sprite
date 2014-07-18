@@ -20,7 +20,7 @@
    <string>Moon Pixel</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="icons.qrc">
+   <iconset resource="../icons.qrc">
     <normaloff>:/icon/icons/appicon.png</normaloff>:/icon/icons/appicon.png</iconset>
   </property>
   <property name="toolButtonStyle">
@@ -116,7 +116,6 @@
    </property>
   </widget>
   <zorder>dockWidgetAssets</zorder>
-  <zorder>dockWidgetCompositeTools</zorder>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
@@ -128,7 +127,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="icons.qrc"/>
+  <include location="../icons.qrc"/>
  </resources>
  <connections/>
  <slots>

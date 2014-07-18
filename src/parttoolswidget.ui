@@ -156,7 +156,7 @@
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="icons.qrc">
+           <iconset resource="../icons.qrc">
             <normaloff>:/icon/icons/browser-new-window-2.png</normaloff>:/icon/icons/browser-new-window-2.png</iconset>
           </property>
          </widget>
@@ -170,7 +170,7 @@
            <string>rename</string>
           </property>
           <property name="icon">
-           <iconset resource="icons.qrc">
+           <iconset resource="../icons.qrc">
             <normaloff>:/icon/icons/paragraph-justify-2.png</normaloff>:/icon/icons/paragraph-justify-2.png</iconset>
           </property>
          </widget>
@@ -190,7 +190,7 @@
            <string>d</string>
           </property>
           <property name="icon">
-           <iconset resource="icons.qrc">
+           <iconset resource="../icons.qrc">
             <normaloff>:/icon/icons/browser-windows-2.png</normaloff>:/icon/icons/browser-windows-2.png</iconset>
           </property>
          </widget>
@@ -210,7 +210,7 @@
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="icons.qrc">
+           <iconset resource="../icons.qrc">
             <normaloff>:/icon/icons/browser-minimise-2.png</normaloff>:/icon/icons/browser-minimise-2.png</iconset>
           </property>
          </widget>
@@ -265,7 +265,7 @@
            <string/>
           </property>
           <property name="pixmap">
-           <pixmap resource="icons.qrc">:/icon/icons/draw.png</pixmap>
+           <pixmap resource="../icons.qrc">:/icon/icons/draw.png</pixmap>
           </property>
          </widget>
         </item>
@@ -323,7 +323,7 @@
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="icons.qrc">
+           <iconset resource="../icons.qrc">
             <normaloff>:/icon/icons/previous.png</normaloff>:/icon/icons/previous.png</iconset>
           </property>
          </widget>
@@ -337,7 +337,7 @@
            <string>...</string>
           </property>
           <property name="icon">
-           <iconset resource="icons.qrc">
+           <iconset resource="../icons.qrc">
             <normaloff>:/icon/icons/arrow-left.png</normaloff>:/icon/icons/arrow-left.png</iconset>
           </property>
          </widget>
@@ -351,7 +351,7 @@
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="icons.qrc">
+           <iconset resource="../icons.qrc">
             <normaloff>:/icon/icons/play.png</normaloff>
             <normalon>:/icon/icons/pause.png</normalon>:/icon/icons/play.png</iconset>
           </property>
@@ -369,7 +369,7 @@
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="icons.qrc">
+           <iconset resource="../icons.qrc">
             <normaloff>:/icon/icons/stop.png</normaloff>:/icon/icons/stop.png</iconset>
           </property>
          </widget>
@@ -383,7 +383,7 @@
            <string>...</string>
           </property>
           <property name="icon">
-           <iconset resource="icons.qrc">
+           <iconset resource="../icons.qrc">
             <normaloff>:/icon/icons/arrow-right.png</normaloff>:/icon/icons/arrow-right.png</iconset>
           </property>
          </widget>
@@ -397,7 +397,7 @@
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="icons.qrc">
+           <iconset resource="../icons.qrc">
             <normaloff>:/icon/icons/next.png</normaloff>:/icon/icons/next.png</iconset>
           </property>
          </widget>
@@ -485,7 +485,7 @@
            <string>...</string>
           </property>
           <property name="icon">
-           <iconset resource="icons.qrc">
+           <iconset resource="../icons.qrc">
             <normaloff>:/icon/icons/browser-new-window-2.png</normaloff>:/icon/icons/browser-new-window-2.png</iconset>
           </property>
          </widget>
@@ -499,7 +499,7 @@
            <string>...</string>
           </property>
           <property name="icon">
-           <iconset resource="icons.qrc">
+           <iconset resource="../icons.qrc">
             <normaloff>:/icon/icons/browser-windows-2.png</normaloff>:/icon/icons/browser-windows-2.png</iconset>
           </property>
          </widget>
@@ -513,7 +513,7 @@
            <string>...</string>
           </property>
           <property name="icon">
-           <iconset resource="icons.qrc">
+           <iconset resource="../icons.qrc">
             <normaloff>:/icon/icons/browser-minimise-2.png</normaloff>:/icon/icons/browser-minimise-2.png</iconset>
           </property>
          </widget>
@@ -622,7 +622,7 @@
            <string/>
           </property>
           <property name="pixmap">
-           <pixmap resource="icons.qrc">:/icon/icons/zoom-in-2.png</pixmap>
+           <pixmap resource="../icons.qrc">:/icon/icons/zoom-in-2.png</pixmap>
           </property>
           <property name="buddy">
            <cstring>frameDraw</cstring>
@@ -675,7 +675,7 @@
            <string>...</string>
           </property>
           <property name="icon">
-           <iconset resource="icons.qrc">
+           <iconset resource="../icons.qrc">
             <normaloff>:/icon/icons/expand-3.png</normaloff>:/icon/icons/expand-3.png</iconset>
           </property>
          </widget>
@@ -696,7 +696,7 @@
            <string/>
           </property>
           <property name="pixmap">
-           <pixmap resource="icons.qrc">:/icon/icons/pencil.png</pixmap>
+           <pixmap resource="../icons.qrc">:/icon/icons/pencil.png</pixmap>
           </property>
          </widget>
         </item>
@@ -777,7 +777,7 @@
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="icons.qrc">
+           <iconset resource="../icons.qrc">
             <normaloff>:/icon/icons/pencil.png</normaloff>:/icon/icons/pencil.png</iconset>
           </property>
           <property name="checkable">
@@ -797,7 +797,7 @@
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="icons.qrc">
+           <iconset resource="../icons.qrc">
             <normaloff>:/icon/icons/eraser.png</normaloff>:/icon/icons/eraser.png</iconset>
           </property>
           <property name="checkable">
@@ -814,7 +814,7 @@
            <string>...</string>
           </property>
           <property name="icon">
-           <iconset resource="icons.qrc">
+           <iconset resource="../icons.qrc">
             <normaloff>:/icon/icons/eye-2.png</normaloff>:/icon/icons/eye-2.png</iconset>
           </property>
          </widget>
@@ -825,7 +825,7 @@
            <string>...</string>
           </property>
           <property name="icon">
-           <iconset resource="icons.qrc">
+           <iconset resource="../icons.qrc">
             <normaloff>:/icon/icons/stamp.png</normaloff>:/icon/icons/stamp.png</iconset>
           </property>
          </widget>
@@ -839,7 +839,7 @@
            <string>...</string>
           </property>
           <property name="icon">
-           <iconset resource="icons.qrc">
+           <iconset resource="../icons.qrc">
             <normaloff>:/icon/icons/stamp-2.png</normaloff>:/icon/icons/stamp-2.png</iconset>
           </property>
           <property name="checkable">
@@ -862,7 +862,7 @@
            <string>...</string>
           </property>
           <property name="icon">
-           <iconset resource="icons.qrc">
+           <iconset resource="../icons.qrc">
             <normaloff>:/icon/icons/flask-empty.png</normaloff>:/icon/icons/flask-empty.png</iconset>
           </property>
          </widget>
@@ -920,7 +920,7 @@
         <string>...</string>
        </property>
        <property name="icon">
-        <iconset resource="icons.qrc">
+        <iconset resource="../icons.qrc">
          <normaloff>:/icon/icons/browser-new-window-2.png</normaloff>:/icon/icons/browser-new-window-2.png</iconset>
        </property>
       </widget>
@@ -931,7 +931,7 @@
         <string>...</string>
        </property>
        <property name="icon">
-        <iconset resource="icons.qrc">
+        <iconset resource="../icons.qrc">
          <normaloff>:/icon/icons/browser-minimise-2.png</normaloff>:/icon/icons/browser-minimise-2.png</iconset>
        </property>
       </widget>
@@ -997,7 +997,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icon/icons/pencil.png</normaloff>:/icon/icons/pencil.png</iconset>
    </property>
    <property name="text">
@@ -1012,7 +1012,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icon/icons/eraser.png</normaloff>:/icon/icons/eraser.png</iconset>
    </property>
    <property name="text">
@@ -1027,7 +1027,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icon/icons/eye-2.png</normaloff>:/icon/icons/eye-2.png</iconset>
    </property>
    <property name="text">
@@ -1039,7 +1039,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icon/icons/stamp-2.png</normaloff>:/icon/icons/stamp-2.png</iconset>
    </property>
    <property name="text">
@@ -1057,7 +1057,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icon/icons/stamp.png</normaloff>:/icon/icons/stamp.png</iconset>
    </property>
    <property name="text">
@@ -1075,7 +1075,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icon/icons/flask-empty.png</normaloff>:/icon/icons/flask-empty.png</iconset>
    </property>
    <property name="text">
@@ -1098,7 +1098,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="icons.qrc"/>
+  <include location="../icons.qrc"/>
  </resources>
  <connections/>
 </ui>
