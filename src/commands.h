@@ -8,8 +8,7 @@
 
 class Command: public QUndoCommand {
 public:
-    bool ok; // is true if command can be processed
-    ProjectModel* PM(){return ProjectModel::Instance();}
+    bool ok; // is true if command can be processed    
 };
 
 class NewPartCommand: public Command
@@ -20,49 +19,56 @@ public:
     void redo();
 
 private:
-    QString mName;
+    AssetRef mUuid;
 };
 
 class CopyPartCommand: public Command
 {
 public:
-    CopyPartCommand(const QString& name);
+    CopyPartCommand(AssetRef ref);
     void undo();
     void redo();
 
 private:
+    AssetRef mOriginal;
+    AssetRef mCopy;
     QString mName;
     QString mNewPartName;
 };
 
 class DeletePartCommand: public Command {
-public:
-    DeletePartCommand(QString name);
+public:    
+    DeletePartCommand(AssetRef ref);
     ~DeletePartCommand();
     void undo();
     void redo();
 
 private:
-    QString mName;
+    AssetRef mRef;
     Part* mCopy;
 };
 
 class RenamePartCommand: public Command {
 public:
-    RenamePartCommand(QString oldName, QString newName);
+    RenamePartCommand(AssetRef ref, QString newName);
     void undo();
     void redo();
 
 private:
+    AssetRef mRef;
     QString mOldName, mNewName;
 };
+
+/////////////////////////////////////////////////////////////
+// XXX: Stubbed these out for now...
+/////////////////////////////////////////////////////////////
 
 class NewModeCommand: public Command
 {
 public:
-    NewModeCommand(const QString& partName, const QString& copyModeName);
-    void undo();
-    void redo();
+    NewModeCommand(const QString& partName, const QString& copyModeName){}
+    void undo(){}
+    void redo(){}
 
 private:
     QString mPartName;
@@ -73,9 +79,9 @@ private:
 class DeleteModeCommand: public Command
 {
 public:
-    DeleteModeCommand(const QString& partName, const QString& modeName);
-    void undo();
-    void redo();
+    DeleteModeCommand(const QString& partName, const QString& modeName){}
+    void undo(){}
+    void redo(){}
 
 private:
     QString mPartName;
@@ -86,9 +92,9 @@ private:
 class ResetModeCommand: public Command
 {
 public:
-    ResetModeCommand(const QString& partName, const QString& modeName);
-    void undo();
-    void redo();
+    ResetModeCommand(const QString& partName, const QString& modeName){}
+    void undo(){}
+    void redo(){}
 
 private:
     QString mPartName;
@@ -99,9 +105,9 @@ private:
 class CopyModeCommand: public Command
 {
 public:
-    CopyModeCommand(const QString& partName, const QString& modeName);
-    void undo();
-    void redo();
+    CopyModeCommand(const QString& partName, const QString& modeName){}
+    void undo(){}
+    void redo(){}
 
 private:
     QString mPartName;
@@ -112,9 +118,9 @@ private:
 class RenameModeCommand: public Command
 {
 public:
-    RenameModeCommand(const QString& partName, const QString& oldModeName, const QString& newModeName);
-    void undo();
-    void redo();
+    RenameModeCommand(const QString& partName, const QString& oldModeName, const QString& newModeName){}
+    void undo(){}
+    void redo(){}
 
 private:
     QString mPartName;
@@ -125,9 +131,9 @@ private:
 class NewCompositeCommand: public Command
 {
 public:
-    NewCompositeCommand();
-    void undo();
-    void redo();
+    NewCompositeCommand(){}
+    void undo(){}
+    void redo(){}
 
 private:
     QString mName;
@@ -136,9 +142,9 @@ private:
 class CopyCompositeCommand: public Command
 {
 public:
-    CopyCompositeCommand(const QString& name);
-    void undo();
-    void redo();
+    CopyCompositeCommand(const QString& name){}
+    void undo(){}
+    void redo(){}
 
 private:
     QString mName;
@@ -147,10 +153,10 @@ private:
 
 class DeleteCompositeCommand: public Command {
 public:
-    DeleteCompositeCommand(QString name);
-    ~DeleteCompositeCommand();
-    void undo();
-    void redo();
+    DeleteCompositeCommand(QString name){}
+    ~DeleteCompositeCommand(){}
+    void undo(){}
+    void redo(){}
 
 private:
     QString mName;
@@ -159,9 +165,9 @@ private:
 
 class RenameCompositeCommand: public Command {
 public:
-    RenameCompositeCommand(QString oldName, QString newName);
-    void undo();
-    void redo();
+    RenameCompositeCommand(QString oldName, QString newName){}
+    void undo(){}
+    void redo(){}
 
 private:
     QString mOldName, mNewName;
@@ -183,9 +189,9 @@ private:
 
 class DrawOnPartCommand: public Command {
 public:
-    DrawOnPartCommand(QString partName, QString mode, int frame, QImage data, QPoint offset);
-    void undo();
-    void redo();
+    DrawOnPartCommand(QString partName, QString mode, int frame, QImage data, QPoint offset){}
+    void undo(){}
+    void redo(){}
 private:
     QString mPartName;
     QString mMode;
@@ -197,9 +203,9 @@ private:
 
 class EraseOnPartCommand: public Command {
 public:
-    EraseOnPartCommand(QString partName, QString mode, int frame, QImage data, QPoint offset);
-    void undo();
-    void redo();
+    EraseOnPartCommand(QString partName, QString mode, int frame, QImage data, QPoint offset){}
+    void undo(){}
+    void redo(){}
 private:
     QString mPartName;
     QString mMode;
@@ -211,9 +217,9 @@ private:
 
 class NewFrameCommand: public Command {
 public:
-    NewFrameCommand(QString partName, QString modeName, int index);
-    void undo();
-    void redo();
+    NewFrameCommand(QString partName, QString modeName, int index){}
+    void undo(){}
+    void redo(){}
 
 private:
     QString mPartName, mModeName;
@@ -222,9 +228,9 @@ private:
 
 class CopyFrameCommand: public Command {
 public:
-    CopyFrameCommand(QString partName, QString modeName, int index);
-    void undo();
-    void redo();
+    CopyFrameCommand(QString partName, QString modeName, int index){}
+    void undo(){}
+    void redo(){}
 
 private:
     QString mPartName, mModeName;
@@ -233,9 +239,9 @@ private:
 
 class DeleteFrameCommand: public Command {
 public:
-    DeleteFrameCommand(QString partName, QString modeName, int index);
-    void undo();
-    void redo();
+    DeleteFrameCommand(QString partName, QString modeName, int index){}
+    void undo(){}
+    void redo(){}
 
 private:
     QString mPartName, mModeName;
@@ -247,9 +253,9 @@ private:
 
 class UpdateAnchorAndPivotsCommand: public Command {
 public:
-    UpdateAnchorAndPivotsCommand(QString partName, QString modeName, int index, QPoint anchor, QPoint p1, QPoint p2, QPoint p3, QPoint p4);
-    void undo();
-    void redo();
+    UpdateAnchorAndPivotsCommand(QString partName, QString modeName, int index, QPoint anchor, QPoint p1, QPoint p2, QPoint p3, QPoint p4){}
+    void undo(){}
+    void redo(){}
 
 private:
     QString mPartName, mModeName;
@@ -260,9 +266,9 @@ private:
 
 class ChangeNumPivotsCommand: public Command {
 public:
-    ChangeNumPivotsCommand(QString partName, QString modeName, int numPivots);
-    void undo();
-    void redo();
+    ChangeNumPivotsCommand(QString partName, QString modeName, int numPivots){}
+    void undo(){}
+    void redo(){}
 
 private:
     QString mPartName, mModeName;
@@ -273,9 +279,9 @@ private:
 
 class ChangeModeSizeCommand: public Command {
 public:
-    ChangeModeSizeCommand(QString partName, QString modeName, int width, int height, int offsetX, int offsetY);
-    void undo();
-    void redo();
+    ChangeModeSizeCommand(QString partName, QString modeName, int width, int height, int offsetX, int offsetY){}
+    void undo(){}
+    void redo(){}
 
 private:
     QString mPartName, mModeName;
@@ -286,9 +292,9 @@ private:
 
 class ChangeModeFPSCommand: public Command {
 public:
-    ChangeModeFPSCommand(QString partName, QString modeName, int fps);
-    void undo();
-    void redo();
+    ChangeModeFPSCommand(QString partName, QString modeName, int fps){}
+    void undo(){}
+    void redo(){}
 
 private:
     QString mPartName, mModeName;
@@ -298,9 +304,9 @@ private:
 
 class EditCompositeChildCommand: public Command {
 public:
-    EditCompositeChildCommand(const QString& compName, const QString& childName, const QString& newPartName, int newZ, int newParent, int newParentPivot);
-    void undo();
-    void redo();
+    EditCompositeChildCommand(const QString& compName, const QString& childName, const QString& newPartName, int newZ, int newParent, int newParentPivot){}
+    void undo(){}
+    void redo(){}
 
 private:
     QString mCompName, mChildName;
@@ -313,9 +319,9 @@ private:
 
 class NewCompositeChildCommand: public Command {
 public:
-    NewCompositeChildCommand(const QString& compName);
-    void redo();
-    void undo();
+    NewCompositeChildCommand(const QString& compName){}
+    void redo(){}
+    void undo(){}
 
 private:
     QString mCompName, mChildName;
@@ -323,9 +329,9 @@ private:
 
 class EditCompositeChildNameCommand: public Command {
 public:
-    EditCompositeChildNameCommand(const QString& compName, const QString& child, const QString& newChildName);
-    void redo();
-    void undo();
+    EditCompositeChildNameCommand(const QString& compName, const QString& child, const QString& newChildName){}
+    void redo(){}
+    void undo(){}
 
 private:
     QString mCompName, mOldChildName, mNewChildName;
@@ -333,9 +339,9 @@ private:
 
 class DeleteCompositeChildCommand: public Command {
 public:
-    DeleteCompositeChildCommand(const QString& compName, const QString& childName);
-    void redo();
-    void undo();
+    DeleteCompositeChildCommand(const QString& compName, const QString& childName){}
+    void redo(){}
+    void undo(){}
 
 private:
     QString mCompName, mChildName;
@@ -345,9 +351,9 @@ private:
 
 class ChangePropertiesCommand: public Command {
 public:
-    ChangePropertiesCommand(QString partName, QString properties);
-    void undo();
-    void redo();
+    ChangePropertiesCommand(QString partName, QString properties){}
+    void undo(){}
+    void redo(){}
 
 private:
     QString mPartName;
@@ -357,9 +363,9 @@ private:
 
 class ChangeCompPropertiesCommand: public Command {
 public:
-    ChangeCompPropertiesCommand(QString compName, QString properties);
-    void undo();
-    void redo();
+    ChangeCompPropertiesCommand(QString compName, QString properties){}
+    void undo(){}
+    void redo(){}
 
 private:
     QString mCompName;

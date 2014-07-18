@@ -416,19 +416,6 @@ CompositeWidget* MainWindow::activeCompositeWidget(){
     else return NULL;
 }
 
-bool MainWindow::renamePart(const QString& oldPartName, const QString& newPartName){
-    // qDebug() << "MainWindow::renamePart" << oldPartName << newPartName;
-    Command *command = new RenamePartCommand(oldPartName, newPartName);
-    if (command->ok){
-        mUndoStack->push(command);
-        return true;
-    }
-    else {
-        delete command;
-        return false;
-    }
-}
-
 void MainWindow::partListChanged(){
     mPartList->updateList();
 

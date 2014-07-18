@@ -34,9 +34,6 @@ public:
     void createMenus();
     void showMessage(const QString& msg, int timeout=2000);
 
-    // misc Command stuff
-    bool renamePart(const QString& oldPartName, const QString& newPartName);
-
     // Notifications from commands that something has changed in the project
     void partListChanged();
     void partRenamed(const QString& oldName, const QString& newName);

@@ -7,20 +7,29 @@
 #include <QString>
 #include <QPoint>
 #include <QJsonObject>
+#include <QUuid>
 
 static const int MAX_PIVOTS = 4;
 static const int MAX_CHILDREN = 4;
-class Part;
+struct Part;
 struct Composite;
 
 #define ASSET_TYPE_PART 0
 #define ASSET_TYPE_COMPOSITE 1
 
-#define PROJECT_SAVE_FILE_VERSION 1
+// TODO: Convert my v1 save files
+#define PROJECT_SAVE_FILE_VERSION 2
+
+using AssetRef = QUuid;
+
+// Global access
+class ProjectModel;
+ProjectModel* PM();
 
 /**
- * ProjectModel stores the static data of a project and provides Qt Models on that data.
+ * ProjectModel stores the static data of a project.
  * It is modified by QCommands supporting undo/redo (see http://qt-project.org/doc/qt-5.0/qtdoc/qundo.html )
+ * Can access the global instance with PM()
  */
 class ProjectModel
 {
@@ -30,13 +39,23 @@ public:
     static ProjectModel* Instance();
 
     // globally accessible assets of the model
-    QMap<QString,Part*> parts;
-    QMap<QString,Composite*> composites;
     QString fileName;
+    // QMap<QString,Part*> parts;
+    QMap<QString,Composite*> composites;
+
+    // TODO: Access assets
+    Part* getPart(const AssetRef& ref);
+    bool hasPart(const AssetRef& ref);
+
+    // @deprecated because assets are referred to with the assetref/uuid
+    Part* getPart(const QString& name); // NB: Returns the first part with this name, but may have similar named assets
+    bool hasPart(const QString& name);
+
+    QMap<AssetRef, Part*> parts;
+    // QMap<QUuid, Composite*> composites;
 
     // Change the project model
     void clear();
-    void loadTestData();
     bool load(const QString& fileName);
     bool save(const QString& fileName);
 
@@ -47,8 +66,13 @@ protected:
     static void JsonToComposite(const QJsonObject& obj, Composite* comp);
 };
 
-class Part {
-public:
+
+struct Asset {
+  AssetRef ref;
+  QString name;
+};
+
+struct Part: public Asset {
     ~Part();
 
     struct Mode {
@@ -66,9 +90,10 @@ public:
     QString properties;
 };
 
-struct Composite {
+struct Composite: public Asset {
     struct Child {
-        QString part;
+        QString part; // TODO: Ref should be a UUID
+
         int index; // in children
         int parent; // index of parent
         int parentPivot; // pivot index connected to

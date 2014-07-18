@@ -30,11 +30,19 @@ bool AssetListWidget::eventFilter(QObject *object, QEvent *event)
             int index = item->data(Qt::UserRole).toInt();
             QString name = mAssetNames.at(index);
             int type = mAssetTypes.at(index);
+
+            // TODO: Also add ref to signal mAssetRefs
+
             emit assetDoubleClicked(name,type);
         }
         return true;
     }
     return false;
+}
+
+AssetRef AssetListWidget::assetRef(int id) const {
+    Q_ASSERT(id>=0 && id<mAssetRefs.size());
+    return mAssetRefs.at(id);
 }
 
 const QString& AssetListWidget::assetName(int id) const {
@@ -48,6 +56,7 @@ int AssetListWidget::assetType(int id) const {
 }
 
 void AssetListWidget::updateList(){
+    mAssetRefs.clear();
     mAssetNames.clear();
     mAssetTypes.clear();
     this->clear();
@@ -57,13 +66,17 @@ void AssetListWidget::updateList(){
     cfont.setBold(true);
 
     int index = 0;
-    foreach(QString key, ProjectModel::Instance()->parts.keys()){
-        QListWidgetItem* item = new QListWidgetItem(key);
+
+    foreach(AssetRef ref, ProjectModel::Instance()->parts.keys()){
+        Part* part = ProjectModel::Instance()->getPart(ref);
+
+        QListWidgetItem* item = new QListWidgetItem(part->name);
         item->setData(Qt::UserRole, index++);
         item->setFont(font);
         item->setBackgroundColor(QColor(255,255,240));
 
-        mAssetNames.push_back(key);
+        mAssetRefs.push_back(part->ref);
+        mAssetNames.push_back(part->name);
         mAssetTypes.push_back(ASSET_TYPE_PART);
 
         this->addItem(item);
@@ -74,6 +87,7 @@ void AssetListWidget::updateList(){
         item->setFont(font); // cfont
         item->setBackgroundColor(QColor(255,240,255));
 
+        mAssetRefs.push_back(0);
         mAssetNames.push_back(key);
         mAssetTypes.push_back(ASSET_TYPE_COMPOSITE);
 

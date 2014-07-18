@@ -26,6 +26,8 @@
 
 static ProjectModel* sInstance = NULL;
 
+ProjectModel* PM(){return ProjectModel::Instance();}
+
 ProjectModel::ProjectModel()
 {
     sInstance = this;
@@ -39,9 +41,30 @@ ProjectModel* ProjectModel::Instance(){
     return sInstance;
 }
 
+Part* ProjectModel::getPart(const QUuid& uuid){
+    return parts.value(uuid);
+}
+
+Part* ProjectModel::getPart(const QString& name){
+    for(Part* p: parts.values()){
+        if (p->name==name){
+            return p;
+        }
+    }
+    return nullptr;
+}
+
+bool ProjectModel::hasPart(const QUuid& uuid){
+    return getPart(uuid)!=nullptr;
+}
+
+bool ProjectModel::hasPart(const QString& name){
+    return getPart(name)!=nullptr;
+}
+
 void ProjectModel::clear(){
 
-    foreach(QString key, parts.keys()){
+    foreach(AssetRef key, parts.keys()){
         delete parts[key];
     }
     foreach(QString key, composites.keys())
@@ -51,72 +74,6 @@ void ProjectModel::clear(){
     parts.clear();
     composites.clear();
     fileName = QString();
-}
-
-void ProjectModel::loadTestData(){
-    // setup temp data
-    std::srand(std::time(NULL));
-    static const char* PARTS[2] = {"test_foo", "bar_test"};
-    static const char* MODES[2] = {"anm0", "anm9"};
-    QColor colours[2] = {QColor(255,0,0), QColor(0,0,255)};
-
-    for(int i=0;i<2;i++){
-        Part* p = new Part;
-
-        for(int j=0;j<2;j++){
-            Part::Mode m;
-            m.numFrames = 1;
-            m.width = 16;
-            m.height = 16;
-            m.numPivots = 2;
-            m.framesPerSecond = 24;
-            for(int k=0;k<m.numFrames;k++){
-                for(int p=0;p<MAX_PIVOTS;p++){
-                    int px = floor((m.width-1)*(std::rand()*1.f/RAND_MAX));
-                    int py = floor((m.height-1)*(std::rand()*1.f/RAND_MAX));
-                    m.pivots[p].push_back(QPoint(px,py));
-                }
-                m.anchor.push_back(QPoint(m.width/2,m.height/2));
-                QImage* img = new QImage(m.width, m.height, QImage::Format_ARGB32);
-                m.images.push_back(img);
-                img->fill(QColor(255,255,255,0));
-                QPainter painter(img);
-                painter.fillRect(m.width/4,m.height/4,m.width/2,m.height/2,colours[i]);
-            }
-            p->modes.insert(MODES[j],m);
-            this->parts.insert(PARTS[i],p);
-        }
-    }
-
-    Composite* comp = new Composite;
-    comp->root = 0;
-
-    {
-        Composite::Child ch;
-        ch.part = "test_foo";
-        ch.index = 0;
-        ch.parent = -1;
-        ch.parentPivot = -1;
-        ch.z = 1;
-        ch.children.push_back(1);
-
-        comp->children.push_back("parent");
-        comp->childrenMap.insert(comp->children.back(), ch);
-    }
-
-    {
-        Composite::Child ch;
-        ch.part = "bar_test";
-        ch.index = 1;
-        ch.parent = 0;
-        ch.parentPivot = 0;
-        ch.z = 0;
-
-        comp->children.push_back("child");
-        comp->childrenMap.insert(comp->children.back(), ch);
-    }
-
-    this->composites.insert("comp", comp);
 }
 
 bool ProjectModel::load(const QString& fileName){
@@ -220,14 +177,15 @@ bool ProjectModel::load(const QString& fileName){
 
         if (!parts.isEmpty()){
             for(QJsonObject::iterator it = parts.begin(); it!=parts.end(); it++){
-                const QString& partName = it.key();
+                const QString& uuid = it.key();
                 const QJsonObject& partObj = it.value().toObject();
                 // Load the part..
                 Part* part = new Part;
+                part->ref = QUuid(uuid);
                 part->properties = QString();
                 JsonToPart(partObj, imageMap, part);
                 // Add <partName, part> to mParts
-                this->parts.insert(partName, part);
+                this->parts.insert(part->name, part);
             }
         }
 
@@ -249,9 +207,139 @@ bool ProjectModel::load(const QString& fileName){
     return true;
 }
 
-void ProjectModel::JsonToPart(const QJsonObject& obj, const QMap<QString,QImage*>& imageMap, Part* part){
-    // foreach mode    
+bool ProjectModel::save(const QString& fileName){
+    std::fstream out(fileName.toStdString().c_str(), std::ios::out | std::ios::binary);
+    if(!out.is_open()){
+        qDebug() << "Cannot open out";
+        return false;
+    }
+    QMap<QString,QImage*> imageMap;
 
+    lindenb::io::TarOut tarball(out);
+
+    //////////////////////
+    // data.json
+    // NB: build the image set while processing data
+    //////////////////////
+
+    {
+        QJsonObject data;
+
+        // version etc
+        data.insert("version", PROJECT_SAVE_FILE_VERSION);
+        // data.insert("test", QString("booo"));
+
+        // parts
+        QJsonObject partsObject;
+
+        QMapIterator<AssetRef, Part*> pit(this->parts);
+        while (pit.hasNext()){
+            pit.next();
+            QJsonObject partObject;
+            const Part* p = pit.value();
+            PartToJson(p->name, *p, &partObject, &imageMap);
+
+            QString& uuid = p->ref.toString();
+            partsObject.insert(uuid, partObject);
+            // partsObject.insert(pit.key(), partObject);
+        }
+        data.insert("parts", partsObject);
+
+        // comps
+        QJsonObject compsObject;
+        {
+            QMapIterator<QString, Composite*> it(this->composites);
+            while (it.hasNext()){
+                it.next();
+                QString compNameFixed = it.key();
+                compNameFixed.replace(' ','_');
+                QJsonObject compObject;
+                const Composite* comp = it.value();
+                CompositeToJson(compNameFixed, *comp, &compObject);
+                compsObject.insert(it.key(), compObject);
+            }
+        }
+        data.insert("comps", compsObject);
+
+        // Send it out
+        QString dataStr;
+        QTextStream out(&dataStr);
+        QJsonDocument doc(data);
+        out << doc.toJson();
+        tarball.put("data.json", dataStr.toStdString().c_str());
+    }
+
+    //////////////////////
+    // prefs.json
+    //////////////////////
+
+    {
+        QJsonObject settingsObj;
+        QSettings settings;
+        foreach(QString key, settings.allKeys()){
+            const QVariant& val = settings.value(key);
+            if (key=="background_colour"){
+                uint col = val.toUInt();
+                settingsObj.insert(key, QString::number(col));
+            }
+            else {
+                settingsObj.insert(key, QJsonValue::fromVariant(val));
+            }
+        }
+
+        QString prefsdataStr;
+        QTextStream prefsout(&prefsdataStr);
+        QJsonDocument prefsdoc(settingsObj);
+        prefsout << prefsdoc.toJson();
+
+        tarball.put("prefs.json", prefsdataStr.toStdString().c_str());
+    }
+
+    ////////////////
+    // images.json
+    ////////////////
+
+    {
+        QDir tempPath = QDir(QDir::tempPath());
+        QString tempFileName = tempPath.absoluteFilePath("tmp.png");
+
+        QMapIterator<QString,QImage*> it(imageMap);
+        while (it.hasNext()){
+            it.next();
+
+            const QImage* img = it.value();
+            if (img){
+                bool res = img->save(tempFileName, "PNG");
+                if (res){
+                    tarball.putFile(tempFileName.toStdString().c_str(),it.key().toStdString().c_str());
+                }
+                else {
+                    qDebug() << "Couldn't save image: " << it.key();
+                }
+            }
+        }
+    }
+
+    tarball.finish();
+    out.close();
+
+    this->fileName = fileName;
+    return true;
+
+    /*
+    // gzip utility functions from: http://zlib.net/manual.html#Utility
+    gzFile gz = gzopen(zipFileName.toStdString().c_str(), "wbT"); // "T" no compression
+    const char* buf = "Hello";
+    gzwrite(gz, buf, strlen(buf));
+    gzclose(gz);
+    */
+}
+
+void ProjectModel::JsonToPart(const QJsonObject& obj, const QMap<QString,QImage*>& imageMap, Part* part){
+    // Load name
+    part->name = obj["name"].toString();
+
+    // foreach mode
     for(QJsonObject::const_iterator it=obj.begin();it!=obj.end();it++){        
         const QString& modeName = it.key();
 
@@ -310,6 +398,7 @@ void ProjectModel::PartToJson(const QString& name, const Part& part, QJsonObject
     QMapIterator<QString,Part::Mode> mit(part.modes);
     QString partNameFixed = name;
     partNameFixed.replace(' ', '_');
+    obj->insert("name", name);
 
     while (mit.hasNext()){
         mit.next();
@@ -410,130 +499,6 @@ void ProjectModel::JsonToComposite(const QJsonObject& obj, Composite* comp){
     }
 }
 
-bool ProjectModel::save(const QString& fileName){
-    std::fstream out(fileName.toStdString().c_str(), std::ios::out | std::ios::binary);
-    if(!out.is_open()){
-        qDebug() << "Cannot open out";
-        return false;
-    }
-    QMap<QString,QImage*> imageMap;
-
-    lindenb::io::TarOut tarball(out);
-
-    //////////////////////
-    // data.json
-    // NB: build the image set while processing data
-    //////////////////////
-
-    {
-        QJsonObject data;
-
-        // version etc
-        data.insert("version", PROJECT_SAVE_FILE_VERSION);
-        // data.insert("test", QString("booo"));
-
-        // parts
-        QJsonObject partsObject;
-
-        QMapIterator<QString,Part*> pit(this->parts);
-        while (pit.hasNext()){
-            pit.next();
-            QJsonObject partObject;
-            const Part* p = pit.value();
-            PartToJson(pit.key(), *p, &partObject, &imageMap);
-            partsObject.insert(pit.key(), partObject);
-        }
-        data.insert("parts", partsObject);
-
-        // comps
-        QJsonObject compsObject;
-        {
-            QMapIterator<QString, Composite*> it(this->composites);
-            while (it.hasNext()){
-                it.next();
-                QString compNameFixed = it.key();
-                compNameFixed.replace(' ','_');
-                QJsonObject compObject;
-                const Composite* comp = it.value();
-                CompositeToJson(compNameFixed, *comp, &compObject);
-                compsObject.insert(it.key(), compObject);
-            }
-        }
-        data.insert("comps", compsObject);
-
-        // Send it out
-        QString dataStr;
-        QTextStream out(&dataStr);
-        QJsonDocument doc(data);
-        out << doc.toJson();
-        tarball.put("data.json", dataStr.toStdString().c_str());
-    }
-
-    //////////////////////
-    // prefs.json
-    //////////////////////
-
-    {
-        QJsonObject settingsObj;
-        QSettings settings;
-        foreach(QString key, settings.allKeys()){
-            const QVariant& val = settings.value(key);
-            if (key=="background_colour"){
-                uint col = val.toUInt();
-                settingsObj.insert(key, QString::number(col));
-            }
-            else {
-                settingsObj.insert(key, QJsonValue::fromVariant(val));
-            }
-        }
-
-        QString prefsdataStr;
-        QTextStream prefsout(&prefsdataStr);
-        QJsonDocument prefsdoc(settingsObj);
-        prefsout << prefsdoc.toJson();
-
-        tarball.put("prefs.json", prefsdataStr.toStdString().c_str());
-    }
-
-    ////////////////
-    // images.json
-    ////////////////
-
-    {
-        QDir tempPath = QDir(QDir::tempPath());
-        QString tempFileName = tempPath.absoluteFilePath("tmp.png");
-
-        QMapIterator<QString,QImage*> it(imageMap);
-        while (it.hasNext()){
-            it.next();
-
-            const QImage* img = it.value();
-            if (img){
-                bool res = img->save(tempFileName, "PNG");
-                if (res){
-                    tarball.putFile(tempFileName.toStdString().c_str(),it.key().toStdString().c_str());
-                }
-                else {
-                    qDebug() << "Couldn't save image: " << it.key();
-                }
-            }
-        }
-    }
-
-    tarball.finish();
-    out.close();
-
-    this->fileName = fileName;
-    return true;
-
-    /*
-    // gzip utility functions from: http://zlib.net/manual.html#Utility
-    gzFile gz = gzopen(zipFileName.toStdString().c_str(), "wbT"); // "T" no compression
-    const char* buf = "Hello";
-    gzwrite(gz, buf, strlen(buf));
-    gzclose(gz);
-    */
-}
 
 Part::~Part(){
     foreach(QString key, modes.keys()){

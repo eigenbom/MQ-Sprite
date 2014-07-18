@@ -4,60 +4,71 @@
 #include <QString>
 
 static int sNewCompositeSuffix = 0;
-static int sNewPartSuffix = 0;
 static int sNewModeSuffix = 0;
 
-NewPartCommand::NewPartCommand() {
-    // Find a name
-    mName = QObject::tr("part_") + QString::number(sNewPartSuffix++);
-    while (PM()->parts.contains(mName)){
-        mName = QObject::tr("part_") + QString::number(sNewPartSuffix++);
-    }
+NewPartCommand::NewPartCommand() {    
+    mUuid = QUuid::createUuid();
     ok = true;
 }
 
 void NewPartCommand::undo()
 {
-    Part* p = PM()->parts.take(mName);
+    Part* p = PM()->parts.take(mUuid);
     delete p;
     MainWindow::Instance()->partListChanged();
 }
 
 void NewPartCommand::redo()
 {
+    // Find a unique name
+    QString name;
+    int number = 0;
+    do {
+      name = (number==0)?QString("part"):(QObject::tr("part_") + QString::number(number++));
+      number++;
+    } while (PM()->hasPart(name));
+
     Part* part = new Part;
+    part->ref = mUuid;
+    part->name = name;
     Part::Mode mode;
     mode.numFrames = 1;
-    mode.numPivots = 2;
+    mode.numPivots = 0;
     mode.width = 8;
     mode.height = 8;
     mode.framesPerSecond = 12;
-    mode.anchor.push_back(QPoint(0,0));
+    mode.anchor.push_back(QPoint(4,4));
     for(int i=0;i<MAX_PIVOTS;i++){
         mode.pivots[i].push_back(QPoint(0,0));
     }
     QImage* img = new QImage(mode.width, mode.width, QImage::Format_ARGB32);
     img->fill(0x00FFFFFF);
     mode.images.push_back(img);
-    part->modes.insert("anm0", mode);
-    PM()->parts.insert(mName, part);
+    part->modes.insert("dflt", mode);
+    PM()->parts.insert(part->ref, part);
     MainWindow::Instance()->partListChanged();
-    MainWindow::Instance()->openPartWidget(mName);
+
+
+    // TODO: openPartWidget(AssetRef)
+    MainWindow::Instance()->openPartWidget(name);
+
 }
 
-CopyPartCommand::CopyPartCommand(const QString& name):mName(name){
-    ok = PM()->parts.contains(mName);
+CopyPartCommand::CopyPartCommand(AssetRef ref){
+    mOriginal = ref;
+    ok = PM()->hasPart(ref);
     if (ok){
+        Part* part = PM()->getPart(ref);
         int copyNumber = 0;
-        mNewPartName = mName + "_copy";
-        while (PM()->parts.contains(mNewPartName)){
-            mNewPartName = mName + "_copy_" + QString::number(copyNumber++);
-        }
+        do {
+            mNewPartName = part->name + "_" + QString::number(copyNumber++);
+        } while (PM()->hasPart(mNewPartName));
+        mCopy = QUuid::createUuid();
     }
 }
 
 void CopyPartCommand::undo(){
-    Part* p = PM()->parts.take(mNewPartName);
+    Part* p = PM()->parts.take(mCopy);
     delete p;
     // NB: images are deleted in the parts destructor
     MainWindow::Instance()->partListChanged();
@@ -65,7 +76,10 @@ void CopyPartCommand::undo(){
 
 void CopyPartCommand::redo(){
     Part* part = new Part;
-    const Part* partToCopy = PM()->parts.value(mName);
+    part->ref = mCopy;
+    part->name = mNewPartName;
+
+    const Part* partToCopy = PM()->parts.value(mOriginal);
     Q_ASSERT(partToCopy);
     part->properties = partToCopy->properties;
     QMapIterator<QString, Part::Mode> it(partToCopy->modes);
@@ -83,13 +97,13 @@ void CopyPartCommand::redo(){
         }
         part->modes.insert(key, newMode);
     }
-    PM()->parts.insert(mNewPartName, part);
+    PM()->parts.insert(mCopy, part);
 
     MainWindow::Instance()->partListChanged();
 }
 
-DeletePartCommand::DeletePartCommand(QString name): mName(name), mCopy(NULL){
-    ok = PM()->parts.contains(name);
+DeletePartCommand::DeletePartCommand(AssetRef ref):mRef(ref),mCopy(nullptr) {
+    ok = PM()->parts.contains(ref);
 }
 
 DeletePartCommand::~DeletePartCommand(){
@@ -98,31 +112,39 @@ DeletePartCommand::~DeletePartCommand(){
 
 void DeletePartCommand::undo()
 {
-    PM()->parts.insert(mName, mCopy);
-    mCopy = NULL;
-
+    PM()->parts.insert(mRef, mCopy);
+    mCopy = nullptr;
     MainWindow::Instance()->partListChanged();
 }
 
 void DeletePartCommand::redo()
 {
-    mCopy = PM()->parts[mName];
-    PM()->parts.remove(mName);
-
+    mCopy = PM()->parts[mRef];
+    PM()->parts.remove(mRef);
     MainWindow::Instance()->partListChanged();    
 }
 
-RenamePartCommand::RenamePartCommand(QString oldName, QString newName):mOldName(oldName),mNewName(newName){
-    ok = PM()->parts.contains(oldName) && !PM()->parts.contains(newName);
+RenamePartCommand::RenamePartCommand(AssetRef ref, QString newName):mRef(ref){
+    ok = PM()->parts.contains(ref);
+
+    // Find new name with newName as base
+    int num = 0;
+    do {
+        mNewName = (num==0)?newName:(newName + "_" + QString::number(num));
+        num++;
+    } while ((PM()->hasPart(mNewName)));
 }
 
 void RenamePartCommand::undo(){
-    Part* p = PM()->parts[mNewName];
-    PM()->parts.remove(mNewName);
-    PM()->parts.insert(mOldName, p);
+    // Part* p = PM()->parts[mNewName];
+    // PM()->parts.remove(mNewName);
+    // PM()->parts.insert(mOldName, p);
+
+    Part* p = PM()->parts[mRef];
+    p->name = mOldName;
 
     // update comps too...
-    foreach(Composite* comp, PM()->composites.values()){
+    foreach(Composite* comp, PM()->composites.values()){        
         QMutableMapIterator<QString,Composite::Child> it(comp->childrenMap);
         while (it.hasNext()){
             it.next();
@@ -137,9 +159,13 @@ void RenamePartCommand::undo(){
 }
 
 void RenamePartCommand::redo(){
-    Part* p = PM()->parts[mOldName];
-    PM()->parts.remove(mOldName);
-    PM()->parts.insert(mNewName, p);
+
+    // Part* p = PM()->parts[mOldName];
+    // PM()->parts.remove(mOldName);
+    // PM()->parts.insert(mNewName, p);
+    Part* p = PM()->parts[mRef];
+    mOldName = p->name;
+    p->name = mNewName;
 
     // update comps too...
     foreach(Composite* comp, PM()->composites.values()){
@@ -156,6 +182,7 @@ void RenamePartCommand::redo(){
     MainWindow::Instance()->partRenamed(mOldName, mNewName);
 }
 
+/*
 NewModeCommand::NewModeCommand(const QString& partName, const QString& copyModeName):mPartName(partName), mCopyModeName(copyModeName){
     ok = PM()->parts.contains(mPartName) && PM()->parts.value(mPartName)->modes.contains(mCopyModeName);
 
@@ -331,11 +358,6 @@ RenameModeCommand::RenameModeCommand(const QString& partName, const QString& old
     if (mNewModeName.size()==0){
         mNewModeName = "_";
     }
-    /*
-    mNewModeName = mNewModeName.left(4);
-    while (mNewModeName.length()<4)
-        mNewModeName.append('_');
-    */
 
     ok = PM()->parts.contains(mPartName) && PM()->parts.value(mPartName)->modes.contains(mOldModeName) && !PM()->parts.value(mPartName)->modes.contains(mNewModeName);
 }
@@ -1166,3 +1188,5 @@ void ChangeCompPropertiesCommand::redo(){
 
     MainWindow::Instance()->compPropertiesUpdated(mCompName);
 }
+
+*/

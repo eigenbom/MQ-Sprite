@@ -45,6 +45,7 @@ void PartList::renameAsset()
     QListWidgetItem* item = mAssetListWidget->currentItem();
     if (item){
         int id = item->data(Qt::UserRole).toInt();
+        AssetRef ref = mAssetListWidget->assetRef(id);
         const QString& name = mAssetListWidget->assetName(id);
         int type = mAssetListWidget->assetType(id);
         bool ok;
@@ -53,7 +54,7 @@ void PartList::renameAsset()
                                              name, &ok);
         if (ok && !text.isEmpty()){
             if (type==ASSET_TYPE_PART){
-                RenamePartCommand* command = new RenamePartCommand(name, text);
+                RenamePartCommand* command = new RenamePartCommand(ref, text);
                 if (command->ok){
                     MainWindow::Instance()->undoStack()->push(command);
                 }
@@ -79,10 +80,11 @@ void PartList::copyAsset()
     QListWidgetItem* item = mAssetListWidget->currentItem();
     if (item){
         int id = item->data(Qt::UserRole).toInt();
+        AssetRef ref = mAssetListWidget->assetRef(id);
         const QString& name = mAssetListWidget->assetName(id);
         int type = mAssetListWidget->assetType(id);
         if (type==ASSET_TYPE_PART){
-            CopyPartCommand* command = new CopyPartCommand(name);
+            CopyPartCommand* command = new CopyPartCommand(ref);
             if (command->ok) MainWindow::Instance()->undoStack()->push(command);
             else delete command;
         }
@@ -99,10 +101,12 @@ void PartList::deleteAsset()
     QListWidgetItem* item = mAssetListWidget->currentItem();
     if (item){
         int id = item->data(Qt::UserRole).toInt();
+
+        AssetRef ref = mAssetListWidget->assetRef(id);
         const QString& name = mAssetListWidget->assetName(id);
         int type = mAssetListWidget->assetType(id);
         if (type==ASSET_TYPE_PART){
-            DeletePartCommand* command = new DeletePartCommand(name);
+            DeletePartCommand* command = new DeletePartCommand(ref);
             if (command->ok) MainWindow::Instance()->undoStack()->push(command);
             else delete command;
         }

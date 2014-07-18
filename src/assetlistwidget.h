@@ -4,6 +4,7 @@
 #include <QListWidget>
 #include <QVector>
 #include <QString>
+#include "projectmodel.h"
 
 class AssetListWidget : public QListWidget
 {
@@ -11,6 +12,7 @@ class AssetListWidget : public QListWidget
 public:
     explicit AssetListWidget(QWidget *parent = 0);
     bool eventFilter(QObject *object, QEvent *event);
+    AssetRef assetRef(int id) const;
     const QString& assetName(int id) const;
     int assetType(int id) const;
 
@@ -21,6 +23,7 @@ public slots:
     void updateList();
 
 protected:
+    QVector<AssetRef> mAssetRefs;
     QVector<QString> mAssetNames;
     QVector<int> mAssetTypes;
 };
