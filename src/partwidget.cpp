@@ -107,8 +107,8 @@ void PartWidget::updatePartFrames(){
     mPartView->scene()->clear();
     mBoundsItem = NULL;
 
-    if (ProjectModel::Instance()->parts.contains(mPartName)){
-        mPart = ProjectModel::Instance()->parts[mPartName];
+    if (PM()->hasPart(mPartName)){
+        mPart = PM()->getPart(mPartName);
         mProperties = mPart->properties;
 
         if (mPart->modes.size()>0){
@@ -303,7 +303,7 @@ void PartWidget::partFramesUpdated(const QString& part, const QString& mode){
 void PartWidget::partNumPivotsUpdated(const QString& part, const QString& mode){
     if (part==mPartName && mModeName==mode){
         // update ..
-        Part* part = ProjectModel::Instance()->parts[mPartName];
+        Part* part = PM()->getPart(mPartName);
         Part::Mode& mode = part->modes[mModeName];
         mNumPivots = mode.numPivots;
         showFrame(mFrameNumber);
@@ -360,7 +360,7 @@ void PartWidget::updatePropertiesOverlays(){
 void PartWidget::partPropertiesChanged(const QString& part){
     if (part==mPartName){
         // update ..
-        Part* part = ProjectModel::Instance()->parts[mPartName];
+        Part* part = PM()->getPart(mPartName);
         mProperties = part->properties;
         updatePropertiesOverlays();
         showFrame(mFrameNumber);

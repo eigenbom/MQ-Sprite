@@ -321,11 +321,15 @@ void MainWindow::closeEvent(QCloseEvent*){
     settings.setValue("main_window_state", saveState());
 }
 
-void MainWindow::assetDoubleClicked(const QString& name, int type){
-    if (type==ASSET_TYPE_PART)
-        openPartWidget(name);
-    else if (type==ASSET_TYPE_COMPOSITE)
-        openCompositeWidget(name);
+void MainWindow::assetDoubleClicked(AssetRef ref, AssetType type){
+    if (type==AssetType::Part){
+        Part* p = PM()->getPart(ref);
+        openPartWidget(p->name);
+    }
+    else if (type==AssetType::Composite){
+        Composite* c = PM()->getComposite(ref);
+        openCompositeWidget(c->name);
+    }
 }
 
 void MainWindow::partWidgetClosed(PartWidget* pw){
@@ -338,10 +342,9 @@ void MainWindow::partWidgetClosed(PartWidget* pw){
 }
 
 void MainWindow::openPartWidget(const QString& str){    
-    if (!mProjectModel->parts.contains(str)) return;
-    else {
+    if (PM()->hasPart(str)){
         PartWidget* p = new PartWidget(str, mMdiArea);
-        p->setProperty("asset_type", ASSET_TYPE_PART);
+        // p->setProperty("asset_type", AssetType::Part);
         mMdiArea->addSubWindow(p);
         p->show();
         // NB: part widget
@@ -360,10 +363,9 @@ void MainWindow::compositeWidgetClosed(CompositeWidget* cw){
 }
 
 void MainWindow::openCompositeWidget(const QString& str){
-    if (!mProjectModel->composites.contains(str)) return;
-    else {
+    if (PM()->hasComposite(str)){
         CompositeWidget* p = new CompositeWidget(str, mMdiArea);
-        p->setProperty("asset_type", ASSET_TYPE_COMPOSITE);
+        // p->setProperty("asset_type", AssetType::Composite);
         mMdiArea->addSubWindow(p);
         p->show();
         // NB: part widget
@@ -380,22 +382,23 @@ void MainWindow::subWindowActivated(QMdiSubWindow* win){
         mStackedWidget->setCurrentIndex(mNoToolsIndex);
     }
     else {
-        int type = win->property("asset_type").toInt();
-        if (type==ASSET_TYPE_PART){
+        if (dynamic_cast<PartWidget*>(win)){
             PartWidget* pw = (PartWidget*)(win);
             mPartToolsWidget->setTargetPartWidget(pw);
             mCompositeToolsWidget->setTargetCompWidget(NULL);
 
-            mPartList->setSelection(pw->partName(), ASSET_TYPE_PART);
+            Part* part = PM()->getPart(pw->partName());
+            mPartList->setSelection(part->ref, AssetType::Part);
 
             mStackedWidget->setCurrentIndex(mPToolsIndex);
         }
-        else if (type==ASSET_TYPE_COMPOSITE){
+        else if (dynamic_cast<CompositeWidget*>(win)){
             CompositeWidget* cw = (CompositeWidget*)(win);
             mPartToolsWidget->setTargetPartWidget(NULL);
             mCompositeToolsWidget->setTargetCompWidget(cw);
 
-            mPartList->setSelection(cw->compName(), ASSET_TYPE_COMPOSITE);
+            Composite* comp = PM()->getComposite(cw->compName());
+            mPartList->setSelection(comp->ref, AssetType::Composite);
 
             mStackedWidget->setCurrentIndex(mCToolsIndex);
         }
@@ -403,17 +406,22 @@ void MainWindow::subWindowActivated(QMdiSubWindow* win){
 }
 
 PartWidget* MainWindow::activePartWidget(){
-    QMdiSubWindow* win = mMdiArea->activeSubWindow();
-    if (win->property("asset_type").toInt()==ASSET_TYPE_PART)
-        return (PartWidget*) win;
-    else return NULL;
+    QMdiSubWindow* win = mMdiArea->activeSubWindow();    
+    return dynamic_cast<PartWidget*>(win);
+    //if (win->property("asset_type").toInt()==AssetType::Part)
+    //    return (PartWidget*) win;
+    //else return NULL;
 }
 
 CompositeWidget* MainWindow::activeCompositeWidget(){
     QMdiSubWindow* win = mMdiArea->activeSubWindow();
-    if (win->property("asset_type").toInt()==ASSET_TYPE_COMPOSITE)
+    return dynamic_cast<CompositeWidget*>(win);
+
+    /*
+    if (win->property("asset_type").toInt()==AssetType::Composite)
         return (CompositeWidget*) win;
     else return NULL;
+    */
 }
 
 void MainWindow::partListChanged(){
@@ -423,7 +431,7 @@ void MainWindow::partListChanged(){
     QMutableMapIterator<QString,PartWidget*> i(mPartWidgets);
     while (i.hasNext()) {
         i.next();
-        if (!mProjectModel->parts.contains(i.key())){
+        if (!PM()->hasPart(i.key())){
             // Close the widget
             i.value()->close();
         }
@@ -433,7 +441,7 @@ void MainWindow::partListChanged(){
     QMutableMapIterator<QString,CompositeWidget*> i2(mCompositeWidgets);
     while (i2.hasNext()) {
         i2.next();
-        if (!mProjectModel->composites.contains(i2.key())){
+        if (!PM()->hasComposite(i2.key())){
             // Close the widget
             i2.value()->close();
         }
@@ -532,7 +540,7 @@ void MainWindow::compPropertiesUpdated(const QString& comp){
 
 void MainWindow::partModesChanged(const QString& partName){
     if (mPartWidgets.contains(partName)){
-        const Part* part = ProjectModel::Instance()->parts.value(partName);
+        const Part* part = PM()->getPart(partName);
         foreach(PartWidget* p, mPartWidgets.values(partName)){
             if (!part->modes.contains(p->modeName())){
                 // mode has disappeared, so set a new mode..

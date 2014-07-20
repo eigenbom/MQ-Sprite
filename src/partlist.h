@@ -18,7 +18,7 @@ public:
     ~PartList();
 
 signals:
-    void assetDoubleClicked(const QString& name, int type);
+    void assetDoubleClicked(AssetRef ref, AssetType type);
 
 public slots:
     void newPart();
@@ -30,7 +30,7 @@ public slots:
     
     void updateList();
 
-    void setSelection(const QString& name, int type);
+    void setSelection(AssetRef ref, AssetType type);
 
 private:
     Ui::PartList *ui;

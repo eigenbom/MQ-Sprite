@@ -14,13 +14,23 @@ static const int MAX_CHILDREN = 4;
 struct Part;
 struct Composite;
 
-#define ASSET_TYPE_PART 0
-#define ASSET_TYPE_COMPOSITE 1
+enum class AssetType {
+  Part = 0,
+  Composite = 1,
+  Folder = 2,
+};
 
 // TODO: Convert my v1 save files
 #define PROJECT_SAVE_FILE_VERSION 2
 
-using AssetRef = QUuid;
+struct AssetRef {
+    QUuid uuid;
+};
+
+bool operator==(const AssetRef& a, const AssetRef& b);
+bool operator<(const AssetRef& a, const AssetRef& b);
+
+// using AssetRef = QUuid;
 
 // Global access
 class ProjectModel;
@@ -38,21 +48,27 @@ public:
     ~ProjectModel();
     static ProjectModel* Instance();
 
+    AssetRef createAssetRef();
+
     // globally accessible assets of the model
     QString fileName;
     // QMap<QString,Part*> parts;
-    QMap<QString,Composite*> composites;
+    // QMap<QString,Composite*> composites;
 
     // TODO: Access assets
     Part* getPart(const AssetRef& ref);
     bool hasPart(const AssetRef& ref);
+    Composite* getComposite(const AssetRef& ref);
+    bool hasComposite(const AssetRef& ref);
 
     // @deprecated because assets are referred to with the assetref/uuid
     Part* getPart(const QString& name); // NB: Returns the first part with this name, but may have similar named assets
     bool hasPart(const QString& name);
+    Composite* getComposite(const QString& name); // NB: Returns the first part with this name, but may have similar named assets
+    bool hasComposite(const QString& name);
 
     QMap<AssetRef, Part*> parts;
-    // QMap<QUuid, Composite*> composites;
+    QMap<AssetRef, Composite*> composites;
 
     // Change the project model
     void clear();

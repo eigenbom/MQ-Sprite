@@ -12,7 +12,7 @@ PartList::PartList(QWidget *parent) :
 {
     ui->setupUi(this);
     mAssetListWidget = findChild<AssetListWidget*>("assetList");
-    connect(mAssetListWidget, SIGNAL(assetDoubleClicked(QString,int)), this, SIGNAL(assetDoubleClicked(QString,int)));
+    connect(mAssetListWidget, SIGNAL(assetDoubleClicked(AssetRef,AssetType)), this, SIGNAL(assetDoubleClicked(AssetRef,AssetType)));
     connect(findChild<QToolButton*>("toolButtonNewPart"), SIGNAL(clicked()), this, SLOT(newPart()));
     connect(findChild<QToolButton*>("toolButtonNewComp"), SIGNAL(clicked()), this, SLOT(newComp()));
     connect(findChild<QToolButton*>("toolButtonRenameAsset"), SIGNAL(clicked()), this, SLOT(renameAsset()));
@@ -47,13 +47,13 @@ void PartList::renameAsset()
         int id = item->data(Qt::UserRole).toInt();
         AssetRef ref = mAssetListWidget->assetRef(id);
         const QString& name = mAssetListWidget->assetName(id);
-        int type = mAssetListWidget->assetType(id);
+        AssetType type = mAssetListWidget->assetType(id);
         bool ok;
         QString text = QInputDialog::getText(this, tr("Rename Asset"),
                                              tr("Rename ") + name + ":", QLineEdit::Normal,
                                              name, &ok);
         if (ok && !text.isEmpty()){
-            if (type==ASSET_TYPE_PART){
+            if (type==AssetType::Part){
                 RenamePartCommand* command = new RenamePartCommand(ref, text);
                 if (command->ok){
                     MainWindow::Instance()->undoStack()->push(command);
@@ -62,8 +62,8 @@ void PartList::renameAsset()
                     delete command;
                 }
             }
-            else if (type==ASSET_TYPE_COMPOSITE){
-                RenameCompositeCommand* command = new RenameCompositeCommand(name, text);
+            else if (type==AssetType::Composite){
+                RenameCompositeCommand* command = new RenameCompositeCommand(ref, text);
                 if (command->ok){
                     MainWindow::Instance()->undoStack()->push(command);
                 }
@@ -81,15 +81,14 @@ void PartList::copyAsset()
     if (item){
         int id = item->data(Qt::UserRole).toInt();
         AssetRef ref = mAssetListWidget->assetRef(id);
-        const QString& name = mAssetListWidget->assetName(id);
-        int type = mAssetListWidget->assetType(id);
-        if (type==ASSET_TYPE_PART){
+        AssetType type = mAssetListWidget->assetType(id);
+        if (type==AssetType::Part){
             CopyPartCommand* command = new CopyPartCommand(ref);
             if (command->ok) MainWindow::Instance()->undoStack()->push(command);
             else delete command;
         }
-        else if (type==ASSET_TYPE_COMPOSITE){
-            CopyCompositeCommand* command = new CopyCompositeCommand(name);
+        else if (type==AssetType::Composite){
+            CopyCompositeCommand* command = new CopyCompositeCommand(ref);
             if (command->ok) MainWindow::Instance()->undoStack()->push(command);
             else delete command;
         }
@@ -103,15 +102,14 @@ void PartList::deleteAsset()
         int id = item->data(Qt::UserRole).toInt();
 
         AssetRef ref = mAssetListWidget->assetRef(id);
-        const QString& name = mAssetListWidget->assetName(id);
-        int type = mAssetListWidget->assetType(id);
-        if (type==ASSET_TYPE_PART){
+        AssetType type = mAssetListWidget->assetType(id);
+        if (type==AssetType::Part){
             DeletePartCommand* command = new DeletePartCommand(ref);
             if (command->ok) MainWindow::Instance()->undoStack()->push(command);
             else delete command;
         }
-        else if (type==ASSET_TYPE_COMPOSITE){
-            DeleteCompositeCommand* command = new DeleteCompositeCommand(name);
+        else if (type==AssetType::Composite){
+            DeleteCompositeCommand* command = new DeleteCompositeCommand(ref);
             if (command->ok) MainWindow::Instance()->undoStack()->push(command);
             else delete command;
         }
@@ -126,11 +124,11 @@ void PartList::updateList(){
     mAssetListWidget->updateList();
 }
 
-void PartList::setSelection(const QString& name, int type){
+void PartList::setSelection(AssetRef ref, AssetType type){
     for(int i=0;i<mAssetListWidget->count();i++){
         QListWidgetItem* item = mAssetListWidget->item(i);
         int id = item->data(Qt::UserRole).toInt();
-        if (type==mAssetListWidget->assetType(id) && name==mAssetListWidget->assetName(id)){
+        if (type==mAssetListWidget->assetType(id) && ref==mAssetListWidget->assetRef(id)){
             // select it
             mAssetListWidget->setCurrentRow(i);
             return;

@@ -110,7 +110,7 @@ void CompositeToolsWidget::updateTable(){
     mTableWidgetParts->verticalHeader()->setDefaultSectionSize(16);
 
     mTableWidgetParts->blockSignals(true);
-    Composite* comp = ProjectModel::Instance()->composites.value(mTarget->compName());
+    Composite* comp = PM()->getComposite(mTarget->compName());
     if (comp){
         int root = comp->root;
         int index = 0;
@@ -165,7 +165,7 @@ void CompositeToolsWidget::updateSet(){
     mVisibleSignalMapper = NULL;
 
     // Create set UI
-    Composite* comp = ProjectModel::Instance()->composites.value(mTarget->compName());
+    Composite* comp = PM()->getComposite(mTarget->compName());
     if (comp){
         // int root = comp->root;
         // int index = 0;
@@ -186,8 +186,8 @@ void CompositeToolsWidget::updateSet(){
             layout->addSpacerItem(new QSpacerItem(0,0,QSizePolicy::MinimumExpanding));
             QComboBox* comboBoxModes = new QComboBox();
             comboBoxModes->setToolTip("Change mode");
-            if (ProjectModel::Instance()->parts.contains(ch.part)){
-                const Part* part = ProjectModel::Instance()->parts.value(ch.part);
+            if (PM()->hasPart(ch.part)){
+                const Part* part = PM()->getPart(ch.part);
                 foreach(const QString& mode, part->modes.keys()){
                     comboBoxModes->addItem(mode);
                 }
@@ -281,7 +281,7 @@ QString CompositeToolsWidget::compName() const {
 
 void CompositeToolsWidget::targetCompPropertiesChanged(){
     if (mTarget){
-        Composite* comp = ProjectModel::Instance()->composites.value(mTarget->compName());
+        Composite* comp = PM()->getComposite(mTarget->compName());
         if (comp){
             int cursorPos = mTextEditProperties->textCursor().position();
             mTextEditProperties->blockSignals(true);
@@ -328,7 +328,7 @@ void CompositeToolsWidget::deletePart(){
 
         // Delete the selected row (if any)
         int row = mTableWidgetParts->currentRow();
-        const Composite* comp = ProjectModel::Instance()->composites.value(mTarget->compName());
+        const Composite* comp = PM()->getComposite(mTarget->compName());
         if (comp){
             if (row>=0 && row<comp->children.size()){
                 const QString& childName = comp->children.at(row);
@@ -346,7 +346,7 @@ void CompositeToolsWidget::deletePart(){
 
 void CompositeToolsWidget::cellChanged(int row, int /*column*/){
     if (mTarget){
-        const Composite* comp = ProjectModel::Instance()->composites.value(mTarget->compName());
+        const Composite* comp = PM()->getComposite(mTarget->compName());
         const QString& childName = mTableWidgetParts->item(row, 0)->text();
         const QString& partName = mTableWidgetParts->item(row, 1)->text();
         bool ok = false;

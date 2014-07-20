@@ -55,7 +55,7 @@ protected:
     void closeEvent(QCloseEvent* event);
 
 public slots:
-    void assetDoubleClicked(const QString& name, int type);
+    void assetDoubleClicked(AssetRef ref, AssetType type);
     void partWidgetClosed(PartWidget*);
     void openPartWidget(const QString& str);
     void compositeWidgetClosed(CompositeWidget*);

@@ -7,7 +7,7 @@ static int sNewCompositeSuffix = 0;
 static int sNewModeSuffix = 0;
 
 NewPartCommand::NewPartCommand() {    
-    mUuid = QUuid::createUuid();
+    mUuid = PM()->createAssetRef();
     ok = true;
 }
 
@@ -24,7 +24,7 @@ void NewPartCommand::redo()
     QString name;
     int number = 0;
     do {
-      name = (number==0)?QString("part"):(QObject::tr("part_") + QString::number(number++));
+      name = (number==0)?QString("part"):(QObject::tr("part_") + QString::number(number));
       number++;
     } while (PM()->hasPart(name));
 
@@ -63,7 +63,7 @@ CopyPartCommand::CopyPartCommand(AssetRef ref){
         do {
             mNewPartName = part->name + "_" + QString::number(copyNumber++);
         } while (PM()->hasPart(mNewPartName));
-        mCopy = QUuid::createUuid();
+        mCopy = PM()->createAssetRef();
     }
 }
 
@@ -182,7 +182,143 @@ void RenamePartCommand::redo(){
     MainWindow::Instance()->partRenamed(mOldName, mNewName);
 }
 
+NewCompositeCommand::NewCompositeCommand() {
+
+    // Find a name
+    int compSuffix = 0;
+    do {
+        mName = (compSuffix==0)?QString("comp"):(QObject::tr("comp_") + QString::number(compSuffix));
+        compSuffix++;
+    }
+    while (PM()->hasComposite(mName));
+    mRef = PM()->createAssetRef();
+    ok = true;
+}
+
+void NewCompositeCommand::undo()
+{
+    Composite* c = PM()->composites.take(mRef);
+    delete c;
+    MainWindow::Instance()->partListChanged();
+}
+
+void NewCompositeCommand::redo()
+{
+    Composite* comp = new Composite;
+    comp->root = -1;
+    comp->name = mName;
+    comp->ref = mRef;
+    PM()->composites.insert(comp->ref, comp);
+    MainWindow::Instance()->partListChanged();
+    MainWindow::Instance()->openCompositeWidget(mName);
+}
+
+CopyCompositeCommand::CopyCompositeCommand(AssetRef ref){
+    Composite* comp = PM()->getComposite(ref);
+    ok = (comp!=nullptr);
+    if (ok){
+        mOriginal = ref;
+        int copyNumber = 0;        
+        do {
+            mNewCompositeName = comp->name + "_" + QString::number(copyNumber++);
+        }
+        while (PM()->hasComposite(mNewCompositeName));
+    }
+}
+
+void CopyCompositeCommand::undo(){
+    Composite* copy = PM()->composites.take(mCopy);
+    delete copy;
+    MainWindow::Instance()->partListChanged();
+}
+
+void CopyCompositeCommand::redo(){
+    const Composite* comp = PM()->getComposite(mOriginal);
+    Composite* copy = new Composite;    
+    mCopy = PM()->createAssetRef();
+    copy->ref = mCopy;
+    copy->name = mNewCompositeName;
+    copy->root = comp->root;
+    copy->properties = comp->properties;
+    copy->children = comp->children;
+    copy->childrenMap = comp->childrenMap;
+    PM()->composites.insert(copy->ref, copy);
+
+    MainWindow::Instance()->partListChanged();
+}
+
+DeleteCompositeCommand::DeleteCompositeCommand(AssetRef ref): mRef(ref), mCopy(nullptr){
+    ok = PM()->hasComposite(ref);
+}
+
+DeleteCompositeCommand::~DeleteCompositeCommand(){
+    delete mCopy;
+}
+
+void DeleteCompositeCommand::undo()
+{
+    PM()->composites.insert(mRef, mCopy);
+    mCopy = nullptr;
+    MainWindow::Instance()->partListChanged();
+}
+
+void DeleteCompositeCommand::redo()
+{
+    mCopy = PM()->composites.take(mRef);
+    MainWindow::Instance()->partListChanged();
+}
+
+RenameCompositeCommand::RenameCompositeCommand(AssetRef ref, QString newName):mRef(ref),mNewName(newName){
+    Composite* comp = PM()->getComposite(ref);
+    ok = comp!=nullptr;
+    if (ok){
+        mOldName = comp->name;
+        int copyNumber = 0;
+        do {
+            mNewName = (copyNumber==0)?newName:(newName + "_" + QString::number(copyNumber));
+            copyNumber++;
+        }
+        while (PM()->hasComposite(mNewName));
+    }
+}
+
+void RenameCompositeCommand::undo(){
+    Composite* p = PM()->getComposite(mRef);
+    p->name = mOldName;
+
+    MainWindow::Instance()->compositeRenamed(mNewName, mOldName);
+}
+
+void RenameCompositeCommand::redo(){
+    Composite* p = PM()->getComposite(mRef);
+    p->name = mNewName;
+
+    MainWindow::Instance()->compositeRenamed(mOldName, mNewName);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*
+
 NewModeCommand::NewModeCommand(const QString& partName, const QString& copyModeName):mPartName(partName), mCopyModeName(copyModeName){
     ok = PM()->parts.contains(mPartName) && PM()->parts.value(mPartName)->modes.contains(mCopyModeName);
 
@@ -377,128 +513,6 @@ void RenameModeCommand::redo(){
 
      MainWindow::Instance()->partModeRenamed(mPartName, mOldModeName, mNewModeName);
 }
-
-NewCompositeCommand::NewCompositeCommand() {
-    // Find a name
-    mName = QObject::tr("comp_") + QString::number(sNewCompositeSuffix++);
-    while (PM()->composites.contains(mName)){
-        mName = QObject::tr("comp_") + QString::number(sNewCompositeSuffix++);
-    }
-    ok = true;
-}
-
-void NewCompositeCommand::undo()
-{
-    Composite* c = PM()->composites.take(mName);
-    delete c;
-    MainWindow::Instance()->partListChanged();
-}
-
-void NewCompositeCommand::redo()
-{
-    Composite* comp = new Composite;
-    comp->root = -1;
-    //  No children, nothing
-    PM()->composites.insert(mName, comp);
-
-    MainWindow::Instance()->partListChanged();
-    MainWindow::Instance()->openCompositeWidget(mName);
-}
-
-CopyCompositeCommand::CopyCompositeCommand(const QString& name):mName(name){
-    ok = PM()->composites.contains(mName);
-    if (ok){
-        int copyNumber = 0;
-        mNewCompositeName = mName + "_copy";
-        while (PM()->composites.contains(mNewCompositeName)){
-            mNewCompositeName = mName + "_copy_" + QString::number(copyNumber++);
-        }
-    }
-}
-
-void CopyCompositeCommand::undo(){
-    Composite* copy = PM()->composites.take(mNewCompositeName);
-    delete copy;
-    MainWindow::Instance()->partListChanged();
-}
-
-void CopyCompositeCommand::redo(){
-    const Composite* comp = PM()->composites.value(mName);
-    Composite* copy = new Composite;
-    copy->root = comp->root;
-    copy->properties = comp->properties;
-    copy->children = comp->children;
-    copy->childrenMap = comp->childrenMap;
-    PM()->composites.insert(mNewCompositeName, copy);
-
-    MainWindow::Instance()->partListChanged();
-}
-
-DeleteCompositeCommand::DeleteCompositeCommand(QString name): mName(name), mCopy(NULL){
-    ok = PM()->composites.contains(name);
-}
-
-DeleteCompositeCommand::~DeleteCompositeCommand(){
-    delete mCopy;
-}
-
-void DeleteCompositeCommand::undo()
-{
-    PM()->composites.insert(mName, mCopy);
-    mCopy = NULL;
-    MainWindow::Instance()->partListChanged();
-}
-
-void DeleteCompositeCommand::redo()
-{
-    mCopy = PM()->composites[mName];
-    PM()->composites.remove(mName);
-
-    MainWindow::Instance()->partListChanged();
-}
-
-RenameCompositeCommand::RenameCompositeCommand(QString oldName, QString newName):mOldName(oldName),mNewName(newName){
-    ok = PM()->composites.contains(oldName) && !PM()->composites.contains(newName);
-}
-
-void RenameCompositeCommand::undo(){
-    Composite* p = PM()->composites[mNewName];
-    PM()->composites.remove(mNewName);
-    PM()->composites.insert(mOldName, p);
-
-    MainWindow::Instance()->compositeRenamed(mNewName, mOldName);
-}
-
-void RenameCompositeCommand::redo(){
-    Composite* p = PM()->composites[mOldName];
-    PM()->composites.remove(mOldName);
-    PM()->composites.insert(mNewName, p);
-
-    MainWindow::Instance()->compositeRenamed(mOldName, mNewName);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

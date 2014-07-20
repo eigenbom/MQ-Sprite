@@ -28,12 +28,7 @@ bool AssetListWidget::eventFilter(QObject *object, QEvent *event)
         QListWidgetItem* item = this->currentItem();
         if (item){
             int index = item->data(Qt::UserRole).toInt();
-            QString name = mAssetNames.at(index);
-            int type = mAssetTypes.at(index);
-
-            // TODO: Also add ref to signal mAssetRefs
-
-            emit assetDoubleClicked(name,type);
+            emit assetDoubleClicked(mAssetRefs.at(index), mAssetTypes.at(index));
         }
         return true;
     }
@@ -50,7 +45,7 @@ const QString& AssetListWidget::assetName(int id) const {
     return mAssetNames.at(id);
 }
 
-int AssetListWidget::assetType(int id) const {
+AssetType AssetListWidget::assetType(int id) const {
     Q_ASSERT(id>=0 && id<mAssetTypes.size());
     return mAssetTypes.at(id);
 }
@@ -68,7 +63,7 @@ void AssetListWidget::updateList(){
     int index = 0;
 
     foreach(AssetRef ref, ProjectModel::Instance()->parts.keys()){
-        Part* part = ProjectModel::Instance()->getPart(ref);
+        Part* part = PM()->getPart(ref);
 
         QListWidgetItem* item = new QListWidgetItem(part->name);
         item->setData(Qt::UserRole, index++);
@@ -77,19 +72,21 @@ void AssetListWidget::updateList(){
 
         mAssetRefs.push_back(part->ref);
         mAssetNames.push_back(part->name);
-        mAssetTypes.push_back(ASSET_TYPE_PART);
+        mAssetTypes.push_back(AssetType::Part);
 
         this->addItem(item);
     }
-    foreach(QString key, ProjectModel::Instance()->composites.keys()){
-        QListWidgetItem* item = new QListWidgetItem(key);
+    foreach(AssetRef ref, ProjectModel::Instance()->composites.keys()){
+        Composite* comp = PM()->getComposite(ref);
+
+        QListWidgetItem* item = new QListWidgetItem(comp->name);
         item->setData(Qt::UserRole, index++);
         item->setFont(font); // cfont
         item->setBackgroundColor(QColor(255,240,255));
 
-        mAssetRefs.push_back(0);
-        mAssetNames.push_back(key);
-        mAssetTypes.push_back(ASSET_TYPE_COMPOSITE);
+        mAssetRefs.push_back(comp->ref);
+        mAssetNames.push_back(comp->name);
+        mAssetTypes.push_back(AssetType::Composite);
 
         this->addItem(item);
     }

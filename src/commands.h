@@ -59,6 +59,69 @@ private:
     QString mOldName, mNewName;
 };
 
+
+// Composite
+
+class NewCompositeCommand: public Command
+{
+public:
+    NewCompositeCommand();
+    void undo();
+    void redo();
+
+private:
+    AssetRef mRef;
+    QString mName;
+};
+
+class CopyCompositeCommand: public Command
+{
+public:
+    CopyCompositeCommand(AssetRef ref);
+    void undo();
+    void redo();
+
+private:
+    AssetRef mOriginal;
+    AssetRef mCopy;
+    QString mNewCompositeName;
+};
+
+class DeleteCompositeCommand: public Command {
+public:
+    DeleteCompositeCommand(AssetRef ref);
+    ~DeleteCompositeCommand();
+    void undo();
+    void redo();
+
+private:
+    AssetRef mRef;
+    Composite* mCopy;
+};
+
+class RenameCompositeCommand: public Command {
+public:
+    RenameCompositeCommand(AssetRef ref, QString newName);
+    void undo();
+    void redo();
+
+private:
+    AssetRef mRef;
+    QString mOldName, mNewName;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
 /////////////////////////////////////////////////////////////
 // XXX: Stubbed these out for now...
 /////////////////////////////////////////////////////////////
@@ -127,61 +190,6 @@ private:
     QString mOldModeName;
     QString mNewModeName;
 };
-
-class NewCompositeCommand: public Command
-{
-public:
-    NewCompositeCommand(){}
-    void undo(){}
-    void redo(){}
-
-private:
-    QString mName;
-};
-
-class CopyCompositeCommand: public Command
-{
-public:
-    CopyCompositeCommand(const QString& name){}
-    void undo(){}
-    void redo(){}
-
-private:
-    QString mName;
-    QString mNewCompositeName;
-};
-
-class DeleteCompositeCommand: public Command {
-public:
-    DeleteCompositeCommand(QString name){}
-    ~DeleteCompositeCommand(){}
-    void undo(){}
-    void redo(){}
-
-private:
-    QString mName;
-    Composite* mCopy;
-};
-
-class RenameCompositeCommand: public Command {
-public:
-    RenameCompositeCommand(QString oldName, QString newName){}
-    void undo(){}
-    void redo(){}
-
-private:
-    QString mOldName, mNewName;
-};
-
-
-
-
-
-
-
-
-
-
 
 
 

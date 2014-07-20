@@ -14,10 +14,10 @@ public:
     bool eventFilter(QObject *object, QEvent *event);
     AssetRef assetRef(int id) const;
     const QString& assetName(int id) const;
-    int assetType(int id) const;
+    AssetType assetType(int id) const;
 
 signals:
-    void assetDoubleClicked(const QString& name, int type);
+    void assetDoubleClicked(AssetRef ref, AssetType type);
     
 public slots:
     void updateList();
@@ -25,7 +25,7 @@ public slots:
 protected:
     QVector<AssetRef> mAssetRefs;
     QVector<QString> mAssetNames;
-    QVector<int> mAssetTypes;
+    QVector<AssetType> mAssetTypes;
 };
 
 #endif // ASSETLISTWIDGET_H

@@ -76,10 +76,9 @@ void CompositeWidget::updateCompFrames(){
     // mCompView->scene()->addRect(-.25,-.25,.5,.5,QPen(Qt::NoPen),QBrush(QColor(0,0,0,50)))->setZValue(1);
 
     // Load all children
-    bool valid = ProjectModel::Instance()->composites.contains(mCompName);
-    Composite* comp = valid?ProjectModel::Instance()->composites[mCompName]:NULL;
+    Composite* comp = PM()->getComposite(mCompName);
     QRectF fullBounds;
-    if (comp && valid){
+    if (comp != nullptr){
         mChildren = comp->children;
         mRoot = comp->root;
         mProperties = comp->properties;
@@ -106,8 +105,8 @@ void CompositeWidget::updateCompFrames(){
             cd.updated = false;
             cd.valid = false;
 
-            if (ProjectModel::Instance()->parts.contains(cd.part)){
-                Part* part = ProjectModel::Instance()->parts[cd.part];
+            if (PM()->hasPart(cd.part)){
+                Part* part = PM()->getPart(cd.part);
                 // qDebug() << "partName: " << cd.part;
 
                 // Load all modes...
@@ -204,10 +203,9 @@ void CompositeWidget::updateCompFramesMinorChanges(){
     mRectItems.clear();
 
     // Update all children
-    bool valid = ProjectModel::Instance()->composites.contains(mCompName);
-    Composite* comp = valid?ProjectModel::Instance()->composites[mCompName]:NULL;
+    Composite* comp = PM()->getComposite(mCompName);
     QRectF fullBounds;
-    if (comp && valid){
+    if (comp){
         mRoot = comp->root;
         mProperties = comp->properties;
 
@@ -244,8 +242,8 @@ void CompositeWidget::updateCompFramesMinorChanges(){
 
             cd.valid = false;
 
-            if (ProjectModel::Instance()->parts.contains(cd.part)){
-                Part* part = ProjectModel::Instance()->parts[cd.part];
+            if (PM()->hasPart(cd.part)){
+                Part* part = PM()->getPart(cd.part);
                 // qDebug() << "partName: " << cd.part;
 
                 // Load all modes...
@@ -564,7 +562,7 @@ void CompositeWidget::compNameChanged(const QString& name){
 void CompositeWidget::compPropertiesChanged(const QString& name){
     if (name==mCompName){
         // update ..
-        Composite* comp = ProjectModel::Instance()->composites[mCompName];
+        Composite* comp = PM()->getComposite(mCompName);
         mProperties = comp->properties;
         updatePropertiesOverlays();
         mCompView->update();

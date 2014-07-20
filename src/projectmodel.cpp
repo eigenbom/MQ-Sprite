@@ -24,6 +24,14 @@
 
 #include "tarball.h"
 
+bool operator==(const AssetRef& a, const AssetRef& b){
+    return a.uuid == b.uuid;
+}
+
+bool operator<(const AssetRef& a, const AssetRef& b){
+ return a.uuid > b.uuid;
+}
+
 static ProjectModel* sInstance = NULL;
 
 ProjectModel* PM(){return ProjectModel::Instance();}
@@ -41,7 +49,11 @@ ProjectModel* ProjectModel::Instance(){
     return sInstance;
 }
 
-Part* ProjectModel::getPart(const QUuid& uuid){
+AssetRef ProjectModel::createAssetRef(){
+    return AssetRef {QUuid::createUuid()};
+}
+
+Part* ProjectModel::getPart(const AssetRef& uuid){
     return parts.value(uuid);
 }
 
@@ -54,7 +66,7 @@ Part* ProjectModel::getPart(const QString& name){
     return nullptr;
 }
 
-bool ProjectModel::hasPart(const QUuid& uuid){
+bool ProjectModel::hasPart(const AssetRef& uuid){
     return getPart(uuid)!=nullptr;
 }
 
@@ -62,12 +74,34 @@ bool ProjectModel::hasPart(const QString& name){
     return getPart(name)!=nullptr;
 }
 
+
+Composite* ProjectModel::getComposite(const AssetRef& uuid){
+    return composites.value(uuid);
+}
+
+Composite* ProjectModel::getComposite(const QString& name){
+    for(Composite* p: composites.values()){
+        if (p->name==name){
+            return p;
+        }
+    }
+    return nullptr;
+}
+
+bool ProjectModel::hasComposite(const AssetRef& uuid){
+    return getComposite(uuid)!=nullptr;
+}
+
+bool ProjectModel::hasComposite(const QString& name){
+    return getComposite(name)!=nullptr;
+}
+
 void ProjectModel::clear(){
 
     foreach(AssetRef key, parts.keys()){
         delete parts[key];
     }
-    foreach(QString key, composites.keys())
+    foreach(AssetRef key, composites.keys())
     {
         delete composites[key];
     }
@@ -181,24 +215,25 @@ bool ProjectModel::load(const QString& fileName){
                 const QJsonObject& partObj = it.value().toObject();
                 // Load the part..
                 Part* part = new Part;
-                part->ref = QUuid(uuid);
+                part->ref = AssetRef {QUuid(uuid)};
                 part->properties = QString();
                 JsonToPart(partObj, imageMap, part);
                 // Add <partName, part> to mParts
-                this->parts.insert(part->name, part);
+                this->parts.insert(part->ref, part);
             }
         }
 
         if (!comps.isEmpty()){
             for(QJsonObject::iterator it = comps.begin(); it!=comps.end(); it++){
-                const QString& compName = it.key();
+                const QString& uuid = it.key();
                 const QJsonObject& compObj = it.value().toObject();
                 // Load the part..
                 Composite* composite = new Composite;
+                composite->ref = AssetRef{ QUuid(uuid)};
                 composite->properties = QString();
                 JsonToComposite(compObj, composite);
                 // Add <partName, part> to mParts
-                this->composites.insert(compName, composite);
+                this->composites.insert(composite->ref, composite);
             }
         }
     }
@@ -239,24 +274,25 @@ bool ProjectModel::save(const QString& fileName){
             const Part* p = pit.value();
             PartToJson(p->name, *p, &partObject, &imageMap);
 
-            QString& uuid = p->ref.toString();
+            QString& uuid = p->ref.uuid.toString();
             partsObject.insert(uuid, partObject);
-            // partsObject.insert(pit.key(), partObject);
         }
         data.insert("parts", partsObject);
 
         // comps
         QJsonObject compsObject;
         {
-            QMapIterator<QString, Composite*> it(this->composites);
+            QMapIterator<AssetRef, Composite*> it(this->composites);
             while (it.hasNext()){
                 it.next();
-                QString compNameFixed = it.key();
+                const Composite* comp = it.value();
+                QString compNameFixed = comp->name;
                 compNameFixed.replace(' ','_');
                 QJsonObject compObject;
-                const Composite* comp = it.value();
                 CompositeToJson(compNameFixed, *comp, &compObject);
-                compsObject.insert(it.key(), compObject);
+
+                QString uuid = comp->ref.uuid.toString();
+                compsObject.insert(uuid, compObject);
             }
         }
         data.insert("comps", compsObject);
@@ -441,9 +477,10 @@ void ProjectModel::PartToJson(const QString& name, const Part& part, QJsonObject
     }
 }
 
-void ProjectModel::CompositeToJson(const QString&, const Composite& comp, QJsonObject* obj){
+void ProjectModel::CompositeToJson(const QString& name, const Composite& comp, QJsonObject* obj){
     obj->insert("root", comp.root);
     obj->insert("properties", comp.properties);
+    obj->insert("name", name);
 
     QJsonArray compChildren;
     foreach(const QString& childName, comp.children){
@@ -471,8 +508,8 @@ void ProjectModel::CompositeToJson(const QString&, const Composite& comp, QJsonO
 }
 
 void ProjectModel::JsonToComposite(const QJsonObject& obj, Composite* comp){
-    comp->root = obj.value("root").toVariant().toInt();
-
+    comp->root = obj.value("root").toVariant().toInt();    
+    comp->name = obj["name"].toString();
     comp->properties = obj.value("properties").toString();
 
     QJsonArray children = obj.value("parts").toArray();
@@ -498,7 +535,6 @@ void ProjectModel::JsonToComposite(const QJsonObject& obj, Composite* comp){
         index++;
     }
 }
-
 
 Part::~Part(){
     foreach(QString key, modes.keys()){
