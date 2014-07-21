@@ -25,9 +25,11 @@ enum class AssetType {
 
 struct AssetRef {
     QUuid uuid;
+    AssetRef();
 };
 
 bool operator==(const AssetRef& a, const AssetRef& b);
+bool operator!=(const AssetRef& a, const AssetRef& b);
 bool operator<(const AssetRef& a, const AssetRef& b);
 
 // using AssetRef = QUuid;
@@ -64,8 +66,7 @@ public:
     // @deprecated because assets are referred to with the assetref/uuid
     Part* getPart(const QString& name); // NB: Returns the first part with this name, but may have similar named assets
     bool hasPart(const QString& name);
-    Composite* getComposite(const QString& name); // NB: Returns the first part with this name, but may have similar named assets
-    bool hasComposite(const QString& name);
+    Composite* findCompositeByName(const QString& name); // NB: Returns the first part with this name, but may have similar named assets
 
     QMap<AssetRef, Part*> parts;
     QMap<AssetRef, Composite*> composites;
@@ -108,7 +109,8 @@ struct Part: public Asset {
 
 struct Composite: public Asset {
     struct Child {
-        QString part; // TODO: Ref should be a UUID
+        AssetRef part;
+        // QString part; // TODO: Ref should be a UUID
 
         int index; // in children
         int parent; // index of parent

@@ -24,12 +24,20 @@
 
 #include "tarball.h"
 
+AssetRef::AssetRef():uuid(){
+
+}
+
 bool operator==(const AssetRef& a, const AssetRef& b){
     return a.uuid == b.uuid;
 }
 
+bool operator!=(const AssetRef& a, const AssetRef& b){
+    return a.uuid != b.uuid;
+}
+
 bool operator<(const AssetRef& a, const AssetRef& b){
- return a.uuid > b.uuid;
+    return a.uuid > b.uuid;
 }
 
 static ProjectModel* sInstance = nullptr;
@@ -50,7 +58,9 @@ ProjectModel* ProjectModel::Instance(){
 }
 
 AssetRef ProjectModel::createAssetRef(){
-    return AssetRef {QUuid::createUuid()};
+    AssetRef ref;
+    ref.uuid = QUuid::createUuid();
+    return ref;
 }
 
 Part* ProjectModel::getPart(const AssetRef& uuid){
@@ -79,7 +89,7 @@ Composite* ProjectModel::getComposite(const AssetRef& uuid){
     return composites.value(uuid);
 }
 
-Composite* ProjectModel::getComposite(const QString& name){
+Composite* ProjectModel::findCompositeByName(const QString& name){
     for(Composite* p: composites.values()){
         if (p->name==name){
             return p;
@@ -90,10 +100,6 @@ Composite* ProjectModel::getComposite(const QString& name){
 
 bool ProjectModel::hasComposite(const AssetRef& uuid){
     return getComposite(uuid)!=nullptr;
-}
-
-bool ProjectModel::hasComposite(const QString& name){
-    return getComposite(name)!=nullptr;
 }
 
 void ProjectModel::clear(){
@@ -215,7 +221,7 @@ bool ProjectModel::load(const QString& fileName){
                 const QJsonObject& partObj = it.value().toObject();
                 // Load the part..
                 Part* part = new Part;
-                part->ref = AssetRef {QUuid(uuid)};
+                part->ref.uuid = QUuid(uuid);
                 part->properties = QString();
                 JsonToPart(partObj, imageMap, part);
                 // Add <partName, part> to mParts
@@ -229,7 +235,7 @@ bool ProjectModel::load(const QString& fileName){
                 const QJsonObject& compObj = it.value().toObject();
                 // Load the part..
                 Composite* composite = new Composite;
-                composite->ref = AssetRef{ QUuid(uuid)};
+                composite->ref.uuid = QUuid(uuid);
                 composite->properties = QString();
                 JsonToComposite(compObj, composite);
                 // Add <partName, part> to mParts
@@ -493,7 +499,7 @@ void ProjectModel::CompositeToJson(const QString& name, const Composite& comp, Q
         childObject.insert("parent", child.parent);
         childObject.insert("parentPivot", child.parentPivot);
         childObject.insert("z", child.z);
-        childObject.insert("part", child.part);
+        childObject.insert("part", child.part.uuid.toString());
 
         QJsonArray children;
         foreach(int ci, child.children){
@@ -523,7 +529,7 @@ void ProjectModel::JsonToComposite(const QJsonObject& obj, Composite* comp){
         child.parent = childObject.value("parent").toVariant().toInt();
         child.parentPivot = childObject.value("parentPivot").toVariant().toInt();
         child.z = childObject.value("z").toVariant().toInt();
-        child.part = childObject.value("part").toString();
+        child.part.uuid = QUuid(childObject.value("part").toString());
         child.index = index;
 
         QJsonArray childrenOfChild = childObject.value("children").toArray();

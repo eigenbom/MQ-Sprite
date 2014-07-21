@@ -322,20 +322,15 @@ void MainWindow::closeEvent(QCloseEvent*){
 }
 
 void MainWindow::assetDoubleClicked(AssetRef ref, AssetType type){
-    if (type==AssetType::Part){
-        openPartWidget(ref);
-    }
-    else if (type==AssetType::Composite){
-        Composite* c = PM()->getComposite(ref);
-        openCompositeWidget(c->name);
-    }
+    if (type==AssetType::Part) openPartWidget(ref);
+    else if (type==AssetType::Composite) openCompositeWidget(ref);
 }
 
 void MainWindow::partWidgetClosed(PartWidget* pw){
     if (pw){
-        mPartWidgets.remove(pw->partRef());
+        mPartWidgets.remove(pw->partRef(), pw);
         subWindowActivated(nullptr);
-        delete pw;
+        pw->deleteLater();
     }
 }
 
@@ -346,29 +341,29 @@ void MainWindow::openPartWidget(AssetRef ref){
         mMdiArea->addSubWindow(p);
         p->show();
         // NB: part widget
+
         connect(p, SIGNAL(closed(PartWidget*)), this, SLOT(partWidgetClosed(PartWidget*)));
         mPartWidgets.insertMulti(ref, p);
     }
 }
 
 void MainWindow::compositeWidgetClosed(CompositeWidget* cw){
-    QString key = mCompositeWidgets.key(cw);
-    if (!key.isNull()){
-        mCompositeWidgets.remove(key, cw);
+    if (cw){
+        mCompositeWidgets.remove(cw->compRef(), cw);
         subWindowActivated(nullptr);
-        delete cw;
+        cw->deleteLater();
     }
 }
 
-void MainWindow::openCompositeWidget(const QString& str){
-    if (PM()->hasComposite(str)){
-        CompositeWidget* p = new CompositeWidget(str, mMdiArea);
+void MainWindow::openCompositeWidget(AssetRef ref){
+    if (PM()->hasComposite(ref)){
+        CompositeWidget* p = new CompositeWidget(ref, mMdiArea);
         // p->setProperty("asset_type", AssetType::Composite);
         mMdiArea->addSubWindow(p);
         p->show();
         // NB: part widget
         connect(p, SIGNAL(closed(CompositeWidget*)), this, SLOT(compositeWidgetClosed(CompositeWidget*)));
-        mCompositeWidgets.insertMulti(str, p);
+        mCompositeWidgets.insertMulti(ref, p);
     }
 }
 
@@ -395,7 +390,7 @@ void MainWindow::subWindowActivated(QMdiSubWindow* win){
             mPartToolsWidget->setTargetPartWidget(nullptr);
             mCompositeToolsWidget->setTargetCompWidget(cw);
 
-            Composite* comp = PM()->getComposite(cw->compName());
+            Composite* comp = PM()->getComposite(cw->compRef());
             mPartList->setSelection(comp->ref, AssetType::Composite);
 
             mStackedWidget->setCurrentIndex(mCToolsIndex);
@@ -436,7 +431,7 @@ void MainWindow::partListChanged(){
     }
 
     // Delete any comp widgets that don't exist anymore
-    QMutableMapIterator<QString,CompositeWidget*> i2(mCompositeWidgets);
+    QMutableMapIterator<AssetRef,CompositeWidget*> i2(mCompositeWidgets);
     while (i2.hasNext()) {
         i2.next();
         if (!PM()->hasComposite(i2.key())){
@@ -461,13 +456,11 @@ void MainWindow::partRenamed(AssetRef ref, const QString& newName){
     */
 
     foreach(CompositeWidget* cw, mCompositeWidgets.values()){
-        qDebug() << "TODO: change cw partname";
-        // cw->partNameChanged(oldName, newName);
+        cw->partNameChanged(ref, newName);
     }
 
     if (mCompositeToolsWidget->isEnabled()){
-        qDebug() << "TODO: change tools widget";
-        // mCompositeToolsWidget->partNameChanged(oldName, newName);
+        mCompositeToolsWidget->partNameChanged(ref, newName);
     }
 }
 
@@ -479,8 +472,7 @@ void MainWindow::partFrameUpdated(AssetRef ref, const QString& mode, int frame){
     }
 
     foreach(CompositeWidget* cw, mCompositeWidgets.values()){
-        qDebug() << "TODO: ";
-        // cw->partFrameUpdated(part, mode, frame);
+        cw->partFrameUpdated(ref, mode, frame);
     }
 }
 
@@ -496,8 +488,7 @@ void MainWindow::partFramesUpdated(AssetRef ref, const QString& mode){
     }
 
     foreach(CompositeWidget* cw, mCompositeWidgets.values()){
-        qDebug() << "TODO: ";
-        // cw->partFramesUpdated(part, mode);
+        cw->partFramesUpdated(ref, mode);
     }
 }
 
@@ -513,8 +504,7 @@ void MainWindow::partNumPivotsUpdated(AssetRef ref, const QString& mode){
     }
 
     foreach(CompositeWidget* cw, mCompositeWidgets.values()){
-        qDebug() << "TODO: ";
-        // cw->partNumPivotsUpdated(part, mode);
+        cw->partNumPivotsUpdated(ref, mode);
     }
 }
 
@@ -530,13 +520,13 @@ void MainWindow::partPropertiesUpdated(AssetRef ref){
     }
 }
 
-void MainWindow::compPropertiesUpdated(const QString& comp){
-    foreach(CompositeWidget* cw, mCompositeWidgets.values()){
+void MainWindow::compPropertiesUpdated(AssetRef comp){
+    foreach(CompositeWidget* cw, mCompositeWidgets.values(comp)){
         cw->updateCompFrames();
     }
     if (mCompositeToolsWidget->isEnabled()){
-        if (mCompositeToolsWidget->compName()==comp){
-            mCompositeToolsWidget->targetCompPropertiesChanged();
+       if (mCompositeToolsWidget->compRef()==comp){
+           mCompositeToolsWidget->targetCompPropertiesChanged();
         }
     }
 }
@@ -561,16 +551,12 @@ void MainWindow::partModesChanged(AssetRef ref){
     }
 
     // TODO: Tell composite widgets
-    /*
-    foreach(CompositeWidget* cw, mCompositeWidgets.values()){
-        cw->partModesChanged(partName);
-    }
-
-    if (mCompositeToolsWidget->isEnabled()){
-        mCompositeToolsWidget->partModesChanged(compName);
-    }
-    */
-
+    // foreach(CompositeWidget* cw, mCompositeWidgets.values()){
+        // cw->partModesChanged(part);
+    // }
+    //if (mCompositeToolsWidget->isEnabled()){
+    //    mCompositeToolsWidget->partModesChanged(ref);
+    //}
 }
 
 void MainWindow::partModeRenamed(AssetRef ref, const QString& oldModeName, const QString& newModeName){
@@ -589,38 +575,34 @@ void MainWindow::partModeRenamed(AssetRef ref, const QString& oldModeName, const
     // TODO: Tell composite widgets
 }
 
-void MainWindow::compositeRenamed(const QString& oldName, const QString& newName){
+void MainWindow::compositeRenamed(AssetRef ref, const QString& newName){
     mPartList->updateList();
-    while (mCompositeWidgets.contains(oldName)){
-        CompositeWidget* p = mCompositeWidgets.take(oldName);
-        // inform...
-        p->compNameChanged(newName);
-        mCompositeWidgets.insertMulti(newName, p);
+    for(CompositeWidget* cw: mCompositeWidgets.values(ref)){
+        cw->compNameChanged(ref);
     }
 
     if (mCompositeToolsWidget->isEnabled()){
-        mCompositeToolsWidget->compNameChanged(oldName, newName);
+        mCompositeToolsWidget->compNameChanged(ref, newName);
     }
 }
 
-void MainWindow::compositeUpdated(const QString& compName){
-    foreach(CompositeWidget* cw, mCompositeWidgets.values()){
+void MainWindow::compositeUpdated(AssetRef ref){
+    foreach(CompositeWidget* cw, mCompositeWidgets.values(ref)){
         cw->updateCompFrames();
-        // cw->compositeChildUpdated(compName, childName);
     }
 
     if (mCompositeToolsWidget->isEnabled()){
-        mCompositeToolsWidget->compositeUpdated(compName);
+         mCompositeToolsWidget->compositeUpdated(ref);
     }
 }
 
-void MainWindow::compositeUpdatedMinorChanges(const QString& compName){
-    foreach(CompositeWidget* cw, mCompositeWidgets.values()){
+void MainWindow::compositeUpdatedMinorChanges(AssetRef ref){
+    foreach(CompositeWidget* cw, mCompositeWidgets.values(ref)){
         cw->updateCompFramesMinorChanges();
     }
 
     if (mCompositeToolsWidget->isEnabled()){
-        mCompositeToolsWidget->compositeUpdated(compName);
+         mCompositeToolsWidget->compositeUpdated(ref);
     }
 }
 

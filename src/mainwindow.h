@@ -44,10 +44,10 @@ public:
     void partModesChanged(AssetRef ref);
     void partModeRenamed(AssetRef ref, const QString& oldModeName, const QString& newModeName);
 
-    void compositeRenamed(const QString& oldName, const QString& newName);
-    void compositeUpdated(const QString& compName);
-    void compositeUpdatedMinorChanges(const QString& compName);
-    void compPropertiesUpdated(const QString& comp);
+    void compositeRenamed(AssetRef ref, const QString& newName);
+    void compositeUpdated(AssetRef ref);
+    void compositeUpdatedMinorChanges(AssetRef ref);
+    void compPropertiesUpdated(AssetRef ref);
 
     PartWidget* activePartWidget();
     CompositeWidget* activeCompositeWidget();
@@ -58,9 +58,9 @@ protected:
 public slots:
     void assetDoubleClicked(AssetRef ref, AssetType type);
     void partWidgetClosed(PartWidget*);
-    void openPartWidget(AssetRef str);
+    void openPartWidget(AssetRef ref);
     void compositeWidgetClosed(CompositeWidget*);
-    void openCompositeWidget(const QString& str);
+    void openCompositeWidget(AssetRef ref);
     void subWindowActivated(QMdiSubWindow*);
     void showViewOptionsDialog();
 
@@ -103,7 +103,7 @@ private:
     int mNoToolsIndex, mPToolsIndex, mCToolsIndex;
 
     QMultiMap<AssetRef,PartWidget*> mPartWidgets;
-    QMultiMap<QString,CompositeWidget*> mCompositeWidgets;
+    QMultiMap<AssetRef,CompositeWidget*> mCompositeWidgets;
 
     QUndoStack* mUndoStack;
 

@@ -9,6 +9,7 @@
 #include <QVBoxLayout>
 #include <QSignalMapper>
 #include <QPlainTextEdit>
+#include "projectmodel.h"
 
 class CompositeWidget;
 
@@ -29,11 +30,11 @@ public:
     void updateSet();
 
     // Updates
-    void partNameChanged(const QString& oldPartName, const QString& newPartName);
-    void compNameChanged(const QString& oldCompName, const QString& newCompName);
-    void compositeUpdated(const QString& compName);
+    void partNameChanged(AssetRef part, const QString& newPartName);
+    void compNameChanged(AssetRef comp, const QString& newCompName);
+    void compositeUpdated(AssetRef comp);
 
-    QString compName() const;
+    AssetRef compRef() const;
     void targetCompPropertiesChanged();
 
 public slots:

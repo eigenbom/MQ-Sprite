@@ -22,7 +22,7 @@ CompositeToolsWidget::CompositeToolsWidget(QWidget *parent) :
     mModesSignalMapper(nullptr),
     mLoopSignalMapper(nullptr),
     mVisibleSignalMapper(nullptr)
-  {
+{
     ui->setupUi(this);
 
     mTableWidgetParts = findChild<QTableWidget*>("tableWidgetParts");
@@ -110,7 +110,7 @@ void CompositeToolsWidget::updateTable(){
     mTableWidgetParts->verticalHeader()->setDefaultSectionSize(16);
 
     mTableWidgetParts->blockSignals(true);
-    Composite* comp = PM()->getComposite(mTarget->compName());
+    Composite* comp = PM()->getComposite(mTarget->compRef());
     if (comp){
         int root = comp->root;
         int index = 0;
@@ -121,12 +121,16 @@ void CompositeToolsWidget::updateTable(){
             // ch.part
             int row = mTableWidgetParts->rowCount();
             mTableWidgetParts->insertRow(row);
+
+            Part* part = PM()->getPart(ch.part);
+            QString partName = part?part->name:QString("");
             mTableWidgetParts->setItem(row,0, new QTableWidgetItem(childName));
-            mTableWidgetParts->setItem(row,1, new QTableWidgetItem(ch.part));
+            mTableWidgetParts->setItem(row,1, new QTableWidgetItem(partName));
             mTableWidgetParts->setItem(row,2, new QTableWidgetItem(QString::number(ch.z)));
             mTableWidgetParts->setItem(row,3, new QTableWidgetItem(QString::number(ch.parent)));
             mTableWidgetParts->setItem(row,4, new QTableWidgetItem(QString::number(ch.parentPivot)));
             mTableWidgetParts->setVerticalHeaderItem(row, new QTableWidgetItem(QString::number(row)));
+
 
             if (index==root){
                 QFont font = mTableWidgetParts->item(row,0)->font();
@@ -165,7 +169,7 @@ void CompositeToolsWidget::updateSet(){
     mVisibleSignalMapper = nullptr;
 
     // Create set UI
-    Composite* comp = PM()->getComposite(mTarget->compName());
+    Composite* comp = PM()->getComposite(mTarget->compRef());
     if (comp){
         // int root = comp->root;
         // int index = 0;
@@ -192,7 +196,7 @@ void CompositeToolsWidget::updateSet(){
                     comboBoxModes->addItem(mode);
                 }
             }
-            layout->addWidget(comboBoxModes);            
+            layout->addWidget(comboBoxModes);
             mChildModeComboBox.insert(childName, comboBoxModes);
 
             connect(comboBoxModes, SIGNAL(currentIndexChanged(int)), mModesSignalMapper, SLOT(map()));
@@ -250,38 +254,45 @@ void CompositeToolsWidget::updateSet(){
     mHSliderPlaybackSpeedMultiplier->setValue(psmi);
 }
 
-void CompositeToolsWidget::partNameChanged(const QString& oldPartName, const QString& newPartName){
+void CompositeToolsWidget::partNameChanged(AssetRef part, const QString& newPartName){
     // Update part names in comp
     if (mTarget){
+        Composite* comp = PM()->getComposite(mTarget->compRef());
         for(int i=0;i<mTableWidgetParts->rowCount();i++){
-            const QString& str = mTableWidgetParts->item(i,1)->text();
-            if (str==oldPartName){
+            const QString& childName = comp->children[i];
+            const Composite::Child& child = comp->childrenMap.value(childName);
+            if (child.part==part){
                 mTableWidgetParts->setItem(i,1,new QTableWidgetItem(newPartName));
             }
+
+            // const QString& str = mTableWidgetParts->item(i,1)->text();
+            // if (str==oldPartName){
+            //                mTableWidgetParts->setItem(i,1,new QTableWidgetItem(newPartName));
+            //            }
         }
     }
 }
 
-void CompositeToolsWidget::compNameChanged(const QString& oldCompName, const QString& /*newCompName*/){
-    if (mTarget && mTarget->compName()==oldCompName){
+void CompositeToolsWidget::compNameChanged(AssetRef ref, const QString& /*newCompName*/){
+    if (mTarget && mTarget->compRef()==ref){
         // TODO ?
     }
 }
 
-void CompositeToolsWidget::compositeUpdated(const QString& compName){
-    if (mTarget && mTarget->compName()==compName){        
+void CompositeToolsWidget::compositeUpdated(AssetRef ref){
+    if (mTarget && mTarget->compRef()==ref){
         updateTable();
         updateSet();
     }
 }
 
-QString CompositeToolsWidget::compName() const {
-    return mTarget?mTarget->compName():QString();
+AssetRef CompositeToolsWidget::compRef() const {
+    return mTarget?mTarget->compRef():AssetRef();
 }
 
 void CompositeToolsWidget::targetCompPropertiesChanged(){
     if (mTarget){
-        Composite* comp = PM()->getComposite(mTarget->compName());
+        Composite* comp = PM()->getComposite(mTarget->compRef());
         if (comp){
             int cursorPos = mTextEditProperties->textCursor().position();
             mTextEditProperties->blockSignals(true);
@@ -297,7 +308,7 @@ void CompositeToolsWidget::targetCompPropertiesChanged(){
 
 void CompositeToolsWidget::textPropertiesEdited(){
     if (mTarget){
-        ChangeCompPropertiesCommand* command = new ChangeCompPropertiesCommand(mTarget->compName(), mTextEditProperties->toPlainText());
+        ChangeCompPropertiesCommand* command = new ChangeCompPropertiesCommand(mTarget->compRef(), mTextEditProperties->toPlainText());
         if (command->ok){
             MainWindow::Instance()->undoStack()->push(command);
         }
@@ -312,7 +323,7 @@ void CompositeToolsWidget::addPart(){
         if (mTarget->isPlaying()) mTarget->play(false);
 
         // Add a new child command
-        NewCompositeChildCommand* command = new NewCompositeChildCommand(mTarget->compName());
+        NewCompositeChildCommand* command = new NewCompositeChildCommand(mTarget->compRef());
         if (command->ok){
             MainWindow::Instance()->undoStack()->push(command);
         }
@@ -328,11 +339,11 @@ void CompositeToolsWidget::deletePart(){
 
         // Delete the selected row (if any)
         int row = mTableWidgetParts->currentRow();
-        const Composite* comp = PM()->getComposite(mTarget->compName());
+        const Composite* comp = PM()->getComposite(mTarget->compRef());
         if (comp){
             if (row>=0 && row<comp->children.size()){
                 const QString& childName = comp->children.at(row);
-                DeleteCompositeChildCommand* command = new DeleteCompositeChildCommand(mTarget->compName(), childName);
+                DeleteCompositeChildCommand* command = new DeleteCompositeChildCommand(mTarget->compRef(), childName);
                 if (command->ok){
                     MainWindow::Instance()->undoStack()->push(command);
                 }
@@ -346,7 +357,7 @@ void CompositeToolsWidget::deletePart(){
 
 void CompositeToolsWidget::cellChanged(int row, int /*column*/){
     if (mTarget){
-        const Composite* comp = PM()->getComposite(mTarget->compName());
+        const Composite* comp = PM()->getComposite(mTarget->compRef());
         const QString& childName = mTableWidgetParts->item(row, 0)->text();
         const QString& partName = mTableWidgetParts->item(row, 1)->text();
         bool ok = false;
@@ -357,7 +368,7 @@ void CompositeToolsWidget::cellChanged(int row, int /*column*/){
         int parentPivot = mTableWidgetParts->item(row, 4)->text().toInt(&ok);
         if (!ok) parentPivot = -1;
         if (comp->children.at(row)!=childName){
-            EditCompositeChildNameCommand* command = new EditCompositeChildNameCommand(mTarget->compName(), comp->children.at(row), childName);
+            EditCompositeChildNameCommand* command = new EditCompositeChildNameCommand(mTarget->compRef(), comp->children.at(row), childName);
             if (command->ok){
                 MainWindow::Instance()->undoStack()->push(command);
             }
@@ -367,9 +378,11 @@ void CompositeToolsWidget::cellChanged(int row, int /*column*/){
         }
         else {
             const Composite::Child& child = comp->childrenMap.value(childName);
-            if (child.part!=partName || child.parent!=parent || child.parentPivot!=parentPivot || child.z!=z){
+            Part* part = PM()->getPart(child.part);
+            QString partName = part?part->name:QString();
+            if (partName!=partName || child.parent!=parent || child.parentPivot!=parentPivot || child.z!=z){
                 // Update..
-                EditCompositeChildCommand* command = new EditCompositeChildCommand(mTarget->compName(), childName, partName, z, parent, parentPivot);
+                EditCompositeChildCommand* command = new EditCompositeChildCommand(mTarget->compRef(), childName, partName, z, parent, parentPivot);
                 if (command->ok){
                     MainWindow::Instance()->undoStack()->push(command);
                 }

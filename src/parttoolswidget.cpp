@@ -294,7 +294,7 @@ void PartToolsWidget::colourSelected(QColor colour){
 
 void PartToolsWidget::textPropertiesEdited(){
     if (mTarget){
-        ChangePropertiesCommand* command = new ChangePropertiesCommand(mTarget->partName(), mTextEditProperties->toPlainText());
+        ChangePropertiesCommand* command = new ChangePropertiesCommand(mTarget->partRef(), mTextEditProperties->toPlainText());
         if (command->ok){
             MainWindow::Instance()->undoStack()->push(command);
         }
@@ -553,7 +553,7 @@ void PartToolsWidget::goToFrame(int f){
 void PartToolsWidget::setNumPivots(int p){
     if (mTarget){
         // Create command
-        ChangeNumPivotsCommand* command = new ChangeNumPivotsCommand(mTarget->partName(), mTarget->modeName(), p);
+        ChangeNumPivotsCommand* command = new ChangeNumPivotsCommand(mTarget->partRef(), mTarget->modeName(), p);
         if (command->ok){
             MainWindow::Instance()->undoStack()->push(command);
         }
@@ -675,7 +675,7 @@ void PartToolsWidget::resizeModeDialogAccepted(){
         int offsetx = mResizeModeDialog->mLineEditOffsetX->text().toInt();
         int offsety = mResizeModeDialog->mLineEditOffsetY->text().toInt();
         QString currentMode = mComboBoxModes->currentText();
-        ChangeModeSizeCommand* command = new ChangeModeSizeCommand(mTarget->partName(), currentMode, width, height, offsetx, offsety);
+        ChangeModeSizeCommand* command = new ChangeModeSizeCommand(mTarget->partRef(), currentMode, width, height, offsetx, offsety);
         if (command->ok){
             MainWindow::Instance()->undoStack()->push(command);
         }
@@ -692,7 +692,7 @@ void PartToolsWidget::setModeFPS(){
         bool ok;
         int fps = QInputDialog::getInt(this, "Set FPS", tr("Set FPS:"), mPushButtonModeFPS->text().toInt(),1,600,1,&ok);
         if (ok){
-            ChangeModeFPSCommand* command = new ChangeModeFPSCommand(mTarget->partName(), currentMode, fps);
+            ChangeModeFPSCommand* command = new ChangeModeFPSCommand(mTarget->partRef(), currentMode, fps);
             if (command->ok){
                 MainWindow::Instance()->undoStack()->push(command);
             }

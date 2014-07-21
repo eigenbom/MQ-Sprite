@@ -36,7 +36,7 @@ class CompositeWidget : public QMdiSubWindow
     Q_OBJECT
     friend class CompositeView;
 public:
-    explicit CompositeWidget(const QString& compName, QWidget *parent = 0);
+    explicit CompositeWidget(AssetRef comp, QWidget *parent = 0);
     void updateCompFrames(); // loads the comp frames etc
     void updateCompFramesMinorChanges();
 
@@ -45,14 +45,14 @@ public:
     void updateChildRecursively(int index, const QPointF& parentPivotPos);
 
     // part updates..
-    void partNameChanged(const QString& oldPartName, const QString& newPartName);
-    void partFrameUpdated(const QString& part, const QString& mode, int frame);
-    void partFramesUpdated(const QString& part, const QString& mode);
-    void partNumPivotsUpdated(const QString& part, const QString& mode);
+    void partNameChanged(AssetRef part, const QString& newPartName);
+    void partFrameUpdated(AssetRef part, const QString& mode, int frame);
+    void partFramesUpdated(AssetRef part, const QString& mode);
+    void partNumPivotsUpdated(AssetRef part, const QString& mode);
 
     // TODO: comp updates
-    void compNameChanged(const QString& name);
-    void compPropertiesChanged(const QString& name);
+    void compNameChanged(AssetRef ref);
+    void compPropertiesChanged(AssetRef ref);
     // void compChanged(...) -> updateCompFrames()
 
     void setChildMode(const QString& child, const QString& mode);
@@ -63,6 +63,7 @@ public:
     void updateDropShadow();
 
     // query
+    AssetRef compRef() const {return mCompRef;}
     QString compName() const {return mCompName;}
     int zoom() const {return (int)mZoom;}
 
@@ -107,6 +108,7 @@ protected:
 
 
 protected:
+    AssetRef mCompRef;
     QString mCompName;
     Composite* mComp;
     CompositeView* mCompView;
@@ -123,7 +125,7 @@ protected:
         bool valid; // Is this child valid?
 
         // Part stuff
-        QString part;
+        AssetRef part;
         struct Mode {
             int width, height;
             int numFrames;

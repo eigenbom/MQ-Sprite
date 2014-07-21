@@ -694,16 +694,14 @@ void PartWidget::partViewMouseReleaseEvent(QMouseEvent *event){
                 qDebug() << "Can't copy image region";
             }
             else {
-                /*
-                QMimeData* mimeData = new QMimeData();
-                QByteArray data;
-                QBuffer buffer(&data);
-                buffer.open(QIODevice::WriteOnly);
-                subImg.save(&buffer, "PNG");
-                buffer.close();
-                mimeData->setData("application/x-qt-windows-mime;value=\"PNG\"", data);
-                QGuiApplication::clipboard()->setMimeData( mimeData );
-                */
+//                QMimeData* mimeData = new QMimeData();
+//                QByteArray data;
+//                QBuffer buffer(&data);
+//                buffer.open(QIODevice::WriteOnly);
+//                subImg.save(&buffer, "PNG");
+//                buffer.close();
+//                mimeData->setData("application/x-qt-windows-mime;value=\"PNG\"", data);
+//                QGuiApplication::clipboard()->setMimeData( mimeData );
 
                 // NB: This doesn't work with GIMP for some reason
                 QGuiApplication::clipboard()->setImage(subImg);
@@ -827,7 +825,7 @@ void PartWidget::partViewKeyPressEvent(QKeyEvent *event){
         QPoint p3 = (mNumPivots>2)?mPivots[2].at(mFrameNumber):QPoint(0,0);
         QPoint p4 = (mNumPivots>3)?mPivots[3].at(mFrameNumber):QPoint(0,0);
 
-        UpdateAnchorAndPivotsCommand* command = new UpdateAnchorAndPivotsCommand(mPartName, mModeName, mFrameNumber, a, p1, p2, p3, p4);
+        UpdateAnchorAndPivotsCommand* command = new UpdateAnchorAndPivotsCommand(mPartRef, mModeName, mFrameNumber, a, p1, p2, p3, p4);
         if (command->ok){
             MainWindow::Instance()->undoStack()->push(command);
         }

@@ -18,9 +18,9 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
-CompositeWidget::CompositeWidget(const QString& compName, QWidget *parent) :
+CompositeWidget::CompositeWidget(AssetRef ref, QWidget *parent) :
     QMdiSubWindow(parent),
-    mCompName(compName),
+    mCompRef(ref),
     mComp(nullptr),
     mCompView(nullptr),
     mZoom(4),
@@ -49,6 +49,10 @@ void CompositeWidget::updateCompFrames(){
     // Load all frames of all modes of all parts
     //////////////////////
 
+    Composite* comp = PM()->getComposite(mCompRef);
+    Q_ASSERT(comp);
+    mCompName = comp->name;
+
     setWindowTitle(mCompName);
 
     // Delete all existing graphics items
@@ -76,7 +80,7 @@ void CompositeWidget::updateCompFrames(){
     // mCompView->scene()->addRect(-.25,-.25,.5,.5,QPen(Qt::NoPen),QBrush(QColor(0,0,0,50)))->setZValue(1);
 
     // Load all children
-    Composite* comp = PM()->getComposite(mCompName);
+
     QRectF fullBounds;
     if (comp != nullptr){
         mChildren = comp->children;
@@ -203,7 +207,7 @@ void CompositeWidget::updateCompFramesMinorChanges(){
     mRectItems.clear();
 
     // Update all children
-    Composite* comp = PM()->getComposite(mCompName);
+    Composite* comp = PM()->getComposite(mCompRef);
     QRectF fullBounds;
     if (comp){
         mRoot = comp->root;
@@ -217,7 +221,7 @@ void CompositeWidget::updateCompFramesMinorChanges(){
             // Load part
             //////////////////////////////////
             bool changePart = false;
-            if (cd.part!=child.part){
+            if (cd.part != child.part){
                 cd.part = child.part;
                 changePart = true;
 
@@ -490,26 +494,26 @@ void CompositeWidget::updatePropertiesOverlays(){
     }
 }
 
-void CompositeWidget::partNameChanged(const QString& oldPartName, const QString& newPartName){
+void CompositeWidget::partNameChanged(AssetRef part, const QString& newPartName){
     // Check for any children with this name...
     QMutableMapIterator<QString,ChildDriver> it(mChildrenMap);
     while (it.hasNext()){
         it.next();
         ChildDriver& cd = it.value();
-        if (cd.part==oldPartName){
+        // if (cd.part==part){
             // qDebug() << cd.part << "->" << newPartName;
-            cd.part = newPartName;
-        }
+        //    cd.part = newPartName;
+        // }
     }
 }
 
-void CompositeWidget::partFrameUpdated(const QString& part, const QString& /*mode*/, int /*frame*/){
+void CompositeWidget::partFrameUpdated(AssetRef part, const QString& /*mode*/, int /*frame*/){
     QMutableMapIterator<QString,ChildDriver> it(mChildrenMap);
     bool bingo = false;
     while (it.hasNext()){
         it.next();
         ChildDriver& cd = it.value();
-        if (cd.part==part){
+        if (cd.part == part){
             bingo = true;
             break;
         }
@@ -518,13 +522,13 @@ void CompositeWidget::partFrameUpdated(const QString& part, const QString& /*mod
     if (bingo) updateCompFramesMinorChanges();
 }
 
-void CompositeWidget::partFramesUpdated(const QString& part, const QString&/* mode*/){
+void CompositeWidget::partFramesUpdated(AssetRef part, const QString&/* mode*/){
     QMutableMapIterator<QString,ChildDriver> it(mChildrenMap);
     bool bingo = false;
     while (it.hasNext()){
         it.next();
         ChildDriver& cd = it.value();
-        if (cd.part==part){
+        if (cd.part == part){
             bingo = true;
             break;
         }
@@ -532,13 +536,13 @@ void CompositeWidget::partFramesUpdated(const QString& part, const QString&/* mo
     if (bingo) updateCompFramesMinorChanges();
 }
 
-void CompositeWidget::partNumPivotsUpdated(const QString& part, const QString& /*mode*/){
+void CompositeWidget::partNumPivotsUpdated(AssetRef part, const QString& /*mode*/){
     QMutableMapIterator<QString,ChildDriver> it(mChildrenMap);
     bool bingo = false;
     while (it.hasNext()){
         it.next();
         ChildDriver& cd = it.value();
-        if (cd.part==part){
+        if (cd.part == part){
             bingo = true;
             break;
         }
@@ -554,15 +558,18 @@ void CompositeWidget::setZoom(int z){
     mCompView->update();
 }
 
-void CompositeWidget::compNameChanged(const QString& name){
-    mCompName = name;
-    setWindowTitle(mCompName);
+void CompositeWidget::compNameChanged(AssetRef ref){
+    if (ref==mCompRef){
+        Composite* comp = PM()->getComposite(ref);
+        mCompName = comp->name;
+        setWindowTitle(mCompName);
+    }
 }
 
-void CompositeWidget::compPropertiesChanged(const QString& name){
-    if (name==mCompName){
+void CompositeWidget::compPropertiesChanged(AssetRef ref){
+    if (ref==mCompRef){
         // update ..
-        Composite* comp = PM()->getComposite(mCompName);
+        Composite* comp = PM()->getComposite(mCompRef);
         mProperties = comp->properties;
         updatePropertiesOverlays();
         mCompView->update();

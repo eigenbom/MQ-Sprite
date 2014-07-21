@@ -260,20 +260,17 @@ private:
 
 
 
-/////////////////////////////////////////////////////////////
-// XXX: Stubbed these out for now...
-/////////////////////////////////////////////////////////////
-
 
 
 class UpdateAnchorAndPivotsCommand: public Command {
 public:
-    UpdateAnchorAndPivotsCommand(QString partName, QString modeName, int index, QPoint anchor, QPoint p1, QPoint p2, QPoint p3, QPoint p4){}
-    void undo(){}
-    void redo(){}
+    UpdateAnchorAndPivotsCommand(AssetRef part, QString modeName, int index, QPoint anchor, QPoint p1, QPoint p2, QPoint p3, QPoint p4);
+    void undo();
+    void redo();
 
 private:
-    QString mPartName, mModeName;
+    AssetRef mPart;
+    QString mModeName;
     int mIndex;
     QPoint mAnchor, mPivots[MAX_PIVOTS];
     QPoint mOldAnchor, mOldPivots[MAX_PIVOTS];
@@ -281,12 +278,13 @@ private:
 
 class ChangeNumPivotsCommand: public Command {
 public:
-    ChangeNumPivotsCommand(QString partName, QString modeName, int numPivots){}
-    void undo(){}
-    void redo(){}
+    ChangeNumPivotsCommand(AssetRef part, QString modeName, int numPivots);
+    void undo();
+    void redo();
 
 private:
-    QString mPartName, mModeName;
+    AssetRef mPart;
+    QString mModeName;
     int mIndex;
     int mNumPivots;
     int mOldNumPivots;
@@ -294,12 +292,13 @@ private:
 
 class ChangeModeSizeCommand: public Command {
 public:
-    ChangeModeSizeCommand(QString partName, QString modeName, int width, int height, int offsetX, int offsetY){}
-    void undo(){}
-    void redo(){}
+    ChangeModeSizeCommand(AssetRef part, QString modeName, int width, int height, int offsetX, int offsetY);
+    void undo();
+    void redo();
 
 private:
-    QString mPartName, mModeName;
+    AssetRef mPart;
+    QString mModeName;
     int mOldWidth, mOldHeight;
     int mWidth, mHeight, mOffsetX, mOffsetY;
     Part::Mode mOldMode;
@@ -307,24 +306,29 @@ private:
 
 class ChangeModeFPSCommand: public Command {
 public:
-    ChangeModeFPSCommand(QString partName, QString modeName, int fps){}
-    void undo(){}
-    void redo(){}
+    ChangeModeFPSCommand(AssetRef part, QString modeName, int fps);
+    void undo();
+    void redo();
 
 private:
-    QString mPartName, mModeName;
+    AssetRef mPart;
+    QString mModeName;
     int mOldFPS;
     int mFPS;
 };
 
+
+
+
 class EditCompositeChildCommand: public Command {
 public:
-    EditCompositeChildCommand(const QString& compName, const QString& childName, const QString& newPartName, int newZ, int newParent, int newParentPivot){}
-    void undo(){}
-    void redo(){}
+    EditCompositeChildCommand(AssetRef comp, const QString& childName, const QString& newPartName, int newZ, int newParent, int newParentPivot);
+    void undo();
+    void redo();
 
 private:
-    QString mCompName, mChildName;
+    AssetRef mComp;
+    QString mChildName;
     QString mOldPartName, mNewPartName;    
     int mOldParent, mNewParent;
     int mOldParentPivot, mNewParentPivot;
@@ -334,56 +338,59 @@ private:
 
 class NewCompositeChildCommand: public Command {
 public:
-    NewCompositeChildCommand(const QString& compName){}
-    void redo(){}
-    void undo(){}
+    NewCompositeChildCommand(AssetRef comp);
+    void redo();
+    void undo();
 
 private:
-    QString mCompName, mChildName;
+    AssetRef mComp;
+    QString mChildName;
 };
 
 class EditCompositeChildNameCommand: public Command {
 public:
-    EditCompositeChildNameCommand(const QString& compName, const QString& child, const QString& newChildName){}
-    void redo(){}
-    void undo(){}
+    EditCompositeChildNameCommand(AssetRef comp, const QString& child, const QString& newChildName);
+    void redo();
+    void undo();
 
 private:
-    QString mCompName, mOldChildName, mNewChildName;
+    AssetRef mComp;
+    QString mOldChildName, mNewChildName;
 };
 
 class DeleteCompositeChildCommand: public Command {
 public:
-    DeleteCompositeChildCommand(const QString& compName, const QString& childName){}
-    void redo(){}
-    void undo(){}
+    DeleteCompositeChildCommand(AssetRef comp, const QString& childName);
+    void redo();
+    void undo();
 
 private:
-    QString mCompName, mChildName;
+    AssetRef mComp;
+    QString mChildName;
     int mChildIndex;
     Composite mCompCopy;
 };
 
 class ChangePropertiesCommand: public Command {
 public:
-    ChangePropertiesCommand(QString partName, QString properties){}
-    void undo(){}
-    void redo(){}
+    ChangePropertiesCommand(AssetRef part, QString properties);
+    void undo();
+    void redo();
 
 private:
-    QString mPartName;
+    AssetRef mPart;
     QString mProperties;
     QString mOldProperties;
 };
 
 class ChangeCompPropertiesCommand: public Command {
 public:
-    ChangeCompPropertiesCommand(QString compName, QString properties){}
-    void undo(){}
-    void redo(){}
+    ChangeCompPropertiesCommand(AssetRef comp, QString properties);
+    void undo();
+    void redo();
 
 private:
-    QString mCompName;
+    AssetRef mComp;
     QString mProperties;
     QString mOldProperties;
 };

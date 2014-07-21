@@ -143,16 +143,17 @@ void RenamePartCommand::undo(){
     p->name = mOldName;
 
     // update comps too...
+    /*
     foreach(Composite* comp, PM()->composites.values()){        
         QMutableMapIterator<QString,Composite::Child> it(comp->childrenMap);
         while (it.hasNext()){
             it.next();
             Composite::Child& ch = it.value();
-            if (ch.part==mNewName){
+            if (ch.part == mNewName){
                 ch.part = mOldName;
             }
         }
-    }
+    }*/
 
     MainWindow::Instance()->partRenamed(mRef, mOldName);
 }
@@ -167,6 +168,7 @@ void RenamePartCommand::redo(){
     p->name = mNewName;
 
     // update comps too...
+    /*
     foreach(Composite* comp, PM()->composites.values()){
         QMutableMapIterator<QString,Composite::Child> it(comp->childrenMap);
         while (it.hasNext()){
@@ -176,7 +178,7 @@ void RenamePartCommand::redo(){
                 ch.part = mNewName;
             }
         }
-    }
+    }*/
 
     MainWindow::Instance()->partRenamed(mRef, mNewName);
 }
@@ -189,7 +191,7 @@ NewCompositeCommand::NewCompositeCommand() {
         mName = (compSuffix==0)?QString("comp"):(QObject::tr("comp_") + QString::number(compSuffix));
         compSuffix++;
     }
-    while (PM()->hasComposite(mName));
+    while (PM()->findCompositeByName(mName)!=nullptr);
     mRef = PM()->createAssetRef();
     ok = true;
 }
@@ -209,7 +211,7 @@ void NewCompositeCommand::redo()
     comp->ref = mRef;
     PM()->composites.insert(comp->ref, comp);
     MainWindow::Instance()->partListChanged();
-    MainWindow::Instance()->openCompositeWidget(mName);
+    MainWindow::Instance()->openCompositeWidget(mRef);
 }
 
 CopyCompositeCommand::CopyCompositeCommand(AssetRef ref){
@@ -221,7 +223,7 @@ CopyCompositeCommand::CopyCompositeCommand(AssetRef ref){
         do {
             mNewCompositeName = comp->name + "_" + QString::number(copyNumber++);
         }
-        while (PM()->hasComposite(mNewCompositeName));
+        while (PM()->findCompositeByName(mNewCompositeName)!=nullptr);
     }
 }
 
@@ -277,7 +279,7 @@ RenameCompositeCommand::RenameCompositeCommand(AssetRef ref, QString newName):mR
             mNewName = (copyNumber==0)?newName:(newName + "_" + QString::number(copyNumber));
             copyNumber++;
         }
-        while (PM()->hasComposite(mNewName));
+        while (PM()->findCompositeByName(mNewName)!=nullptr);
     }
 }
 
@@ -285,14 +287,14 @@ void RenameCompositeCommand::undo(){
     Composite* p = PM()->getComposite(mRef);
     p->name = mOldName;
 
-    MainWindow::Instance()->compositeRenamed(mNewName, mOldName);
+    MainWindow::Instance()->compositeRenamed(mRef, mOldName);
 }
 
 void RenameCompositeCommand::redo(){
     Composite* p = PM()->getComposite(mRef);
     p->name = mNewName;
 
-    MainWindow::Instance()->compositeRenamed(mOldName, mNewName);
+    MainWindow::Instance()->compositeRenamed(mRef, mNewName);
 }
 
 
@@ -738,38 +740,35 @@ void DeleteFrameCommand::redo(){
 }
 
 
-/*
- *
- *
-UpdateAnchorAndPivotsCommand::UpdateAnchorAndPivotsCommand(QString partName, QString modeName, int index, QPoint anchor, QPoint p1, QPoint p2, QPoint p3, QPoint p4)
-    :mPartName(partName), mModeName(modeName), mIndex(index), mAnchor(anchor) {
+
+
+
+UpdateAnchorAndPivotsCommand::UpdateAnchorAndPivotsCommand(AssetRef part, QString modeName, int index, QPoint anchor, QPoint p1, QPoint p2, QPoint p3, QPoint p4)
+    :mPart(part), mModeName(modeName), mIndex(index), mAnchor(anchor) {
     mPivots[0] = p1;
     mPivots[1] = p2;
     mPivots[2] = p3;
     mPivots[3] = p4;
 
-    ok = PM()->parts.contains(partName) &&
-            PM()->parts[partName]->modes.contains(mModeName) &&
-            PM()->parts[partName]->modes[mModeName].numFrames>mIndex &&
-            PM()->parts[partName]->modes[mModeName].images.at(mIndex)!=nullptr;
+    Part* p = PM()->getPart(mPart);
+    ok = p &&
+            p->modes.contains(mModeName) &&
+            p->modes[mModeName].numFrames>mIndex &&
+            p->modes[mModeName].images.at(mIndex)!=nullptr;
 }
 
 void UpdateAnchorAndPivotsCommand::undo(){
-    // qDebug() << "UpdateAnchorAndPivotsCommand::undo()";
-    Part* part = PM()->parts[mPartName];
+    Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     mode.anchor.replace(mIndex, mOldAnchor);
     for(int i=0;i<mode.numPivots;i++){
         mode.pivots[i].replace(mIndex, mOldPivots[i]);
     }
-
-    MainWindow::Instance()->partFrameUpdated(mPartName, mModeName, mIndex);
+    MainWindow::Instance()->partFrameUpdated(mPart, mModeName, mIndex);
 }
 
 void UpdateAnchorAndPivotsCommand::redo(){
-    // qDebug() << "UpdateAnchorAndPivotsCommand::redo()";
-
-    Part* part = PM()->parts[mPartName];
+    Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     mOldAnchor = mode.anchor.at(mIndex);
     mode.anchor.replace(mIndex, mAnchor);
@@ -778,41 +777,41 @@ void UpdateAnchorAndPivotsCommand::redo(){
         mode.pivots[i].replace(mIndex, mPivots[i]);
     }
 
-    MainWindow::Instance()->partFrameUpdated(mPartName, mModeName, mIndex);
+    MainWindow::Instance()->partFrameUpdated(mPart, mModeName, mIndex);
 }
 
-ChangeNumPivotsCommand::ChangeNumPivotsCommand(QString partName, QString modeName, int numPivots)
-    :mPartName(partName), mModeName(modeName), mNumPivots(numPivots){
-    ok = PM()->parts.contains(partName) &&
-         PM()->parts[partName]->modes.contains(modeName);
+ChangeNumPivotsCommand::ChangeNumPivotsCommand(AssetRef part, QString modeName, int numPivots)
+    :mPart(part), mModeName(modeName), mNumPivots(numPivots){
+    ok = PM()->hasPart(part) &&
+         PM()->getPart(part)->modes.contains(modeName);
 }
 
 void ChangeNumPivotsCommand::undo(){
-    Part* part = PM()->parts[mPartName];
+    Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     mode.numPivots = mOldNumPivots;
 
-    MainWindow::Instance()->partNumPivotsUpdated(mPartName, mModeName);
+    MainWindow::Instance()->partNumPivotsUpdated(mPart, mModeName);
 }
 
 void ChangeNumPivotsCommand::redo(){
-    Part* part = PM()->parts[mPartName];
+    Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     mOldNumPivots = mode.numPivots;
     mode.numPivots = mNumPivots;
 
-    MainWindow::Instance()->partNumPivotsUpdated(mPartName, mModeName);
+    MainWindow::Instance()->partNumPivotsUpdated(mPart, mModeName);
 }
 
-ChangeModeSizeCommand::ChangeModeSizeCommand(QString partName, QString modeName, int width, int height, int offsetx, int offsety):
-    mPartName(partName), mModeName(modeName), mWidth(width), mHeight(height), mOffsetX(offsetx), mOffsetY(offsety){
-    ok = PM()->parts.contains(partName) &&
-         PM()->parts[partName]->modes.contains(modeName);
+ChangeModeSizeCommand::ChangeModeSizeCommand(AssetRef part, QString modeName, int width, int height, int offsetx, int offsety)
+   :mPart(part), mModeName(modeName), mWidth(width), mHeight(height), mOffsetX(offsetx), mOffsetY(offsety){
+    ok = PM()->hasPart(mPart) &&
+         PM()->getPart(mPart)->modes.contains(modeName);
     ok = ok && mWidth>0 && mHeight>0;
 }
 
 void ChangeModeSizeCommand::undo(){
-    Part* part = PM()->parts[mPartName];
+    Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
 
     for(int k=0;k<mode.numFrames;k++){
@@ -822,16 +821,14 @@ void ChangeModeSizeCommand::undo(){
 
     part->modes[mModeName] = mOldMode;
 
-     MainWindow::Instance()->partModesChanged(mPartName);
+     MainWindow::Instance()->partModesChanged(mPart);
 }
 
 void ChangeModeSizeCommand::redo(){
-    Part* part = PM()->parts[mPartName];
+    Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     mOldWidth = mode.width;
     mOldHeight = mode.height;
-
-    qDebug() << "Making copy of old mode";
 
     // make copy of old mode
     mOldMode = mode;
@@ -843,13 +840,10 @@ void ChangeModeSizeCommand::redo(){
         mOldMode.images.push_back(mode.images.at(k)); // this ref will be removed below anyway
     }
 
-    qDebug() << "Modify mode to new dimensions";
     // Modify mode to new dimensions
     mode.width = mWidth;
     mode.height = mHeight;
     for(int k=0;k<mode.numFrames;k++){
-        qDebug() << "Frame " << k;
-
         QImage* newImage = new QImage(mWidth, mHeight, QImage::Format_ARGB32);
         newImage->fill(0x00FFFFFF);
         QPainter painter(newImage);
@@ -863,63 +857,58 @@ void ChangeModeSizeCommand::redo(){
         }
     }
 
-    qDebug() << "Done";
-
     // mOldWidth, mOldHeight
     // save mOldMode
 
-    MainWindow::Instance()->partModesChanged(mPartName);
+    MainWindow::Instance()->partModesChanged(mPart);
 }
 
-ChangeModeFPSCommand::ChangeModeFPSCommand(QString partName, QString modeName, int fps)
-    :mPartName(partName), mModeName(modeName), mFPS(fps){
-    ok = PM()->parts.contains(partName) &&
-         PM()->parts[partName]->modes.contains(modeName);
+ChangeModeFPSCommand::ChangeModeFPSCommand(AssetRef part, QString modeName, int fps)
+    :mPart(part), mModeName(modeName), mFPS(fps){
+    ok = PM()->hasPart(mPart) &&
+         PM()->getPart(mPart)->modes.contains(modeName);
     ok = ok && mFPS>0;
 }
 
 void ChangeModeFPSCommand::undo(){
-    Part* part = PM()->parts[mPartName];
+    Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     mode.framesPerSecond = mOldFPS;
 
-    MainWindow::Instance()->partModesChanged(mPartName);
+    MainWindow::Instance()->partModesChanged(mPart);
 }
 
 void ChangeModeFPSCommand::redo(){
-    Part* part = PM()->parts[mPartName];
+    Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     mOldFPS = mode.framesPerSecond;
     mode.framesPerSecond = mFPS;
 
-    MainWindow::Instance()->partModesChanged(mPartName);
+    MainWindow::Instance()->partModesChanged(mPart);
 }
 
-EditCompositeChildCommand::EditCompositeChildCommand(const QString& compName, const QString& childName, const QString& newPartName, int newZ, int newParent, int newParentPivot)
-    :mCompName(compName), mChildName(childName), mNewPartName(newPartName), mNewParent(newParent), mNewParentPivot(newParentPivot), mNewZ(newZ)
-{
-    if (PM()->composites.contains(mCompName)){
-        Composite* comp = PM()->composites.value(mCompName);
-        if (comp->children.contains(mChildName) && comp->childrenMap.contains(mChildName)){
-            ok = true;
-        }
-        else {
-            ok = false;
-        }
-    }
-    else {
-        ok = false;
-    }
 
+
+
+
+
+
+
+EditCompositeChildCommand::EditCompositeChildCommand(AssetRef comp, const QString& childName, const QString& newPartName, int newZ, int newParent, int newParentPivot)
+    :mComp(comp), mChildName(childName), mNewPartName(newPartName), mNewParent(newParent), mNewParentPivot(newParentPivot), mNewZ(newZ)
+{
+    ok = PM()->hasComposite(mComp) && PM()->getComposite(mComp)->childrenMap.contains(mChildName);
 }
 
 void EditCompositeChildCommand::undo(){
-    Composite* comp = PM()->composites.value(mCompName);
+    Composite* comp = PM()->getComposite(mComp);
     Composite::Child& child = comp->childrenMap[mChildName];
 
     child.parent = mOldParent;
     child.parentPivot = mOldParentPivot;
-    child.part = mOldPartName;
+
+    Part* part = PM()->getPart(mOldPartName);
+    child.part = part->ref;
     child.z = mOldZ;
 
     // qDebug() << "EditCompositeChildCommand: Updating child: " << mChildName << child.part << mNewZ << child.parent << child.parentPivot;
@@ -951,20 +940,26 @@ void EditCompositeChildCommand::undo(){
     comp->root = mOldRoot;
 
     // Update comp..
-    MainWindow::Instance()->compositeUpdatedMinorChanges(mCompName);
+    MainWindow::Instance()->compositeUpdatedMinorChanges(mComp);
 }
 
 void EditCompositeChildCommand::redo(){
-    Composite* comp = PM()->composites.value(mCompName);
+    Composite* comp = PM()->getComposite(mComp);
     Composite::Child& child = comp->childrenMap[mChildName];
-    mOldPartName = child.part;
+
+    Part* part = PM()->getPart(child.part);
+    child.part = part?part->ref:AssetRef();
+
+    mOldPartName = part?part->name:"";
     mOldZ = child.z;
     mOldParent = child.parent;
     mOldParentPivot = child.parentPivot;
 
     child.parent = std::max(-1, mNewParent);
     child.parentPivot = std::max(-1, mNewParentPivot);
-    child.part = mNewPartName;
+
+    Part* newPart = PM()->getPart(mNewPartName);
+    child.part = newPart?newPart->ref:AssetRef();
     child.z = mNewZ;
 
     // qDebug() << "EditCompositeChildCommand: Updating child: " << mChildName << child.part << mNewZ << child.parent << child.parentPivot;
@@ -1005,110 +1000,98 @@ void EditCompositeChildCommand::redo(){
     }
 
     // Update comp..
-    MainWindow::Instance()->compositeUpdatedMinorChanges(mCompName);
+    MainWindow::Instance()->compositeUpdatedMinorChanges(mComp);
 }
 
-NewCompositeChildCommand::NewCompositeChildCommand(const QString& compName):
-    mCompName(compName){
-    ok = PM()->composites.contains(mCompName);
+NewCompositeChildCommand::NewCompositeChildCommand(AssetRef comp):
+   mComp(comp){
+    ok = PM()->hasComposite(mComp);
 
     if (ok){
-        Composite* comp = PM()->composites[mCompName];
+        Composite* comp = PM()->getComposite(mComp);
 
         // Find a unique name..
-        int childIndex = 0;
-        mChildName = QString("c") + QString::number(childIndex++);
-        while (true){
-            if (!comp->children.contains(mChildName)) break;
-            else mChildName = QString("c") + QString::number(childIndex++);
+        int suffix = 0;
+        do {
+            mChildName = QString("c") + QString("%1").arg(suffix, 3, 10, QChar('0'));
+            suffix++;
         }
+        while (comp->children.contains(mChildName));
     }
 }
 
 void NewCompositeChildCommand::undo(){
     // Delete the child..
-    Composite* comp = PM()->composites[mCompName];
+    Composite* comp = PM()->getComposite(mComp);
     comp->children.removeAll(mChildName);
     comp->childrenMap.remove(mChildName);
 
     // Update widgets
-    MainWindow::Instance()->compositeUpdated(mCompName);
+    MainWindow::Instance()->compositeUpdated(mComp);
 }
 
 void NewCompositeChildCommand::redo(){
     // Add a new blank child..
-    Composite* comp = PM()->composites[mCompName];
+    Composite* comp = PM()->getComposite(mComp);
     comp->children.append(mChildName);
 
     Composite::Child child;
     child.index = comp->children.count()-1;
     child.parent = -1;
     child.parentPivot = -1;
-    child.part = ""; // blank
+    child.part = AssetRef(); // blank
     child.z = 0;
     comp->childrenMap.insert(mChildName, child);
 
     // Update widgets
-    MainWindow::Instance()->compositeUpdated(mCompName);
+    MainWindow::Instance()->compositeUpdated(mComp);
 }
 
-EditCompositeChildNameCommand::EditCompositeChildNameCommand(const QString& compName, const QString& child, const QString& newChildName)
-    :mCompName(compName), mOldChildName(child), mNewChildName(newChildName){
-    ok = PM()->composites.contains(mCompName);
+EditCompositeChildNameCommand::EditCompositeChildNameCommand(AssetRef ref, const QString& child, const QString& newChildName)
+    :mComp(ref), mOldChildName(child), mNewChildName(newChildName){
+    Composite* comp = PM()->getComposite(mComp);
+    ok = comp && comp->children.contains(child);
     if (ok){
-        Composite* comp = PM()->composites[mCompName];
-        if (comp->children.contains(child)){
-            if (comp->children.contains(mNewChildName)){
-                // Find a unique variant
-                int childIndex = 0;
-                mNewChildName = newChildName + QString::number(childIndex++);
-                while (true){
-                    if (!comp->children.contains(mNewChildName)) break;
-                    else mNewChildName = newChildName + QString::number(childIndex++);
-                }
-            }
-        }
-        else {
-            ok = false;
+        // Find a unique child name
+        int childIndex = 0;
+        while (comp->children.contains(mNewChildName)){
+            mNewChildName = newChildName + QString::number(childIndex++);
         }
     }
 }
 
 void EditCompositeChildNameCommand::undo(){
     // Unchange the child name
-    Composite* comp = PM()->composites[mCompName];
+    Composite* comp = PM()->getComposite(mComp);
     comp->children.replace(comp->children.indexOf(mNewChildName), mOldChildName);
     comp->childrenMap.insert(mOldChildName, comp->childrenMap.take(mNewChildName));
-    MainWindow::Instance()->compositeUpdated(mCompName);
+    MainWindow::Instance()->compositeUpdated(mComp);
 }
 
 void EditCompositeChildNameCommand::redo(){
     // Change the child name
-    Composite* comp = PM()->composites[mCompName];
+    Composite* comp = PM()->getComposite(mComp);
     comp->children.replace(comp->children.indexOf(mOldChildName), mNewChildName);
     comp->childrenMap.insert(mNewChildName, comp->childrenMap.take(mOldChildName));
-    MainWindow::Instance()->compositeUpdated(mCompName);
+    MainWindow::Instance()->compositeUpdated(mComp);
 }
 
-DeleteCompositeChildCommand::DeleteCompositeChildCommand(const QString& compName, const QString& childName)
-    :mCompName(compName), mChildName(childName){
+DeleteCompositeChildCommand::DeleteCompositeChildCommand(AssetRef ref, const QString& childName)
+    :mComp(ref), mChildName(childName){
 
-    ok = PM()->composites.contains(mCompName);
+    Composite* comp = PM()->getComposite(mComp);
+    ok = comp && comp->children.contains(childName) && comp->childrenMap.contains(childName);
     if (ok){
-        Composite* comp = PM()->composites[mCompName];
-        ok = comp->children.contains(childName) && comp->childrenMap.contains(childName);
-        if (ok){
-            mChildIndex = comp->children.indexOf(childName);
-            ok = (mChildIndex>=0);
-        }
+        mChildIndex = comp->children.indexOf(childName);
+        ok = (mChildIndex>=0);
     }
 }
 
 void DeleteCompositeChildCommand::undo(){
     Composite* comp = new Composite(mCompCopy);
-    delete PM()->composites.take(mCompName);
-    PM()->composites.insert(mCompName, comp);
-    MainWindow::Instance()->compositeUpdated(mCompName);
+    delete PM()->composites.take(mComp);
+    PM()->composites.insert(mComp, comp);
+    MainWindow::Instance()->compositeUpdated(mComp);
 }
 
 int FixIndex(int i, int ci){
@@ -1118,9 +1101,8 @@ int FixIndex(int i, int ci){
 }
 
 void DeleteCompositeChildCommand::redo(){
-    Composite* comp = PM()->composites[mCompName];
+    Composite* comp = PM()->getComposite(mComp);
     mCompCopy = *comp; // make a copy so we can undo it
-
 
     // We need to adjust all the index references
     // Let ci = mChildIndex
@@ -1165,48 +1147,46 @@ void DeleteCompositeChildCommand::redo(){
         comp->root--;
     }
 
-    MainWindow::Instance()->compositeUpdated(mCompName);
+    MainWindow::Instance()->compositeUpdated(mComp);
 }
 
 
-ChangePropertiesCommand::ChangePropertiesCommand(QString partName, QString properties)
-    :mPartName(partName), mProperties(properties){
-    ok = PM()->parts.contains(partName);
+ChangePropertiesCommand::ChangePropertiesCommand(AssetRef part, QString properties)
+    :mPart(part), mProperties(properties){
+    ok = PM()->hasPart(mPart);
 }
 
 void ChangePropertiesCommand::undo(){
-    Part* part = PM()->parts[mPartName];
+    Part* part = PM()->getPart(mPart);
     part->properties = mOldProperties;
-
-    MainWindow::Instance()->partPropertiesUpdated(mPartName);
+    MainWindow::Instance()->partPropertiesUpdated(mPart);
 }
 
 void ChangePropertiesCommand::redo(){
-    Part* part = PM()->parts[mPartName];
+    Part* part = PM()->getPart(mPart);
     mOldProperties = part->properties;
     part->properties = mProperties;
 
-    MainWindow::Instance()->partPropertiesUpdated(mPartName);
+    MainWindow::Instance()->partPropertiesUpdated(mPart);
 }
 
-ChangeCompPropertiesCommand::ChangeCompPropertiesCommand(QString compName, QString properties)
-    :mCompName(compName), mProperties(properties){
-    ok = PM()->composites.contains(compName);
+ChangeCompPropertiesCommand::ChangeCompPropertiesCommand(AssetRef comp, QString properties)
+    :mComp(comp), mProperties(properties){
+    ok = PM()->hasComposite(mComp);
 }
 
 void ChangeCompPropertiesCommand::undo(){
-    Composite* comp = PM()->composites[mCompName];
+    Composite* comp = PM()->getComposite(mComp);
     comp->properties = mOldProperties;
 
-    MainWindow::Instance()->compPropertiesUpdated(mCompName);
+    MainWindow::Instance()->compPropertiesUpdated(mComp);
 }
 
 void ChangeCompPropertiesCommand::redo(){
-    Composite* comp = PM()->composites[mCompName];
+    Composite* comp = PM()->getComposite(mComp);
     mOldProperties = comp->properties;
     comp->properties = mProperties;
 
-    MainWindow::Instance()->compPropertiesUpdated(mCompName);
+    MainWindow::Instance()->compPropertiesUpdated(mComp);
 }
 
-*/
