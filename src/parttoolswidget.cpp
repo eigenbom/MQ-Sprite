@@ -200,7 +200,8 @@ void PartToolsWidget::setTargetPartWidget(PartWidget* p){
 
         targetPartModesChanged();
 
-        Part* part = PM()->getPart(p->partName());
+        Part* part = PM()->getPart(p->partRef());
+        Q_ASSERT(part);
         Part::Mode m = part->modes.value(p->modeName());
         mPushButtonModeSize->setText(QString("%1x%2").arg(m.width).arg(m.height));
         mPushButtonModeFPS->setText(QString::number(m.framesPerSecond));
@@ -359,7 +360,7 @@ void PartToolsWidget::targetPartModesChanged(){
     if (mTarget){
         // Update combobox
         mComboBoxModes->clear();
-        Part* part = PM()->getPart(mTarget->partName());
+        Part* part = PM()->getPart(mTarget->partRef());
         if (part){
             QStringList list = part->modes.keys();
             mComboBoxModes->addItems(list);
@@ -386,7 +387,7 @@ void PartToolsWidget::targetPartModesChanged(){
 
 void PartToolsWidget::targetPartPropertiesChanged(){
     if (mTarget){
-        Part* part = PM()->getPart(mTarget->partName());
+        Part* part = PM()->getPart(mTarget->partRef());
         if (part){            
             int cursorPos = mTextEditProperties->textCursor().position();
             mTextEditProperties->blockSignals(true);
@@ -539,7 +540,7 @@ void PartToolsWidget::modeActivated(QString mode){
         mTarget->setMode(mode);
 
         // update num frames etc
-        Part* part = PM()->getPart(mTarget->partName());
+        Part* part = PM()->getPart(mTarget->partRef());
         Part::Mode m = part->modes.value(mode);
         mPushButtonModeSize->setText(QString("%1x%2").arg(m.width).arg(m.height));
         mPushButtonModeFPS->setText(QString::number(m.framesPerSecond));
@@ -597,7 +598,7 @@ void PartToolsWidget::resizeMode(){
         stop();
         // Get current size
         QString currentMode = mComboBoxModes->currentText();
-        Part* part = PM()->getPart(mTarget->partName());
+        Part* part = PM()->getPart(mTarget->partRef());
         Part::Mode m = part->modes.value(currentMode);
         mResizeModeDialog->mLineEditWidth->setText(QString::number(m.width));
         mResizeModeDialog->mLineEditHeight->setText(QString::number(m.height));

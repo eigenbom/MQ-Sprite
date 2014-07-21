@@ -324,14 +324,14 @@ private:
 
 class EditCompositeChildCommand: public Command {
 public:
-    EditCompositeChildCommand(AssetRef comp, const QString& childName, const QString& newPartName, int newZ, int newParent, int newParentPivot);
+    EditCompositeChildCommand(AssetRef comp, const QString& childName, AssetRef newPart, int newZ, int newParent, int newParentPivot);
     void undo();
     void redo();
 
 private:
     AssetRef mComp;
     QString mChildName;
-    QString mOldPartName, mNewPartName;    
+    AssetRef mOldPart, mNewPart;
     int mOldParent, mNewParent;
     int mOldParentPivot, mNewParentPivot;
     int mOldRoot;

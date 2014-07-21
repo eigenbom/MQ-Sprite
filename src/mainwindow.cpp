@@ -99,8 +99,9 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
-    delete mProjectModel;
     delete mUndoStack;
+    // delete ProjectModel last
+    delete mProjectModel;
 }
 
 MainWindow* MainWindow::Instance(){
@@ -377,7 +378,8 @@ void MainWindow::subWindowActivated(QMdiSubWindow* win){
             mPartToolsWidget->setTargetPartWidget(pw);
             mCompositeToolsWidget->setTargetCompWidget(nullptr);
 
-            Part* part = PM()->getPart(pw->partName());
+            Part* part = PM()->getPart(pw->partRef());
+            Q_ASSERT(part);
             mPartList->setSelection(part->ref, AssetType::Part);
 
             mStackedWidget->setCurrentIndex(mPToolsIndex);
@@ -900,7 +902,7 @@ void MainWindow::saveProjectAs(){
 
 void MainWindow::undoStackIndexChanged(int){
     mProjectModifiedSinceLastSave = true;
-    setWindowTitle(APP_NAME + " [" + ProjectModel::Instance()->fileName + "*]");
+    setWindowTitle(APP_NAME + " [" + PM()->fileName + "*]");
 }
 
 void MainWindow::openEigenbom(){

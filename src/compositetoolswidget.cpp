@@ -352,11 +352,21 @@ void CompositeToolsWidget::cellChanged(int row, int /*column*/){
         }
         else {
             const Composite::Child& child = comp->childrenMap.value(childName);
-            Part* part = PM()->getPart(child.part);
-            QString oldPartName = part?(part->name):QString();
-            if (oldPartName!=partName || child.parent!=parent || child.parentPivot!=parentPivot || child.z!=z){
+
+            Part* p = PM()->findPartByName(partName);
+            if (p==nullptr){
+                mTableWidgetParts->blockSignals(true);
+                mTableWidgetParts->item(row, 1)->setText("");
+                mTableWidgetParts->blockSignals(false);
+            }
+
+            AssetRef pRef = p?p->ref:AssetRef();
+
+            // Part* part = PM()->getPart(child.part);
+            // QString oldPartName = part?(part->name):QString();
+            if (child.part!=pRef || child.parent!=parent || child.parentPivot!=parentPivot || child.z!=z){
                 // Update..
-                TryCommand(new EditCompositeChildCommand(mTarget->compRef(), childName, partName, z, parent, parentPivot));
+                TryCommand(new EditCompositeChildCommand(mTarget->compRef(), childName, pRef, z, parent, parentPivot));
             }
         }
     }

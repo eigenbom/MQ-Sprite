@@ -37,7 +37,7 @@ void NewPartCommand::redo()
     do {
       name = (number==0)?QString("part"):(QObject::tr("part_") + QString::number(number));
       number++;
-    } while (PM()->hasPart(name));
+    } while (PM()->findPartByName(name)!=nullptr);
 
     Part* part = new Part;
     part->ref = PM()->createAssetRef();
@@ -71,7 +71,7 @@ CopyPartCommand::CopyPartCommand(AssetRef ref){
         int copyNumber = 0;
         do {
             mNewPartName = part->name + "_" + QString::number(copyNumber++);
-        } while (PM()->hasPart(mNewPartName));
+        } while (PM()->findPartByName(mNewPartName)!=nullptr);
         mCopy = PM()->createAssetRef();
     }
 }
@@ -142,7 +142,7 @@ RenamePartCommand::RenamePartCommand(AssetRef ref, QString newName):mRef(ref){
     do {
         mNewName = (num==0)?newName:(newName + "_" + QString::number(num));
         num++;
-    } while ((PM()->hasPart(mNewName)));
+    } while (PM()->findPartByName(mNewName)!=nullptr);
 }
 
 void RenamePartCommand::undo(){
@@ -905,8 +905,8 @@ void ChangeModeFPSCommand::redo(){
 
 
 
-EditCompositeChildCommand::EditCompositeChildCommand(AssetRef comp, const QString& childName, const QString& newPartName, int newZ, int newParent, int newParentPivot)
-    :mComp(comp), mChildName(childName), mNewPartName(newPartName), mNewParent(newParent), mNewParentPivot(newParentPivot), mNewZ(newZ)
+EditCompositeChildCommand::EditCompositeChildCommand(AssetRef comp, const QString& childName, AssetRef newPart, int newZ, int newParent, int newParentPivot)
+    :mComp(comp), mChildName(childName), mNewPart(newPart), mNewParent(newParent), mNewParentPivot(newParentPivot), mNewZ(newZ)
 {
     ok = PM()->hasComposite(mComp) && PM()->getComposite(mComp)->childrenMap.contains(mChildName);
 }
@@ -918,8 +918,7 @@ void EditCompositeChildCommand::undo(){
     child.parent = mOldParent;
     child.parentPivot = mOldParentPivot;
 
-    Part* part = PM()->getPart(mOldPartName);
-    child.part = part->ref;
+    child.part = mOldPart;
     child.z = mOldZ;
 
     // qDebug() << "EditCompositeChildCommand: Updating child: " << mChildName << child.part << mNewZ << child.parent << child.parentPivot;
@@ -958,10 +957,11 @@ void EditCompositeChildCommand::redo(){
     Composite* comp = PM()->getComposite(mComp);
     Composite::Child& child = comp->childrenMap[mChildName];
 
+    mOldPart = child.part;
     Part* part = PM()->getPart(child.part);
-    child.part = part?part->ref:AssetRef();
+    // child.part = part?part->ref:AssetRef();
+    // mOldPartName = part?part->name:"";
 
-    mOldPartName = part?part->name:"";
     mOldZ = child.z;
     mOldParent = child.parent;
     mOldParentPivot = child.parentPivot;
@@ -969,8 +969,8 @@ void EditCompositeChildCommand::redo(){
     child.parent = std::max(-1, mNewParent);
     child.parentPivot = std::max(-1, mNewParentPivot);
 
-    Part* newPart = PM()->getPart(mNewPartName);
-    child.part = newPart?newPart->ref:AssetRef();
+    // Part* newPart = PM()->getPart(mNewPart);
+    child.part = mNewPart; // newPart?newPart->ref:AssetRef();
     child.z = mNewZ;
 
     // qDebug() << "EditCompositeChildCommand: Updating child: " << mChildName << child.part << mNewZ << child.parent << child.parentPivot;

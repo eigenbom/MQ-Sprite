@@ -63,10 +63,12 @@ public:
     Composite* getComposite(const AssetRef& ref);
     bool hasComposite(const AssetRef& ref);
 
-    // @deprecated because assets are referred to with the assetref/uuid
-    Part* getPart(const QString& name); // NB: Returns the first part with this name, but may have similar named assets
-    bool hasPart(const QString& name);
+    Part* findPartByName(const QString& name); // NB: Returns the first part with this name, but may have similar named assets
     Composite* findCompositeByName(const QString& name); // NB: Returns the first part with this name, but may have similar named assets
+
+    // @deprecated because assets are referred to with the assetref/uuid
+    // Part* getPart(const QString& name); // NB: Returns the first part with this name, but may have similar named assets
+    // bool hasPart(const QString& name);
 
     QMap<AssetRef, Part*> parts;
     QMap<AssetRef, Composite*> composites;

@@ -67,7 +67,7 @@ Part* ProjectModel::getPart(const AssetRef& uuid){
     return parts.value(uuid);
 }
 
-Part* ProjectModel::getPart(const QString& name){
+Part* ProjectModel::findPartByName(const QString& name){
     for(Part* p: parts.values()){
         if (p->name==name){
             return p;
@@ -79,11 +79,11 @@ Part* ProjectModel::getPart(const QString& name){
 bool ProjectModel::hasPart(const AssetRef& uuid){
     return getPart(uuid)!=nullptr;
 }
-
+/*
 bool ProjectModel::hasPart(const QString& name){
     return getPart(name)!=nullptr;
 }
-
+*/
 
 Composite* ProjectModel::getComposite(const AssetRef& uuid){
     return composites.value(uuid);
