@@ -337,11 +337,8 @@ void MainWindow::partWidgetClosed(PartWidget* pw){
 void MainWindow::openPartWidget(AssetRef ref){
     if (PM()->hasPart(ref)){
         PartWidget* p = new PartWidget(ref, mMdiArea);
-        // p->setProperty("asset_type", AssetType::Part);
         mMdiArea->addSubWindow(p);
         p->show();
-        // NB: part widget
-
         connect(p, SIGNAL(closed(PartWidget*)), this, SLOT(partWidgetClosed(PartWidget*)));
         mPartWidgets.insertMulti(ref, p);
     }

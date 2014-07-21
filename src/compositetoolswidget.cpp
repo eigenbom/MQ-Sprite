@@ -379,8 +379,8 @@ void CompositeToolsWidget::cellChanged(int row, int /*column*/){
         else {
             const Composite::Child& child = comp->childrenMap.value(childName);
             Part* part = PM()->getPart(child.part);
-            QString partName = part?part->name:QString();
-            if (partName!=partName || child.parent!=parent || child.parentPivot!=parentPivot || child.z!=z){
+            QString oldPartName = part?(part->name):QString();
+            if (oldPartName!=partName || child.parent!=parent || child.parentPivot!=parentPivot || child.z!=z){
                 // Update..
                 EditCompositeChildCommand* command = new EditCompositeChildCommand(mTarget->compRef(), childName, partName, z, parent, parentPivot);
                 if (command->ok){
