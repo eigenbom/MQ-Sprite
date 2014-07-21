@@ -146,56 +146,21 @@ RenamePartCommand::RenamePartCommand(AssetRef ref, QString newName):mRef(ref){
 }
 
 void RenamePartCommand::undo(){
-    // Part* p = PM()->parts[mNewName];
-    // PM()->parts.remove(mNewName);
-    // PM()->parts.insert(mOldName, p);
-
     Part* p = PM()->parts[mRef];
     p->name = mOldName;
-
-    // update comps too...
-    /*
-    foreach(Composite* comp, PM()->composites.values()){        
-        QMutableMapIterator<QString,Composite::Child> it(comp->childrenMap);
-        while (it.hasNext()){
-            it.next();
-            Composite::Child& ch = it.value();
-            if (ch.part == mNewName){
-                ch.part = mOldName;
-            }
-        }
-    }*/
 
     MainWindow::Instance()->partRenamed(mRef, mOldName);
 }
 
 void RenamePartCommand::redo(){
-
-    // Part* p = PM()->parts[mOldName];
-    // PM()->parts.remove(mOldName);
-    // PM()->parts.insert(mNewName, p);
     Part* p = PM()->parts[mRef];
     mOldName = p->name;
     p->name = mNewName;
-
-    // update comps too...
-    /*
-    foreach(Composite* comp, PM()->composites.values()){
-        QMutableMapIterator<QString,Composite::Child> it(comp->childrenMap);
-        while (it.hasNext()){
-            it.next();
-            Composite::Child& ch = it.value();
-            if (ch.part==mOldName){
-                ch.part = mNewName;
-            }
-        }
-    }*/
 
     MainWindow::Instance()->partRenamed(mRef, mNewName);
 }
 
 NewCompositeCommand::NewCompositeCommand() {
-
     // Find a name
     int compSuffix = 0;
     do {
@@ -958,10 +923,6 @@ void EditCompositeChildCommand::redo(){
     Composite::Child& child = comp->childrenMap[mChildName];
 
     mOldPart = child.part;
-    Part* part = PM()->getPart(child.part);
-    // child.part = part?part->ref:AssetRef();
-    // mOldPartName = part?part->name:"";
-
     mOldZ = child.z;
     mOldParent = child.parent;
     mOldParentPivot = child.parentPivot;
@@ -972,8 +933,6 @@ void EditCompositeChildCommand::redo(){
     // Part* newPart = PM()->getPart(mNewPart);
     child.part = mNewPart; // newPart?newPart->ref:AssetRef();
     child.z = mNewZ;
-
-    // qDebug() << "EditCompositeChildCommand: Updating child: " << mChildName << child.part << mNewZ << child.parent << child.parentPivot;
 
     // Fix all parent/children links...
     if (mOldParent!=mNewParent){
@@ -1005,8 +964,6 @@ void EditCompositeChildCommand::redo(){
     for(int i=0;i<comp->children.count();i++){
         if (comp->childrenMap[comp->children[i]].parent==-1){
             comp->root = i;
-            // qDebug() << "EditCompositeChildCommand: Setting root to " << comp->root;
-            break;
         }
     }
 

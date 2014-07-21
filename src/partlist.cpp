@@ -28,12 +28,12 @@ PartList::~PartList()
 
 void PartList::newPart()
 {
-    TryCommand(new NewPartCommand());
+    TryCommand(new CNewPart());
 }
 
 void PartList::newComp()
 {
-    TryCommand(new NewCompositeCommand());
+    TryCommand(new CNewComposite());
 }
 
 void PartList::renameAsset()
@@ -50,10 +50,10 @@ void PartList::renameAsset()
                                              name, &ok);
         if (ok && !text.isEmpty()){
             if (type==AssetType::Part){
-                TryCommand(new RenamePartCommand(ref, text));
+                TryCommand(new CRenamePart(ref, text));
             }
             else if (type==AssetType::Composite){
-                TryCommand(new RenameCompositeCommand(ref, text));
+                TryCommand(new CRenameComposite(ref, text));
             }
         }
     }
@@ -67,10 +67,10 @@ void PartList::copyAsset()
         AssetRef ref = mAssetListWidget->assetRef(id);
         AssetType type = mAssetListWidget->assetType(id);
         if (type==AssetType::Part){
-            TryCommand(new CopyPartCommand(ref));
+            TryCommand(new CCopyPart(ref));
         }
         else if (type==AssetType::Composite){
-            TryCommand(new CopyCompositeCommand(ref));
+            TryCommand(new CCopyComposite(ref));
         }
     }
 }
@@ -84,10 +84,10 @@ void PartList::deleteAsset()
         AssetRef ref = mAssetListWidget->assetRef(id);
         AssetType type = mAssetListWidget->assetType(id);
         if (type==AssetType::Part){
-            TryCommand(new DeletePartCommand(ref));
+            TryCommand(new CDeletePart(ref));
         }
         else if (type==AssetType::Composite){
-            TryCommand(new DeleteCompositeCommand(ref));
+            TryCommand(new CDeleteComposite(ref));
         }
     }
 }
