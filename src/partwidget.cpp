@@ -589,9 +589,7 @@ void PartWidget::partViewMousePressEvent(QMouseEvent *event){
                     }
                 }
 
-                DrawOnPartCommand* command = new DrawOnPartCommand(mPartRef, mModeName, mFrameNumber, fillPattern, QPoint(0,0));
-                if (command->ok) MainWindow::Instance()->undoStack()->push(command);
-                else delete command;
+                TryCommand(new DrawOnPartCommand(mPartRef, mModeName, mFrameNumber, fillPattern, QPoint(0,0)));
             }
         }
 
@@ -605,11 +603,7 @@ void PartWidget::partViewMousePressEvent(QMouseEvent *event){
     else if (left&&mDrawToolType==kDrawToolStamp){
         // stamp
         if (mClipboardItem!=nullptr){
-            DrawOnPartCommand* command = new DrawOnPartCommand(mPartRef, mModeName, mFrameNumber, mClipboardItem->pixmap().toImage().copy(),  mClipboardItem->pos().toPoint());
-            if (command->ok)
-                MainWindow::Instance()->undoStack()->push(command);
-            else
-                delete command;
+            TryCommand(new DrawOnPartCommand(mPartRef, mModeName, mFrameNumber, mClipboardItem->pixmap().toImage().copy(),  mClipboardItem->pos().toPoint()));
         }
     }
     else if (middle){
@@ -666,21 +660,13 @@ void PartWidget::partViewMouseReleaseEvent(QMouseEvent *event){
             // Create the drawIntoCommand and clear the image and pixmap item
             // TODO: clip the image to save space..
             // Can use Pixmap->boundingRect()...
-            DrawOnPartCommand* command = new DrawOnPartCommand(mPartRef, mModeName, mFrameNumber, *mOverlayImage, mOverlayPixmapItem->pos().toPoint());
-            if (command->ok) MainWindow::Instance()->undoStack()->push(command);
-            else delete command;
-
+            TryCommand(new DrawOnPartCommand(mPartRef, mModeName, mFrameNumber, *mOverlayImage, mOverlayPixmapItem->pos().toPoint()));
             mOverlayImage->fill(0x00FFFFFF);
             updateOverlay();
         }
         else if (mDrawToolType==kDrawToolEraser){
             eraseLineTo(event->pos());
-
-            // TODO: Do the actual erasing with a command
-            EraseOnPartCommand* command = new EraseOnPartCommand(mPartRef, mModeName, mFrameNumber, *mOverlayImage, mOverlayPixmapItem->pos().toPoint());
-            if (command->ok) MainWindow::Instance()->undoStack()->push(command);
-            else delete command;
-
+            TryCommand(new EraseOnPartCommand(mPartRef, mModeName, mFrameNumber, *mOverlayImage, mOverlayPixmapItem->pos().toPoint()));
             mOverlayImage->fill(0x00FFFFFF);
             updateOverlay();
         }
@@ -824,14 +810,7 @@ void PartWidget::partViewKeyPressEvent(QKeyEvent *event){
         QPoint p2 = (mNumPivots>1)?mPivots[1].at(mFrameNumber):QPoint(0,0);
         QPoint p3 = (mNumPivots>2)?mPivots[2].at(mFrameNumber):QPoint(0,0);
         QPoint p4 = (mNumPivots>3)?mPivots[3].at(mFrameNumber):QPoint(0,0);
-
-        UpdateAnchorAndPivotsCommand* command = new UpdateAnchorAndPivotsCommand(mPartRef, mModeName, mFrameNumber, a, p1, p2, p3, p4);
-        if (command->ok){
-            MainWindow::Instance()->undoStack()->push(command);
-        }
-        else {
-            delete command;
-        }
+        TryCommand(new UpdateAnchorAndPivotsCommand(mPartRef, mModeName, mFrameNumber, a, p1, p2, p3, p4));
     }
 }
 

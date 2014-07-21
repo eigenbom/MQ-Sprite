@@ -308,28 +308,14 @@ void CompositeToolsWidget::targetCompPropertiesChanged(){
 
 void CompositeToolsWidget::textPropertiesEdited(){
     if (mTarget){
-        ChangeCompPropertiesCommand* command = new ChangeCompPropertiesCommand(mTarget->compRef(), mTextEditProperties->toPlainText());
-        if (command->ok){
-            MainWindow::Instance()->undoStack()->push(command);
-        }
-        else {
-            delete command;
-        }
+        TryCommand(new ChangeCompPropertiesCommand(mTarget->compRef(), mTextEditProperties->toPlainText()));
     }
 }
 
 void CompositeToolsWidget::addPart(){
     if (mTarget){
         if (mTarget->isPlaying()) mTarget->play(false);
-
-        // Add a new child command
-        NewCompositeChildCommand* command = new NewCompositeChildCommand(mTarget->compRef());
-        if (command->ok){
-            MainWindow::Instance()->undoStack()->push(command);
-        }
-        else {
-            delete command;
-        }
+        TryCommand(new NewCompositeChildCommand(mTarget->compRef()));
     }
 }
 
@@ -343,13 +329,7 @@ void CompositeToolsWidget::deletePart(){
         if (comp){
             if (row>=0 && row<comp->children.size()){
                 const QString& childName = comp->children.at(row);
-                DeleteCompositeChildCommand* command = new DeleteCompositeChildCommand(mTarget->compRef(), childName);
-                if (command->ok){
-                    MainWindow::Instance()->undoStack()->push(command);
-                }
-                else {
-                    delete command;
-                }
+                TryCommand(new DeleteCompositeChildCommand(mTarget->compRef(), childName));
             }
         }
     }
@@ -368,13 +348,7 @@ void CompositeToolsWidget::cellChanged(int row, int /*column*/){
         int parentPivot = mTableWidgetParts->item(row, 4)->text().toInt(&ok);
         if (!ok) parentPivot = -1;
         if (comp->children.at(row)!=childName){
-            EditCompositeChildNameCommand* command = new EditCompositeChildNameCommand(mTarget->compRef(), comp->children.at(row), childName);
-            if (command->ok){
-                MainWindow::Instance()->undoStack()->push(command);
-            }
-            else {
-                delete command;
-            }
+            TryCommand(new EditCompositeChildNameCommand(mTarget->compRef(), comp->children.at(row), childName));
         }
         else {
             const Composite::Child& child = comp->childrenMap.value(childName);
@@ -382,14 +356,7 @@ void CompositeToolsWidget::cellChanged(int row, int /*column*/){
             QString oldPartName = part?(part->name):QString();
             if (oldPartName!=partName || child.parent!=parent || child.parentPivot!=parentPivot || child.z!=z){
                 // Update..
-                EditCompositeChildCommand* command = new EditCompositeChildCommand(mTarget->compRef(), childName, partName, z, parent, parentPivot);
-                if (command->ok){
-                    MainWindow::Instance()->undoStack()->push(command);
-                }
-                else {
-                    // TODO: error?
-                    delete command;
-                }
+                TryCommand(new EditCompositeChildCommand(mTarget->compRef(), childName, partName, z, parent, parentPivot));
             }
         }
     }

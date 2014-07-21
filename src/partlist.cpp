@@ -28,16 +28,12 @@ PartList::~PartList()
 
 void PartList::newPart()
 {
-    NewPartCommand* command = new NewPartCommand();
-    if (command->ok) MainWindow::Instance()->undoStack()->push(command);
-    else delete command;
+    TryCommand(new NewPartCommand());
 }
 
 void PartList::newComp()
 {
-    NewCompositeCommand* command = new NewCompositeCommand();
-    if (command->ok) MainWindow::Instance()->undoStack()->push(command);
-    else delete command;
+    TryCommand(new NewCompositeCommand());
 }
 
 void PartList::renameAsset()
@@ -54,22 +50,10 @@ void PartList::renameAsset()
                                              name, &ok);
         if (ok && !text.isEmpty()){
             if (type==AssetType::Part){
-                RenamePartCommand* command = new RenamePartCommand(ref, text);
-                if (command->ok){
-                    MainWindow::Instance()->undoStack()->push(command);
-                }
-                else {
-                    delete command;
-                }
+                TryCommand(new RenamePartCommand(ref, text));
             }
             else if (type==AssetType::Composite){
-                RenameCompositeCommand* command = new RenameCompositeCommand(ref, text);
-                if (command->ok){
-                    MainWindow::Instance()->undoStack()->push(command);
-                }
-                else {
-                    delete command;
-                }
+                TryCommand(new RenameCompositeCommand(ref, text));
             }
         }
     }
@@ -83,14 +67,10 @@ void PartList::copyAsset()
         AssetRef ref = mAssetListWidget->assetRef(id);
         AssetType type = mAssetListWidget->assetType(id);
         if (type==AssetType::Part){
-            CopyPartCommand* command = new CopyPartCommand(ref);
-            if (command->ok) MainWindow::Instance()->undoStack()->push(command);
-            else delete command;
+            TryCommand(new CopyPartCommand(ref));
         }
         else if (type==AssetType::Composite){
-            CopyCompositeCommand* command = new CopyCompositeCommand(ref);
-            if (command->ok) MainWindow::Instance()->undoStack()->push(command);
-            else delete command;
+            TryCommand(new CopyCompositeCommand(ref));
         }
     }
 }
@@ -104,14 +84,10 @@ void PartList::deleteAsset()
         AssetRef ref = mAssetListWidget->assetRef(id);
         AssetType type = mAssetListWidget->assetType(id);
         if (type==AssetType::Part){
-            DeletePartCommand* command = new DeletePartCommand(ref);
-            if (command->ok) MainWindow::Instance()->undoStack()->push(command);
-            else delete command;
+            TryCommand(new DeletePartCommand(ref));
         }
         else if (type==AssetType::Composite){
-            DeleteCompositeCommand* command = new DeleteCompositeCommand(ref);
-            if (command->ok) MainWindow::Instance()->undoStack()->push(command);
-            else delete command;
+            TryCommand(new DeleteCompositeCommand(ref));
         }
     }
 }

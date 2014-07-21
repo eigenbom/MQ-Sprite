@@ -11,6 +11,8 @@ public:
     bool ok; // is true if command can be processed    
 };
 
+bool TryCommand(Command* command); // execute a command if its ok. takes ownership.
+
 class NewPartCommand: public Command
 {
 public:

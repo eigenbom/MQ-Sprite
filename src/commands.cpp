@@ -6,6 +6,17 @@
 static int sNewCompositeSuffix = 0;
 static int sNewModeSuffix = 0;
 
+bool TryCommand(Command* command){
+    if (command->ok){
+        MainWindow::Instance()->undoStack()->push(command);
+        return true;
+    }
+    else {
+        delete command;
+        return false;
+    }
+}
+
 NewPartCommand::NewPartCommand() {    
     mUuid = PM()->createAssetRef();
     ok = true;
