@@ -17,12 +17,12 @@
 
 #define APP_NAME (QString("mmpixel"))
 
-static MainWindow* sWindow = NULL;
+static MainWindow* sWindow = nullptr;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    mViewOptionsDockWidget(NULL),
+    mViewOptionsDockWidget(nullptr),
     mProjectModifiedSinceLastSave(false)
 {
     sWindow = this;
@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // SETUP actions etc
     mPartList = findChild<PartList*>("partList");
     // mPartList->resize(1,1);
-    connect(mPartList, SIGNAL(assetDoubleClicked(QString,int)), this, SLOT(assetDoubleClicked(QString,int)));
+    connect(mPartList, SIGNAL(assetDoubleClicked(AssetRef,AssetType)), this, SLOT(assetDoubleClicked(AssetRef,AssetType)));
 
     // Set MDI Area
     mMdiArea = findChild<QMdiArea*>(tr("mdiArea"));
@@ -123,11 +123,11 @@ void MainWindow::createActions(){
 }
 
 void MainWindow::showViewOptionsDialog(){
-    if (mViewOptionsDockWidget!=NULL && mViewOptionsDockWidget->isHidden()){
+    if (mViewOptionsDockWidget!=nullptr && mViewOptionsDockWidget->isHidden()){
         mViewOptionsDockWidget->show();
         return;
     }
-    else if (mViewOptionsDockWidget!=NULL){
+    else if (mViewOptionsDockWidget!=nullptr){
         return;
     }
 
@@ -271,7 +271,7 @@ void MainWindow::createMenus()
 
     QAction* newProjectAction = mFileMenu->addAction("&New Project");
     newProjectAction->setShortcut(QKeySequence::New);
-    connect(newProjectAction, SIGNAL(triggered()), this, SLOT(newProject()));    
+    connect(newProjectAction, SIGNAL(triggered()), this, SLOT(newProject()));
 
     QAction* loadProjectAction = mFileMenu->addAction("&Open Project");
     loadProjectAction->setShortcut(QKeySequence::Open);
@@ -323,8 +323,7 @@ void MainWindow::closeEvent(QCloseEvent*){
 
 void MainWindow::assetDoubleClicked(AssetRef ref, AssetType type){
     if (type==AssetType::Part){
-        Part* p = PM()->getPart(ref);
-        openPartWidget(p->name);
+        openPartWidget(ref);
     }
     else if (type==AssetType::Composite){
         Composite* c = PM()->getComposite(ref);
@@ -333,23 +332,22 @@ void MainWindow::assetDoubleClicked(AssetRef ref, AssetType type){
 }
 
 void MainWindow::partWidgetClosed(PartWidget* pw){
-    QString key = mPartWidgets.key(pw);
-    if (!key.isNull()){
-        mPartWidgets.remove(key, pw);
-        subWindowActivated(NULL);
+    if (pw){
+        mPartWidgets.remove(pw->partRef());
+        subWindowActivated(nullptr);
         delete pw;
     }
 }
 
-void MainWindow::openPartWidget(const QString& str){    
-    if (PM()->hasPart(str)){
-        PartWidget* p = new PartWidget(str, mMdiArea);
+void MainWindow::openPartWidget(AssetRef ref){
+    if (PM()->hasPart(ref)){
+        PartWidget* p = new PartWidget(ref, mMdiArea);
         // p->setProperty("asset_type", AssetType::Part);
         mMdiArea->addSubWindow(p);
         p->show();
         // NB: part widget
         connect(p, SIGNAL(closed(PartWidget*)), this, SLOT(partWidgetClosed(PartWidget*)));
-        mPartWidgets.insertMulti(str, p);
+        mPartWidgets.insertMulti(ref, p);
     }
 }
 
@@ -357,7 +355,7 @@ void MainWindow::compositeWidgetClosed(CompositeWidget* cw){
     QString key = mCompositeWidgets.key(cw);
     if (!key.isNull()){
         mCompositeWidgets.remove(key, cw);
-        subWindowActivated(NULL);
+        subWindowActivated(nullptr);
         delete cw;
     }
 }
@@ -375,9 +373,9 @@ void MainWindow::openCompositeWidget(const QString& str){
 }
 
 void MainWindow::subWindowActivated(QMdiSubWindow* win){
-    if (win==NULL){
-        mCompositeToolsWidget->setTargetCompWidget(NULL);
-        mPartToolsWidget->setTargetPartWidget(NULL);
+    if (win==nullptr){
+        mCompositeToolsWidget->setTargetCompWidget(nullptr);
+        mPartToolsWidget->setTargetPartWidget(nullptr);
 
         mStackedWidget->setCurrentIndex(mNoToolsIndex);
     }
@@ -385,7 +383,7 @@ void MainWindow::subWindowActivated(QMdiSubWindow* win){
         if (dynamic_cast<PartWidget*>(win)){
             PartWidget* pw = (PartWidget*)(win);
             mPartToolsWidget->setTargetPartWidget(pw);
-            mCompositeToolsWidget->setTargetCompWidget(NULL);
+            mCompositeToolsWidget->setTargetCompWidget(nullptr);
 
             Part* part = PM()->getPart(pw->partName());
             mPartList->setSelection(part->ref, AssetType::Part);
@@ -394,7 +392,7 @@ void MainWindow::subWindowActivated(QMdiSubWindow* win){
         }
         else if (dynamic_cast<CompositeWidget*>(win)){
             CompositeWidget* cw = (CompositeWidget*)(win);
-            mPartToolsWidget->setTargetPartWidget(NULL);
+            mPartToolsWidget->setTargetPartWidget(nullptr);
             mCompositeToolsWidget->setTargetCompWidget(cw);
 
             Composite* comp = PM()->getComposite(cw->compName());
@@ -406,11 +404,11 @@ void MainWindow::subWindowActivated(QMdiSubWindow* win){
 }
 
 PartWidget* MainWindow::activePartWidget(){
-    QMdiSubWindow* win = mMdiArea->activeSubWindow();    
+    QMdiSubWindow* win = mMdiArea->activeSubWindow();
     return dynamic_cast<PartWidget*>(win);
     //if (win->property("asset_type").toInt()==AssetType::Part)
     //    return (PartWidget*) win;
-    //else return NULL;
+    //else return nullptr;
 }
 
 CompositeWidget* MainWindow::activeCompositeWidget(){
@@ -420,7 +418,7 @@ CompositeWidget* MainWindow::activeCompositeWidget(){
     /*
     if (win->property("asset_type").toInt()==AssetType::Composite)
         return (CompositeWidget*) win;
-    else return NULL;
+    else return nullptr;
     */
 }
 
@@ -428,7 +426,7 @@ void MainWindow::partListChanged(){
     mPartList->updateList();
 
     // Delete any part widgets that don't exist anymore
-    QMutableMapIterator<QString,PartWidget*> i(mPartWidgets);
+    QMutableMapIterator<AssetRef,PartWidget*> i(mPartWidgets);
     while (i.hasNext()) {
         i.next();
         if (!PM()->hasPart(i.key())){
@@ -448,80 +446,85 @@ void MainWindow::partListChanged(){
     }
 }
 
-void MainWindow::partRenamed(const QString& oldName, const QString& newName){
+void MainWindow::partRenamed(AssetRef ref, const QString& newName){
     mPartList->updateList();
-    while (mPartWidgets.contains(oldName)){
-        PartWidget* p = mPartWidgets.take(oldName);
+    for(PartWidget* p: mPartWidgets.values(ref)){
+        p->partNameChanged(newName);
+    }
+
+    /*
+    while (mPartWidgets.contains(ref)){
+        PartWidget* p = mPartWidgets.take(ref);
         p->partNameChanged(newName);
         mPartWidgets.insertMulti(newName, p);
     }
+    */
+
     foreach(CompositeWidget* cw, mCompositeWidgets.values()){
-        cw->partNameChanged(oldName, newName);
+        qDebug() << "TODO: change cw partname";
+        // cw->partNameChanged(oldName, newName);
     }
 
     if (mCompositeToolsWidget->isEnabled()){
-        mCompositeToolsWidget->partNameChanged(oldName, newName);
+        qDebug() << "TODO: change tools widget";
+        // mCompositeToolsWidget->partNameChanged(oldName, newName);
     }
 }
 
-void MainWindow::partFrameUpdated(const QString& part, const QString& mode, int frame){
-    if (mPartWidgets.contains(part)){
-        foreach(PartWidget* p, mPartWidgets.values(part)){
-            p->partFrameUpdated(part, mode, frame);
+void MainWindow::partFrameUpdated(AssetRef ref, const QString& mode, int frame){
+    if (mPartWidgets.contains(ref)){
+        foreach(PartWidget* p, mPartWidgets.values(ref)){
+            p->partFrameUpdated(ref, mode, frame);
         }
     }
 
     foreach(CompositeWidget* cw, mCompositeWidgets.values()){
-        cw->partFrameUpdated(part, mode, frame);
+        qDebug() << "TODO: ";
+        // cw->partFrameUpdated(part, mode, frame);
     }
 }
 
-void MainWindow::partFramesUpdated(const QString& part, const QString& mode){
-    if (mPartWidgets.contains(part)){
-        foreach(PartWidget* p, mPartWidgets.values(part)){
-            p->partFramesUpdated(part, mode);
-        }
+void MainWindow::partFramesUpdated(AssetRef ref, const QString& mode){
+    foreach(PartWidget* p, mPartWidgets.values(ref)){
+        p->partFramesUpdated(ref, mode);
     }
 
     if (mPartToolsWidget->isEnabled() && mPartToolsWidget->targetPartWidget()){
-        if (mPartToolsWidget->targetPartWidget()->partName()==part && mPartToolsWidget->targetPartWidget()->modeName()==mode){
+        if (mPartToolsWidget->targetPartWidget()->partRef()==ref && mPartToolsWidget->targetPartWidget()->modeName()==mode){
             mPartToolsWidget->targetPartNumFramesChanged();
         }
     }
 
     foreach(CompositeWidget* cw, mCompositeWidgets.values()){
-        cw->partFramesUpdated(part, mode);
+        qDebug() << "TODO: ";
+        // cw->partFramesUpdated(part, mode);
     }
 }
 
-void MainWindow::partNumPivotsUpdated(const QString& part, const QString& mode){
-    if (mPartWidgets.contains(part)){
-        foreach(PartWidget* p, mPartWidgets.values(part)){
-            p->partNumPivotsUpdated(part, mode);
-        }
+void MainWindow::partNumPivotsUpdated(AssetRef ref, const QString& mode){
+    foreach(PartWidget* p, mPartWidgets.values(ref)){
+        p->partNumPivotsUpdated(ref, mode);
     }
 
     if (mPartToolsWidget->targetPartWidget()){
-        if (mPartToolsWidget->targetPartWidget()->partName()==part && mPartToolsWidget->targetPartWidget()->modeName()==mode){
+        if (mPartToolsWidget->targetPartWidget()->partRef()==ref && mPartToolsWidget->targetPartWidget()->modeName()==mode){
             mPartToolsWidget->targetPartNumPivotsChanged();
         }
     }
 
     foreach(CompositeWidget* cw, mCompositeWidgets.values()){
-        cw->partNumPivotsUpdated(part, mode);
+        qDebug() << "TODO: ";
+        // cw->partNumPivotsUpdated(part, mode);
     }
 }
 
-void MainWindow::partPropertiesUpdated(const QString& part){
-    if (mPartWidgets.contains(part)){
-        foreach(PartWidget* p, mPartWidgets.values(part)){
-            p->partPropertiesChanged(part);
-        }
+void MainWindow::partPropertiesUpdated(AssetRef ref){
+    foreach(PartWidget* p, mPartWidgets.values(ref)){
+        p->partPropertiesChanged(ref);
     }
 
     if (mPartToolsWidget->targetPartWidget()){
-        if (mPartToolsWidget->targetPartWidget()->partName()==part){
-            // mPartToolsWidget->targetPartNumPivotsChanged();
+        if (mPartToolsWidget->targetPartWidget()->partRef()==ref){
             mPartToolsWidget->targetPartPropertiesChanged();
         }
     }
@@ -538,23 +541,21 @@ void MainWindow::compPropertiesUpdated(const QString& comp){
     }
 }
 
-void MainWindow::partModesChanged(const QString& partName){
-    if (mPartWidgets.contains(partName)){
-        const Part* part = PM()->getPart(partName);
-        foreach(PartWidget* p, mPartWidgets.values(partName)){
-            if (!part->modes.contains(p->modeName())){
-                // mode has disappeared, so set a new mode..
-                QString firstMode = *part->modes.keys().begin();
-                p->setMode(firstMode);
-            }
-            else {
-                p->updatePartFrames();
-            }
+void MainWindow::partModesChanged(AssetRef ref){
+    const Part* part = PM()->getPart(ref);
+    foreach(PartWidget* p, mPartWidgets.values(ref)){
+        if (!part->modes.contains(p->modeName())){
+            // mode has disappeared, so set a new mode..
+            QString firstMode = *part->modes.keys().begin();
+            p->setMode(firstMode);
+        }
+        else {
+            p->updatePartFrames();
         }
     }
 
     if (mPartToolsWidget->targetPartWidget()){
-        if (mPartToolsWidget->targetPartWidget()->partName()==partName){
+        if (mPartToolsWidget->targetPartWidget()->partRef()==ref){
             mPartToolsWidget->targetPartModesChanged();
         }
     }
@@ -572,17 +573,15 @@ void MainWindow::partModesChanged(const QString& partName){
 
 }
 
-void MainWindow::partModeRenamed(const QString& partName, const QString& oldModeName, const QString& newModeName){
-    if (mPartWidgets.contains(partName)){
-        foreach(PartWidget* p, mPartWidgets.values(partName)){
-            if (p->modeName()==oldModeName){
-                p->setMode(newModeName);
-            }
+void MainWindow::partModeRenamed(AssetRef ref, const QString& oldModeName, const QString& newModeName){
+    foreach(PartWidget* p, mPartWidgets.values(ref)){
+        if (p->modeName()==oldModeName){
+           p->setMode(newModeName);
         }
     }
 
     if (mPartToolsWidget->targetPartWidget()){
-        if (mPartToolsWidget->targetPartWidget()->partName()==partName){
+        if (mPartToolsWidget->targetPartWidget()->partRef()==ref){
             mPartToolsWidget->targetPartModesChanged();
         }
     }
@@ -759,8 +758,8 @@ void MainWindow::showAbout(){
                            "<li>Right-click (on colour): Select pen and pick colour</li>"
                            "<li>Right-click (on blank): Select eraser</li>"
                            "<li>Ctrl + Wheel: Zoom</li>"
-                           "<li>Middle-press + drag: Move canvas</li>"                           
-                           "<li>Space: Toggle playing in a part window</li>"                           
+                           "<li>Middle-press + drag: Move canvas</li>"
+                           "<li>Space: Toggle playing in a part window</li>"
                            "<li>S/D: Change frame in part window</li>"
                            "<li>W/E: Change mode in part window</li>"
                            "<li>A: Place anchor in a part window</li>"
@@ -787,8 +786,8 @@ void MainWindow::newProject(){
     QMessageBox::StandardButton button = QMessageBox::question(this, "Close Project?", "Really close the current project? All unsaved changes will be lost.");
     if (button==QMessageBox::Yes){
         // Close all windows and deactivate
-        mCompositeToolsWidget->setTargetCompWidget(NULL);
-        mPartToolsWidget->setTargetPartWidget(NULL);
+        mCompositeToolsWidget->setTargetCompWidget(nullptr);
+        mPartToolsWidget->setTargetPartWidget(nullptr);
         mMdiArea->closeAllSubWindows();
 
         // Clear undo stack
@@ -808,8 +807,8 @@ void MainWindow::loadProject(const QString& fileName){
     QSettings settings;
 
     // Close all windows and deactivate
-    mCompositeToolsWidget->setTargetCompWidget(NULL);
-    mPartToolsWidget->setTargetPartWidget(NULL);
+    mCompositeToolsWidget->setTargetCompWidget(nullptr);
+    mPartToolsWidget->setTargetPartWidget(nullptr);
     mMdiArea->closeAllSubWindows();
 
     // Clear undo stack
@@ -838,7 +837,7 @@ void MainWindow::loadProject(const QString& fileName){
         if (mViewOptionsDockWidget){
             mViewOptionsDockWidget->hide();
             delete mViewOptionsDockWidget;
-            mViewOptionsDockWidget = NULL;
+            mViewOptionsDockWidget = nullptr;
         }
 
         QSettings settings;

@@ -21,11 +21,11 @@
 CompositeWidget::CompositeWidget(const QString& compName, QWidget *parent) :
     QMdiSubWindow(parent),
     mCompName(compName),
-    mComp(NULL),
-    mCompView(NULL),
+    mComp(nullptr),
+    mCompView(nullptr),
     mZoom(4),
     mPosition(0,0),
-    mAnimationTimer(NULL),
+    mAnimationTimer(nullptr),
     mIsPlaying(false),
     mMovingCanvas(false),
     mSecondsPassedSinceLastFrame(0),
@@ -127,7 +127,7 @@ void CompositeWidget::updateCompFrames(){
 
                     bool showBounds = false;
                     if (!showBounds){
-                        mode.boundsItem = NULL;
+                        mode.boundsItem = nullptr;
                     }
                     else {
                         mode.boundsItem = mCompView->scene()->addRect(-0.5,-0.5,mode.width+1,mode.height+1, QPen(QColor(0,0,0), 1, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin), QBrush(QColor(0,0,0,0)));
@@ -146,7 +146,7 @@ void CompositeWidget::updateCompFrames(){
                     for(int i=0;i<m.numFrames;i++){
                         QImage* img = m.images.at(i);
                         // qDebug() << "img: " << img;
-                        if (img!=NULL){
+                        if (img!=nullptr){
                             QGraphicsPixmapItem* pi = mCompView->scene()->addPixmap(QPixmap::fromImage(*img));
                             QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect();
                             pi->setGraphicsEffect(effect);
@@ -269,7 +269,7 @@ void CompositeWidget::updateCompFramesMinorChanges(){
 
                     bool showBounds = false;
                     if (!showBounds){
-                        mode.boundsItem = NULL;
+                        mode.boundsItem = nullptr;
                     }
                     else {
                         if (mode.boundsItem) mCompView->scene()->removeItem(mode.boundsItem);
@@ -289,7 +289,7 @@ void CompositeWidget::updateCompFramesMinorChanges(){
                     for(int i=0;i<m.numFrames;i++){
                         QImage* img = m.images.at(i);
                         // qDebug() << "img: " << img;
-                        if (img!=NULL){
+                        if (img!=nullptr){
                             if (hasMode) mCompView->scene()->removeItem(mode.pixmapItems.at(i));
                             QGraphicsPixmapItem* pi = mCompView->scene()->addPixmap(QPixmap::fromImage(*img));
                             QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect();
@@ -762,7 +762,7 @@ void CompositeWidget::play(bool play){
         updateFrame();
     }
     else {
-        if (mAnimationTimer==NULL){
+        if (mAnimationTimer==nullptr){
             mAnimationTimer=new QTimer(this);
             connect(mAnimationTimer, SIGNAL(timeout()), this, SLOT(updateAnimation()));
         }

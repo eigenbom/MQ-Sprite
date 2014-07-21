@@ -120,21 +120,15 @@ private:
 
 
 
-
-
-/////////////////////////////////////////////////////////////
-// XXX: Stubbed these out for now...
-/////////////////////////////////////////////////////////////
-
 class NewModeCommand: public Command
 {
 public:
-    NewModeCommand(const QString& partName, const QString& copyModeName){}
-    void undo(){}
-    void redo(){}
+    NewModeCommand(AssetRef part, const QString& copyModeName);
+    void undo();
+    void redo();
 
 private:
-    QString mPartName;
+    AssetRef mPart;
     QString mCopyModeName;
     QString mModeName;
 };
@@ -142,12 +136,12 @@ private:
 class DeleteModeCommand: public Command
 {
 public:
-    DeleteModeCommand(const QString& partName, const QString& modeName){}
-    void undo(){}
-    void redo(){}
+    DeleteModeCommand(AssetRef part, const QString& modeName);
+    void undo();
+    void redo();
 
 private:
-    QString mPartName;
+    AssetRef mPart;
     QString mModeName;
     Part::Mode mModeCopy;
 };
@@ -155,12 +149,12 @@ private:
 class ResetModeCommand: public Command
 {
 public:
-    ResetModeCommand(const QString& partName, const QString& modeName){}
-    void undo(){}
-    void redo(){}
+    ResetModeCommand(AssetRef part, const QString& modeName);
+    void undo();
+    void redo();
 
 private:
-    QString mPartName;
+    AssetRef mPart;
     QString mModeName;
     Part::Mode mModeCopy;
 };
@@ -168,12 +162,12 @@ private:
 class CopyModeCommand: public Command
 {
 public:
-    CopyModeCommand(const QString& partName, const QString& modeName){}
-    void undo(){}
-    void redo(){}
+    CopyModeCommand(AssetRef part, const QString& modeName);
+    void undo();
+    void redo();
 
 private:
-    QString mPartName;
+    AssetRef mPart;
     QString mModeName;
     QString mNewModeName;
 };
@@ -181,12 +175,12 @@ private:
 class RenameModeCommand: public Command
 {
 public:
-    RenameModeCommand(const QString& partName, const QString& oldModeName, const QString& newModeName){}
-    void undo(){}
-    void redo(){}
+    RenameModeCommand(AssetRef part, const QString& oldModeName, const QString& newModeName);
+    void undo();
+    void redo();
 
 private:
-    QString mPartName;
+    AssetRef mPart;
     QString mOldModeName;
     QString mNewModeName;
 };
@@ -195,13 +189,14 @@ private:
 
 
 
+
 class DrawOnPartCommand: public Command {
 public:
-    DrawOnPartCommand(QString partName, QString mode, int frame, QImage data, QPoint offset){}
-    void undo(){}
-    void redo(){}
+    DrawOnPartCommand(AssetRef part, QString mode, int frame, QImage data, QPoint offset);
+    void undo();
+    void redo();
 private:
-    QString mPartName;
+    AssetRef mPart;
     QString mMode;
     int mFrame;
     QImage mData;
@@ -211,11 +206,11 @@ private:
 
 class EraseOnPartCommand: public Command {
 public:
-    EraseOnPartCommand(QString partName, QString mode, int frame, QImage data, QPoint offset){}
-    void undo(){}
-    void redo(){}
+    EraseOnPartCommand(AssetRef part, QString mode, int frame, QImage data, QPoint offset);
+    void undo();
+    void redo();
 private:
-    QString mPartName;
+    AssetRef mPart;
     QString mMode;
     int mFrame;
     QImage mData;
@@ -223,41 +218,53 @@ private:
     QImage mOldFrame;
 };
 
+
 class NewFrameCommand: public Command {
 public:
-    NewFrameCommand(QString partName, QString modeName, int index){}
-    void undo(){}
-    void redo(){}
+    NewFrameCommand(AssetRef part, QString modeName, int index);
+    void undo();
+    void redo();
 
 private:
-    QString mPartName, mModeName;
+    AssetRef mPart;
+    QString mModeName;
     int mIndex;
 };
 
 class CopyFrameCommand: public Command {
 public:
-    CopyFrameCommand(QString partName, QString modeName, int index){}
-    void undo(){}
-    void redo(){}
+    CopyFrameCommand(AssetRef part, QString modeName, int index);
+    void undo();
+    void redo();
 
 private:
-    QString mPartName, mModeName;
+    AssetRef mPart;
+    QString mModeName;
     int mIndex;
 };
 
 class DeleteFrameCommand: public Command {
 public:
-    DeleteFrameCommand(QString partName, QString modeName, int index){}
-    void undo(){}
-    void redo(){}
+    DeleteFrameCommand(AssetRef part, QString modeName, int index);
+    void undo();
+    void redo();
 
 private:
-    QString mPartName, mModeName;
+    AssetRef mPart;
+    QString mModeName;
     int mIndex;
     QImage mImage;
     QPoint mAnchor;
     QPoint mPivots[MAX_PIVOTS];
 };
+
+
+
+/////////////////////////////////////////////////////////////
+// XXX: Stubbed these out for now...
+/////////////////////////////////////////////////////////////
+
+
 
 class UpdateAnchorAndPivotsCommand: public Command {
 public:

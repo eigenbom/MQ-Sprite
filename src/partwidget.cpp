@@ -24,30 +24,31 @@
 #include <QQueue>
 
 
-PartWidget::PartWidget(const QString& partName, QWidget *parent) :
+PartWidget::PartWidget(AssetRef ref, QWidget *parent) :
     QMdiSubWindow(parent),
-    mPartName(partName),
+    mPartRef(ref),
+    mPartName(),
     mModeName(),
-    mPart(NULL),
-    mPartView(NULL),
-    mOverlayPixmapItem(NULL),
+    mPart(nullptr),
+    mPartView(nullptr),
+    mOverlayPixmapItem(nullptr),
     mZoom(4),
     mPosition(0,0),
     mPenSize(1),
     mPenColour(QColor(0,0,0)),
     mDrawToolType(kDrawToolPaint),
-    mAnimationTimer(NULL),
+    mAnimationTimer(nullptr),
     mFrameNumber(0),
     mSecondsPassedSinceLastFrame(0),
     mIsPlaying(false),
-    mBoundsItem(NULL),
+    mBoundsItem(nullptr),
     mScribbling(false),
     mMovingCanvas(false),
     mPlaybackSpeedMultiplierIndex(-1),
     mPlaybackSpeedMultiplier(1),
-    mOverlayImage(NULL),
-    mClipboardItem(NULL),
-    mCopyRectItem(NULL)
+    mOverlayImage(nullptr),
+    mClipboardItem(nullptr),
+    mCopyRectItem(nullptr)
 {
     // Customise window
     setMinimumSize(64,64);
@@ -72,10 +73,10 @@ void PartWidget::updatePartFrames(){
         mPixmapItems.clear();
     }
 
-    if (mOverlayPixmapItem!=NULL){
+    if (mOverlayPixmapItem!=nullptr){
         mPartView->scene()->removeItem(mOverlayPixmapItem);
         delete mOverlayPixmapItem;
-        mOverlayPixmapItem = NULL;
+        mOverlayPixmapItem = nullptr;
     }
 
     // get rid of any remaining text etc
@@ -92,23 +93,24 @@ void PartWidget::updatePartFrames(){
     }
     mRectItems.clear();
 
-    if (mClipboardItem!=NULL){
+    if (mClipboardItem!=nullptr){
         mPartView->scene()->removeItem(mClipboardItem);
         delete mClipboardItem;
-        mClipboardItem = NULL;
+        mClipboardItem = nullptr;
     }
 
-    if (mCopyRectItem!=NULL){
+    if (mCopyRectItem!=nullptr){
         mPartView->scene()->removeItem(mCopyRectItem);
         delete mCopyRectItem;
-        mCopyRectItem = NULL;
+        mCopyRectItem = nullptr;
     }
 
     mPartView->scene()->clear();
-    mBoundsItem = NULL;
+    mBoundsItem = nullptr;
 
-    if (PM()->hasPart(mPartName)){
-        mPart = PM()->getPart(mPartName);
+    if (PM()->hasPart(mPartRef)){
+        mPart = PM()->getPart(mPartRef);
+        mPartName = mPart->name;
         mProperties = mPart->properties;
 
         if (mPart->modes.size()>0){
@@ -128,7 +130,7 @@ void PartWidget::updatePartFrames(){
             if (m.numFrames>0){
                 for(int i=0;i<m.numFrames;i++){
                     QImage* img = m.images.at(i);
-                    if (img!=NULL){
+                    if (img!=nullptr){
                         QGraphicsPixmapItem* pi = mPartView->scene()->addPixmap(QPixmap::fromImage(*img));
                         QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect();
                         pi->setGraphicsEffect(effect);
@@ -175,7 +177,7 @@ void PartWidget::updatePartFrames(){
                 updatePivots();
                 updatePropertiesOverlays();
 
-                if (mOverlayImage!=NULL) delete mOverlayImage;
+                if (mOverlayImage!=nullptr) delete mOverlayImage;
                 mOverlayImage = new QImage(w,h,QImage::Format_ARGB32);
                 mOverlayImage->fill(0x00FFFFFF);
                 mOverlayPixmapItem = mPartView->scene()->addPixmap(QPixmap::fromImage(*mOverlayImage));
@@ -218,16 +220,16 @@ void PartWidget::setPlaybackSpeedMultiplier(int index, float value){
 void PartWidget::setDrawToolType(DrawToolType type){
     mDrawToolType=type;
 
-    if (mClipboardItem!=NULL){
+    if (mClipboardItem!=nullptr){
         mPartView->scene()->removeItem(mClipboardItem);
         delete mClipboardItem;
-        mClipboardItem = NULL;
+        mClipboardItem = nullptr;
     }
 
     if (mCopyRectItem){
         mPartView->scene()->removeItem(mCopyRectItem);
         delete mCopyRectItem;
-        mCopyRectItem = NULL;
+        mCopyRectItem = nullptr;
     }
 
     switch(mDrawToolType){
@@ -286,24 +288,24 @@ void PartWidget::partNameChanged(const QString& newPartName){
     setWindowTitle(mPartName);
 }
 
-void PartWidget::partFrameUpdated(const QString& part, const QString& mode, int /*frame*/){
-    if (part==mPartName && mModeName==mode){
+void PartWidget::partFrameUpdated(AssetRef part, const QString& mode, int /*frame*/){
+    if (part==mPartRef && mModeName==mode){
         // update ..
         updatePartFrames();
     }
 }
 
-void PartWidget::partFramesUpdated(const QString& part, const QString& mode){
-    if (part==mPartName && mModeName==mode){
+void PartWidget::partFramesUpdated(AssetRef part, const QString& mode){
+    if (part==mPartRef && mModeName==mode){
         // update ..
         updatePartFrames();
     }
 }
 
-void PartWidget::partNumPivotsUpdated(const QString& part, const QString& mode){
-    if (part==mPartName && mModeName==mode){
+void PartWidget::partNumPivotsUpdated(AssetRef part, const QString& mode){
+    if (part==mPartRef && mModeName==mode){
         // update ..
-        Part* part = PM()->getPart(mPartName);
+        Part* part = PM()->getPart(mPartRef);
         Part::Mode& mode = part->modes[mModeName];
         mNumPivots = mode.numPivots;
         showFrame(mFrameNumber);
@@ -357,10 +359,10 @@ void PartWidget::updatePropertiesOverlays(){
     }
 }
 
-void PartWidget::partPropertiesChanged(const QString& part){
-    if (part==mPartName){
+void PartWidget::partPropertiesChanged(AssetRef part){
+    if (part==mPartRef){
         // update ..
-        Part* part = PM()->getPart(mPartName);
+        Part* part = PM()->getPart(mPartRef);
         mProperties = part->properties;
         updatePropertiesOverlays();
         showFrame(mFrameNumber);
@@ -489,7 +491,7 @@ void PartWidget::play(bool play){
         }
     }
     else {
-        if (mAnimationTimer==NULL){
+        if (mAnimationTimer==nullptr){
             mAnimationTimer=new QTimer(this);
             connect(mAnimationTimer, SIGNAL(timeout()), this, SLOT(updateAnimation()));
         }
@@ -587,7 +589,7 @@ void PartWidget::partViewMousePressEvent(QMouseEvent *event){
                     }
                 }
 
-                DrawOnPartCommand* command = new DrawOnPartCommand(mPartName, mModeName, mFrameNumber, fillPattern, QPoint(0,0));
+                DrawOnPartCommand* command = new DrawOnPartCommand(mPartRef, mModeName, mFrameNumber, fillPattern, QPoint(0,0));
                 if (command->ok) MainWindow::Instance()->undoStack()->push(command);
                 else delete command;
             }
@@ -602,8 +604,8 @@ void PartWidget::partViewMousePressEvent(QMouseEvent *event){
     }
     else if (left&&mDrawToolType==kDrawToolStamp){
         // stamp
-        if (mClipboardItem!=NULL){
-            DrawOnPartCommand* command = new DrawOnPartCommand(mPartName, mModeName, mFrameNumber, mClipboardItem->pixmap().toImage().copy(),  mClipboardItem->pos().toPoint());
+        if (mClipboardItem!=nullptr){
+            DrawOnPartCommand* command = new DrawOnPartCommand(mPartRef, mModeName, mFrameNumber, mClipboardItem->pixmap().toImage().copy(),  mClipboardItem->pos().toPoint());
             if (command->ok)
                 MainWindow::Instance()->undoStack()->push(command);
             else
@@ -631,7 +633,7 @@ void PartWidget::partViewMouseMoveEvent(QMouseEvent *event){
         else if (mDrawToolType==kDrawToolEraser){
             eraseLineTo(mMousePos);
         }
-        else if (mDrawToolType==kDrawToolCopy && mCopyRectItem!=NULL){
+        else if (mDrawToolType==kDrawToolCopy && mCopyRectItem!=nullptr){
             QPointF pt = mPartView->mapToScene(event->pos().x(),event->pos().y());
             QRectF rect = mCopyRectItem->rect();
             int w = floor(pt.x()) - rect.x();
@@ -647,7 +649,7 @@ void PartWidget::partViewMouseMoveEvent(QMouseEvent *event){
         setPosition(mLastCanvasPosition + QPointF(diff));
     }
 
-    if (mClipboardItem!=NULL){
+    if (mClipboardItem!=nullptr){
         // Set proper position (mapped and snapped)
         QPointF pt = mPartView->mapToScene(mMousePos.x(),mMousePos.y());
         QPointF snap = QPointF(floor(pt.x()),floor(pt.y()));
@@ -664,7 +666,7 @@ void PartWidget::partViewMouseReleaseEvent(QMouseEvent *event){
             // Create the drawIntoCommand and clear the image and pixmap item
             // TODO: clip the image to save space..
             // Can use Pixmap->boundingRect()...
-            DrawOnPartCommand* command = new DrawOnPartCommand(mPartName, mModeName, mFrameNumber, *mOverlayImage, mOverlayPixmapItem->pos().toPoint());
+            DrawOnPartCommand* command = new DrawOnPartCommand(mPartRef, mModeName, mFrameNumber, *mOverlayImage, mOverlayPixmapItem->pos().toPoint());
             if (command->ok) MainWindow::Instance()->undoStack()->push(command);
             else delete command;
 
@@ -675,7 +677,7 @@ void PartWidget::partViewMouseReleaseEvent(QMouseEvent *event){
             eraseLineTo(event->pos());
 
             // TODO: Do the actual erasing with a command
-            EraseOnPartCommand* command = new EraseOnPartCommand(mPartName, mModeName, mFrameNumber, *mOverlayImage, mOverlayPixmapItem->pos().toPoint());
+            EraseOnPartCommand* command = new EraseOnPartCommand(mPartRef, mModeName, mFrameNumber, *mOverlayImage, mOverlayPixmapItem->pos().toPoint());
             if (command->ok) MainWindow::Instance()->undoStack()->push(command);
             else delete command;
 
@@ -711,10 +713,10 @@ void PartWidget::partViewMouseReleaseEvent(QMouseEvent *event){
             // QGuiApplication::clipboard()->setImage(subImg, QClipboard::Selection);
 
             // delete rect
-            if (mCopyRectItem!=NULL){
+            if (mCopyRectItem!=nullptr){
                 mPartView->scene()->removeItem(mCopyRectItem);
                 delete mCopyRectItem;
-                mCopyRectItem = NULL;
+                mCopyRectItem = nullptr;
             }
         }
     }
@@ -900,7 +902,7 @@ void PartWidget::selectColourUnderPoint(QPointF pt){
     QGraphicsPixmapItem* pi = mPixmapItems.at(mFrameNumber%mPixmapItems.size());
 
     bool inBounds = px>=0 || px<pi->pixmap().width() || py>=0 || py<pi->pixmap().height();
-    if (pi!=NULL && inBounds){
+    if (pi!=nullptr && inBounds){
         QImage img = pi->pixmap().toImage();
         QImage alpha = img.alphaChannel();
         QRgb rgb = img.pixel(pt.x(), pt.y());

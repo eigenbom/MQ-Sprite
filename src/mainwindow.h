@@ -36,13 +36,14 @@ public:
 
     // Notifications from commands that something has changed in the project
     void partListChanged();
-    void partRenamed(const QString& oldName, const QString& newName);
-    void partFrameUpdated(const QString& part, const QString& mode, int frame);
-    void partFramesUpdated(const QString& part, const QString& mode);
-    void partNumPivotsUpdated(const QString& part, const QString& mode);
-    void partPropertiesUpdated(const QString& part);
-    void partModesChanged(const QString& part);
-    void partModeRenamed(const QString& partName, const QString& oldModeName, const QString& newModeName);    
+    void partRenamed(AssetRef ref, const QString& newName);
+    void partFrameUpdated(AssetRef ref, const QString& mode, int frame);
+    void partFramesUpdated(AssetRef ref, const QString& mode);
+    void partNumPivotsUpdated(AssetRef ref, const QString& mode);
+    void partPropertiesUpdated(AssetRef ref);
+    void partModesChanged(AssetRef ref);
+    void partModeRenamed(AssetRef ref, const QString& oldModeName, const QString& newModeName);
+
     void compositeRenamed(const QString& oldName, const QString& newName);
     void compositeUpdated(const QString& compName);
     void compositeUpdatedMinorChanges(const QString& compName);
@@ -57,7 +58,7 @@ protected:
 public slots:
     void assetDoubleClicked(AssetRef ref, AssetType type);
     void partWidgetClosed(PartWidget*);
-    void openPartWidget(const QString& str);
+    void openPartWidget(AssetRef str);
     void compositeWidgetClosed(CompositeWidget*);
     void openCompositeWidget(const QString& str);
     void subWindowActivated(QMdiSubWindow*);
@@ -101,7 +102,7 @@ private:
     QStackedWidget *mStackedWidget;
     int mNoToolsIndex, mPToolsIndex, mCToolsIndex;
 
-    QMultiMap<QString,PartWidget*> mPartWidgets;
+    QMultiMap<AssetRef,PartWidget*> mPartWidgets;
     QMultiMap<QString,CompositeWidget*> mCompositeWidgets;
 
     QUndoStack* mUndoStack;

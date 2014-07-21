@@ -17,7 +17,7 @@ static const char* PLAYBACK_SPEED_MULTIPLIER_LABELS[NUM_PLAYBACK_SPEED_MULTIPLIE
 PartToolsWidget::PartToolsWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::PartToolsWidget),
-    mTarget(NULL)
+    mTarget(nullptr)
 {
     ui->setupUi(this);
 
@@ -171,7 +171,7 @@ void PartToolsWidget::setTargetPartWidget(PartWidget* p){
         disconnect(mTarget, SIGNAL(selectNextMode()), this, SLOT(selectNextMode()));
         disconnect(mTarget, SIGNAL(selectPreviousMode()), this, SLOT(selectPreviousMode()));
 
-        mTarget = NULL;
+        mTarget = nullptr;
     }
     if (p){
         mTarget = p;
@@ -446,7 +446,7 @@ void PartToolsWidget::addFrame(){
     if (mTarget){
         // qDebug() << "addFrame";
         stop();
-        NewFrameCommand* command = new NewFrameCommand(mTarget->partName(), mTarget->modeName(), mTarget->numFrames());
+        NewFrameCommand* command = new NewFrameCommand(mTarget->partRef(), mTarget->modeName(), mTarget->numFrames());
         if (command->ok){
             MainWindow::Instance()->undoStack()->push(command);
             goToFrame(mTarget->numFrames()-1);
@@ -461,7 +461,7 @@ void PartToolsWidget::addFrame(){
 void PartToolsWidget::copyFrame(){
     if (mTarget){
         stop();
-        CopyFrameCommand* command = new CopyFrameCommand(mTarget->partName(), mTarget->modeName(), mTarget->frame());
+        CopyFrameCommand* command = new CopyFrameCommand(mTarget->partRef(), mTarget->modeName(), mTarget->frame());
         if (command->ok){
             MainWindow::Instance()->undoStack()->push(command);
             goToFrame(mTarget->numFrames()-1);
@@ -478,7 +478,7 @@ void PartToolsWidget::deleteFrame(){
         stop();
         // Do it...
         if (mTarget->numFrames()>1){
-            DeleteFrameCommand* command = new DeleteFrameCommand(mTarget->partName(), mTarget->modeName(), mTarget->frame());
+            DeleteFrameCommand* command = new DeleteFrameCommand(mTarget->partRef(), mTarget->modeName(), mTarget->frame());
             if (command->ok){
                 MainWindow::Instance()->undoStack()->push(command);
             }
@@ -582,7 +582,7 @@ void PartToolsWidget::addMode(){
     if (mTarget){
         stop();
         QString mode = mComboBoxModes->currentText();
-        NewModeCommand* command = new NewModeCommand(mTarget->partName(), mode);
+        NewModeCommand* command = new NewModeCommand(mTarget->partRef(), mode);
         if (command->ok){
             MainWindow::Instance()->undoStack()->push(command);
         }
@@ -596,7 +596,7 @@ void PartToolsWidget::copyMode(){
     if (mTarget){
         stop();
         QString mode = mComboBoxModes->currentText();
-        CopyModeCommand* command = new CopyModeCommand(mTarget->partName(), mode);
+        CopyModeCommand* command = new CopyModeCommand(mTarget->partRef(), mode);
         if (command->ok){
             MainWindow::Instance()->undoStack()->push(command);
         }
@@ -612,7 +612,7 @@ void PartToolsWidget::deleteMode(){
         stop();
         QString mode = mComboBoxModes->currentText();
         if (mComboBoxModes->count()>1){
-            DeleteModeCommand* command = new DeleteModeCommand(mTarget->partName(), mode);
+            DeleteModeCommand* command = new DeleteModeCommand(mTarget->partRef(), mode);
             if (command->ok){
                 MainWindow::Instance()->undoStack()->push(command);
             }
@@ -622,7 +622,7 @@ void PartToolsWidget::deleteMode(){
         }
         else if (mComboBoxModes->count()==1){
             // Don't delete mode, but instead clear it..
-            ResetModeCommand* command = new ResetModeCommand(mTarget->partName(), mode);
+            ResetModeCommand* command = new ResetModeCommand(mTarget->partRef(), mode);
             if (command->ok){
                 MainWindow::Instance()->undoStack()->push(command);
             }
@@ -642,7 +642,7 @@ void PartToolsWidget::renameMode(){
                                              tr("Rename ") + currentMode + ":", QLineEdit::Normal,
                                              currentMode, &ok);
         if (ok && !text.isEmpty()){
-            RenameModeCommand* command = new RenameModeCommand(mTarget->partName(), currentMode, text);
+            RenameModeCommand* command = new RenameModeCommand(mTarget->partRef(), currentMode, text);
             if (command->ok){
                 MainWindow::Instance()->undoStack()->push(command);
             }

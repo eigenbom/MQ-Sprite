@@ -32,7 +32,7 @@ bool operator<(const AssetRef& a, const AssetRef& b){
  return a.uuid > b.uuid;
 }
 
-static ProjectModel* sInstance = NULL;
+static ProjectModel* sInstance = nullptr;
 
 ProjectModel* PM(){return ProjectModel::Instance();}
 

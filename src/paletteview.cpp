@@ -40,7 +40,7 @@ PaletteView::~PaletteView(){
 void PaletteView::loadPalette(const QString& palette){
     QPixmap pixmap = QPixmap(palette).scaled(140,140,Qt::KeepAspectRatio,Qt::FastTransformation); // KeepAspectRatioByExpanding
     if (pixmap.isNull()){
-        mLabel = NULL;
+        mLabel = nullptr;
         qWarning() << "Couldn't load default palette";
     }
     else {

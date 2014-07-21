@@ -18,10 +18,10 @@ static const char* PLAYBACK_SPEED_MULTIPLIER_LABELS[NUM_PLAYBACK_SPEED_MULTIPLIE
 CompositeToolsWidget::CompositeToolsWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::CompositeToolsWidget),
-    mTarget(NULL),
-    mModesSignalMapper(NULL),
-    mLoopSignalMapper(NULL),
-    mVisibleSignalMapper(NULL)
+    mTarget(nullptr),
+    mModesSignalMapper(nullptr),
+    mLoopSignalMapper(nullptr),
+    mVisibleSignalMapper(nullptr)
   {
     ui->setupUi(this);
 
@@ -58,7 +58,7 @@ void CompositeToolsWidget::setTargetCompWidget(CompositeWidget* cw){
         }
 
         QLayoutItem* item;
-        while ( ( item = mSetLayout->takeAt( 0 ) ) != NULL )
+        while ( ( item = mSetLayout->takeAt( 0 ) ) != nullptr )
         {
             delete item->widget();
             delete item;
@@ -70,7 +70,7 @@ void CompositeToolsWidget::setTargetCompWidget(CompositeWidget* cw){
         // disconnect
         disconnect(mTarget, SIGNAL(playActivated(bool)), this, SLOT(playActivated(bool)));
 
-        mTarget = NULL;
+        mTarget = nullptr;
     }
 
     if (cw){
@@ -149,7 +149,7 @@ void CompositeToolsWidget::updateSet(){
 
     // Setup UI with proper values
     QLayoutItem* item;
-    while ( ( item = mSetLayout->takeAt( 0 ) ) != NULL )
+    while ( ( item = mSetLayout->takeAt( 0 ) ) != nullptr )
     {
         delete item->widget();
         delete item;
@@ -160,9 +160,9 @@ void CompositeToolsWidget::updateSet(){
     delete mModesSignalMapper;
     delete mLoopSignalMapper;
     delete mVisibleSignalMapper;
-    mModesSignalMapper = NULL;
-    mLoopSignalMapper = NULL;
-    mVisibleSignalMapper = NULL;
+    mModesSignalMapper = nullptr;
+    mLoopSignalMapper = nullptr;
+    mVisibleSignalMapper = nullptr;
 
     // Create set UI
     Composite* comp = PM()->getComposite(mTarget->compName());

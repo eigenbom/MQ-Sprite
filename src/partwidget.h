@@ -49,16 +49,16 @@ class PartWidget : public QMdiSubWindow
     Q_OBJECT
     friend class PartView;
 public:
-    explicit PartWidget(const QString& partName, QWidget *parent = 0);
+    explicit PartWidget(AssetRef partRef, QWidget *parent = 0);
 
     // Project Model updates
     void setMode(const QString& mode);
 
     void partNameChanged(const QString& newPartName);    
-    void partFrameUpdated(const QString& part, const QString& mode, int frame);
-    void partFramesUpdated(const QString& part, const QString& mode);
-    void partNumPivotsUpdated(const QString& part, const QString& mode);
-    void partPropertiesChanged(const QString& part);
+    void partFrameUpdated(AssetRef part, const QString& mode, int frame);
+    void partFramesUpdated(AssetRef part, const QString& mode);
+    void partNumPivotsUpdated(AssetRef part, const QString& mode);
+    void partPropertiesChanged(AssetRef part);
 
     // updaters
     void updatePropertiesOverlays();
@@ -71,6 +71,7 @@ public:
     void setPlaybackSpeedMultiplier(int index, float value);
 
     // query
+    AssetRef partRef() const {return mPartRef;}
     QString partName() const {return mPartName;}
     QString modeName() const {return mModeName;}
     int zoom() const {return mZoom;}
@@ -129,6 +130,7 @@ public slots:
     void updateAnimation();
 
 protected:
+    AssetRef mPartRef;
     QString mPartName;
     QString mModeName;
     Part* mPart;

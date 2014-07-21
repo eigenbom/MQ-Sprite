@@ -29,7 +29,7 @@ void NewPartCommand::redo()
     } while (PM()->hasPart(name));
 
     Part* part = new Part;
-    part->ref = mUuid;
+    part->ref = PM()->createAssetRef();
     part->name = name;
     Part::Mode mode;
     mode.numFrames = 1;
@@ -44,13 +44,11 @@ void NewPartCommand::redo()
     QImage* img = new QImage(mode.width, mode.width, QImage::Format_ARGB32);
     img->fill(0x00FFFFFF);
     mode.images.push_back(img);
-    part->modes.insert("dflt", mode);
+    part->modes.insert("m000", mode);
     PM()->parts.insert(part->ref, part);
+
     MainWindow::Instance()->partListChanged();
-
-
-    // TODO: openPartWidget(AssetRef)
-    MainWindow::Instance()->openPartWidget(name);
+    MainWindow::Instance()->openPartWidget(part->ref);
 
 }
 
@@ -71,6 +69,7 @@ void CopyPartCommand::undo(){
     Part* p = PM()->parts.take(mCopy);
     delete p;
     // NB: images are deleted in the parts destructor
+
     MainWindow::Instance()->partListChanged();
 }
 
@@ -155,7 +154,7 @@ void RenamePartCommand::undo(){
         }
     }
 
-    MainWindow::Instance()->partRenamed(mNewName, mOldName);
+    MainWindow::Instance()->partRenamed(mRef, mOldName);
 }
 
 void RenamePartCommand::redo(){
@@ -179,7 +178,7 @@ void RenamePartCommand::redo(){
         }
     }
 
-    MainWindow::Instance()->partRenamed(mOldName, mNewName);
+    MainWindow::Instance()->partRenamed(mRef, mNewName);
 }
 
 NewCompositeCommand::NewCompositeCommand() {
@@ -317,39 +316,35 @@ void RenameCompositeCommand::redo(){
 
 
 
-/*
-
-NewModeCommand::NewModeCommand(const QString& partName, const QString& copyModeName):mPartName(partName), mCopyModeName(copyModeName){
-    ok = PM()->parts.contains(mPartName) && PM()->parts.value(mPartName)->modes.contains(mCopyModeName);
+NewModeCommand::NewModeCommand(AssetRef part, const QString& copyModeName):mPart(part), mCopyModeName(copyModeName){
+    ok = PM()->hasPart(mPart) && PM()->getPart(mPart)->modes.contains(mCopyModeName);
 
     if (ok){
         // Find a name
-        QString number = QString("%1").arg(sNewModeSuffix++, 3, 10, QChar('0'));
-        mModeName = QString("m") + number;
-        if (sNewModeSuffix>999) sNewModeSuffix = 0;
-        Part* p = PM()->parts.value(mPartName);
-        QStringList list = p->modes.keys();
-        while (list.contains(mModeName)){
-            QString number = QString("%1").arg(sNewModeSuffix++, 3, 10, QChar('0'));
-            mModeName = QString("m") + number;
-            if (sNewModeSuffix>999) sNewModeSuffix = 0;
-        }
+        int suffix = 0;
+        Part* p = PM()->parts.value(mPart);
+        QStringList modeList = p->modes.keys();
+        do {
+            mModeName = QString("m") + QString("%1").arg(suffix, 3, 10, QChar('0'));
+            suffix++;
+
+        } while (modeList.contains(mModeName));
     }
 }
 
 void NewModeCommand::undo(){
     // remove the mode..
-    Part* p = PM()->parts.value(mPartName);
+    Part* p = PM()->getPart(mPart);
     Part::Mode mode = p->modes.take(mModeName);
     foreach(QImage* img, mode.images){
         if (img) delete img;
     }
 
-    MainWindow::Instance()->partModesChanged(mPartName);
+    MainWindow::Instance()->partModesChanged(mPart);
 }
 
 void NewModeCommand::redo(){
-    Part* p = PM()->parts.value(mPartName);
+    Part* p = PM()->parts.value(mPart);
     Part::Mode copyMode = p->modes.value(mCopyModeName);
     Part::Mode m;
     m.numFrames = 1;
@@ -368,48 +363,50 @@ void NewModeCommand::redo(){
     }
     p->modes.insert(mModeName,m);
 
-    MainWindow::Instance()->partModesChanged(mPartName);
+    MainWindow::Instance()->partModesChanged(mPart);
 }
 
-DeleteModeCommand::DeleteModeCommand(const QString& partName, const QString& modeName):mPartName(partName),mModeName(modeName){
+
+DeleteModeCommand::DeleteModeCommand(AssetRef part, const QString& modeName):mPart(part),mModeName(modeName){
     // mModeCopy
-    ok = PM()->parts.contains(mPartName) && PM()->parts.value(mPartName)->modes.contains(mModeName);
+    ok = PM()->hasPart(mPart) && PM()->getPart(mPart)->modes.contains(mModeName);
 }
 
 void DeleteModeCommand::undo(){
     // re-add the mode..
-    Part* p = PM()->parts.value(mPartName);
+    Part* p = PM()->getPart(mPart);
     p->modes.insert(mModeName, mModeCopy);
-    MainWindow::Instance()->partModesChanged(mPartName);
+    MainWindow::Instance()->partModesChanged(mPart);
 }
 
 void DeleteModeCommand::redo(){
     // remove the mode..
-    Part* p = PM()->parts.value(mPartName);
+    Part* p = PM()->getPart(mPart);
     mModeCopy = p->modes.take(mModeName);
-    MainWindow::Instance()->partModesChanged(mPartName);
+    MainWindow::Instance()->partModesChanged(mPart);
 }
 
-ResetModeCommand::ResetModeCommand(const QString& partName, const QString& modeName):mPartName(partName),mModeName(modeName){
+
+ResetModeCommand::ResetModeCommand(AssetRef part, const QString& modeName):mPart(part),mModeName(modeName){
     // mModeCopy
-    ok = PM()->parts.contains(mPartName) && PM()->parts.value(mPartName)->modes.contains(mModeName);
+    ok = PM()->hasPart(mPart) && PM()->getPart(mPart)->modes.contains(mModeName);
 }
 
 void ResetModeCommand::undo(){
     // re-add the mode..
-    Part* p = PM()->parts.value(mPartName);
+    Part* p = PM()->getPart(mPart);
     Part::Mode& mode = p->modes[mModeName];
     for(int k=0;k<mode.numFrames;k++){
         delete mode.images.at(k);
     }
     p->modes[mModeName] = mModeCopy;
 
-    MainWindow::Instance()->partModesChanged(mPartName);
+    MainWindow::Instance()->partModesChanged(mPart);
 }
 
 void ResetModeCommand::redo(){
     // remove the mode..
-    Part* p = PM()->parts.value(mPartName);
+    Part* p = PM()->getPart(mPart);
     Part::Mode& mode = p->modes[mModeName];
     mModeCopy = mode;
     mModeCopy.anchor = mode.anchor;
@@ -435,39 +432,38 @@ void ResetModeCommand::redo(){
     mode.numFrames = 1;
     mode.framesPerSecond = 24;
 
-    MainWindow::Instance()->partModesChanged(mPartName);
+    MainWindow::Instance()->partModesChanged(mPart);
 }
 
-CopyModeCommand::CopyModeCommand(const QString& partName, const QString& modeName):mPartName(partName), mModeName(modeName){
-    ok = PM()->parts.contains(mPartName) && PM()->parts.value(mPartName)->modes.contains(mModeName);
+
+CopyModeCommand::CopyModeCommand(AssetRef part, const QString& modeName):mPart(part), mModeName(modeName){
+    ok = PM()->hasPart(mPart) && PM()->getPart(mPart)->modes.contains(mModeName);
 
     if (ok){
         // Find a name
-        QString number = QString("%1").arg(sNewModeSuffix++, 3, 10, QChar('0'));
-        mNewModeName = QString("m") + number;
-        if (sNewModeSuffix>999) sNewModeSuffix = 0;
-        Part* p = PM()->parts.value(mPartName);
-        QStringList list = p->modes.keys();
-        while (list.contains(mNewModeName)){
-            QString number = QString("%1").arg(sNewModeSuffix++, 3, 10, QChar('0'));
-            mNewModeName = QString("m") + number;
-            if (sNewModeSuffix>999) sNewModeSuffix = 0;
-        }
+        int suffix = 0;
+        Part* p = PM()->parts.value(mPart);
+        QStringList modeList = p->modes.keys();
+        do {
+            mNewModeName = QString("m") + QString("%1").arg(suffix, 3, 10, QChar('0'));
+            suffix++;
+
+        } while (modeList.contains(mNewModeName));
     }
 }
 
 void CopyModeCommand::undo(){
     // remove the mode..
-    Part* p = PM()->parts.value(mPartName);
+    Part* p = PM()->getPart(mPart);
     Part::Mode mode = p->modes.take(mNewModeName);
     foreach(QImage* img, mode.images){
         if (img) delete img;
     }
-    MainWindow::Instance()->partModesChanged(mPartName);
+    MainWindow::Instance()->partModesChanged(mPart);
 }
 
 void CopyModeCommand::redo(){
-    Part* p = PM()->parts.value(mPartName);
+    Part* p = PM()->getPart(mPart);
     Part::Mode copyMode = p->modes.value(mModeName);
     Part::Mode m;
     m.numFrames = copyMode.numFrames;
@@ -483,11 +479,12 @@ void CopyModeCommand::redo(){
         m.images.push_back(img);
     }
     p->modes.insert(mNewModeName,m);
-    MainWindow::Instance()->partModesChanged(mPartName);
+    MainWindow::Instance()->partModesChanged(mPart);
 }
 
-RenameModeCommand::RenameModeCommand(const QString& partName, const QString& oldModeName, const QString& newModeName)
-    :mPartName(partName), mOldModeName(oldModeName), mNewModeName(newModeName){
+
+RenameModeCommand::RenameModeCommand(AssetRef part, const QString& oldModeName, const QString& newModeName)
+    :mPart(part), mOldModeName(oldModeName), mNewModeName(newModeName){
     mNewModeName = mNewModeName.trimmed(); // .simplified();
     mNewModeName.replace(' ','_');
 
@@ -495,107 +492,112 @@ RenameModeCommand::RenameModeCommand(const QString& partName, const QString& old
         mNewModeName = "_";
     }
 
-    ok = PM()->parts.contains(mPartName) && PM()->parts.value(mPartName)->modes.contains(mOldModeName) && !PM()->parts.value(mPartName)->modes.contains(mNewModeName);
+    ok =PM()->hasPart(mPart) && PM()->getPart(mPart)->modes.contains(mOldModeName) && !PM()->getPart(mPart)->modes.contains(mNewModeName);
 }
 
 void RenameModeCommand::undo(){
-    Part* p = PM()->parts.value(mPartName);
+    Part* p = PM()->getPart(mPart);
     Part::Mode m = p->modes.take(mNewModeName);
     p->modes.insert(mOldModeName, m);
 
-    MainWindow::Instance()->partModeRenamed(mPartName, mNewModeName, mOldModeName);
+    MainWindow::Instance()->partModeRenamed(mPart, mNewModeName, mOldModeName);
 }
 
 void RenameModeCommand::redo(){
-     Part* p = PM()->parts.value(mPartName);
+     Part* p = PM()->getPart(mPart);
      Part::Mode m = p->modes.take(mOldModeName);
      p->modes.insert(mNewModeName, m);
 
-     MainWindow::Instance()->partModeRenamed(mPartName, mOldModeName, mNewModeName);
+     MainWindow::Instance()->partModeRenamed(mPart, mOldModeName, mNewModeName);
 }
 
 
 
 
 
-DrawOnPartCommand::DrawOnPartCommand(QString partName, QString mode, int frame, QImage data, QPoint offset)
-    :mPartName(partName),mMode(mode),mFrame(frame),mData(data),mOffset(offset){
-    ok = PM()->parts.contains(partName) &&
-            PM()->parts[partName]->modes.contains(mode) &&
-            PM()->parts[partName]->modes[mode].numFrames>=frame &&
-            PM()->parts[partName]->modes[mode].images.at(frame)!=NULL;
+
+DrawOnPartCommand::DrawOnPartCommand(AssetRef part, QString mode, int frame, QImage data, QPoint offset)
+    :mPart(part),mMode(mode),mFrame(frame),mData(data),mOffset(offset){
+    Part* p = PM()->getPart(mPart);
+    ok = p &&
+            p->modes.contains(mode) &&
+            p->modes[mode].numFrames>=frame &&
+            p->modes[mode].images.at(frame)!=nullptr;
 }
 
 void DrawOnPartCommand::undo(){
     //qDebug() << "DrawOnPartCommand::undo()";
     // Reload the old frame
-    QImage* img = PM()->parts[mPartName]->modes[mMode].images.at(mFrame);
+    QImage* img = PM()->getPart(mPart)->modes[mMode].images.at(mFrame);
     QPainter painter(img);
     painter.setCompositionMode(QPainter::CompositionMode_Source);
     painter.drawImage(0, 0, mOldFrame);
     // *img = mOldFrame;
 
     // tell everyone that the part has been updated
-    MainWindow::Instance()->partFrameUpdated(mPartName, mMode, mFrame);
+    MainWindow::Instance()->partFrameUpdated(mPart, mMode, mFrame);
 }
 
 void DrawOnPartCommand::redo(){    
     //qDebug() << "DrawOnPartCommand::redo()";
     // Record the old frame
     // Draw the image into the part
-    QImage* img = PM()->parts[mPartName]->modes[mMode].images.at(mFrame);
+    QImage* img = PM()->getPart(mPart)->modes[mMode].images.at(mFrame);
     mOldFrame = img->copy();
     QPainter painter(img);
     painter.drawImage(mOffset.x(), mOffset.y(), mData);
 
     // tell everyone that the part has been updated
-    MainWindow::Instance()->partFrameUpdated(mPartName, mMode, mFrame);
+    MainWindow::Instance()->partFrameUpdated(mPart, mMode, mFrame);
 }
 
-EraseOnPartCommand::EraseOnPartCommand(QString partName, QString mode, int frame, QImage data, QPoint offset)
-    :mPartName(partName),mMode(mode),mFrame(frame),mData(data),mOffset(offset){
-    ok = PM()->parts.contains(partName) &&
-            PM()->parts[partName]->modes.contains(mode) &&
-            PM()->parts[partName]->modes[mode].numFrames>=frame &&
-            PM()->parts[partName]->modes[mode].images.at(frame)!=NULL;
+EraseOnPartCommand::EraseOnPartCommand(AssetRef part, QString mode, int frame, QImage data, QPoint offset)
+    :mPart(part),mMode(mode),mFrame(frame),mData(data),mOffset(offset){
+     Part* p = PM()->getPart(part);
+    ok = p &&
+            p->modes.contains(mode) &&
+            p->modes[mode].numFrames>=frame &&
+            p->modes[mode].images.at(frame)!=nullptr;
 }
 
 void EraseOnPartCommand::undo(){
     // Reload the old frame
-    QImage* img = PM()->parts[mPartName]->modes[mMode].images.at(mFrame);
+    QImage* img = PM()->getPart(mPart)->modes[mMode].images.at(mFrame);
     QPainter painter(img);
     painter.drawImage(0, 0, mOldFrame);
     // *img = mOldFrame;
 
     // tell everyone that the part has been updated
-    MainWindow::Instance()->partFrameUpdated(mPartName, mMode, mFrame);
+    MainWindow::Instance()->partFrameUpdated(mPart, mMode, mFrame);
 }
 
 void EraseOnPartCommand::redo(){
     // Record the old frame
     // Draw the image into the part
-    QImage* img = PM()->parts[mPartName]->modes[mMode].images.at(mFrame);
+    QImage* img = PM()->getPart(mPart)->modes[mMode].images.at(mFrame);
     mOldFrame = *img;
     QPainter painter(img);
     painter.setCompositionMode(QPainter::CompositionMode_DestinationOut);
     painter.drawImage(mOffset.x(), mOffset.y(), mData);
 
     // tell everyone that the part has been updated
-    MainWindow::Instance()->partFrameUpdated(mPartName, mMode, mFrame);
+    MainWindow::Instance()->partFrameUpdated(mPart, mMode, mFrame);
 }
 
-NewFrameCommand::NewFrameCommand(QString partName, QString modeName, int index)
-    :mPartName(partName), mModeName(modeName), mIndex(index){
-    ok = PM()->parts.contains(partName) &&
-         PM()->parts[partName]->modes.contains(modeName);
+
+
+NewFrameCommand::NewFrameCommand(AssetRef part, QString modeName, int index)
+    :mPart(part), mModeName(modeName), mIndex(index){
+    ok = PM()->hasPart(part) &&
+         PM()->getPart(part)->modes.contains(modeName);
     if (ok){
-        int numFrames = PM()->parts[partName]->modes[modeName].numFrames;
+        int numFrames = PM()->getPart(part)->modes[modeName].numFrames;
         ok = ok && (index>=0 && index<=numFrames);
     }
 }
 
 void NewFrameCommand::undo(){
-    Part* part = PM()->parts[mPartName];
+    Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     QImage* img = mode.images.takeAt(mIndex);
     if (img) delete img;
@@ -605,12 +607,12 @@ void NewFrameCommand::undo(){
     }
     mode.numFrames--;
 
-    MainWindow::Instance()->partFramesUpdated(mPartName, mModeName);
+    MainWindow::Instance()->partFramesUpdated(mPart, mModeName);
 }
 
 void NewFrameCommand::redo(){
     // Create the new frame
-    Part* part = PM()->parts[mPartName];
+    Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     QImage* image = new QImage(mode.width, mode.height, QImage::Format_ARGB32);
     image->fill(0x00FFFFFF);
@@ -633,21 +635,21 @@ void NewFrameCommand::redo(){
     }
     mode.numFrames++;
 
-    MainWindow::Instance()->partFramesUpdated(mPartName, mModeName);
+    MainWindow::Instance()->partFramesUpdated(mPart, mModeName);
 }
 
-CopyFrameCommand::CopyFrameCommand(QString partName, QString modeName, int index)
-    :mPartName(partName), mModeName(modeName), mIndex(index){
-    ok = PM()->parts.contains(partName) &&
-         PM()->parts[partName]->modes.contains(modeName);
+CopyFrameCommand::CopyFrameCommand(AssetRef part, QString modeName, int index)
+    :mPart(part), mModeName(modeName), mIndex(index){
+    ok = PM()->hasPart(part) &&
+         PM()->getPart(part)->modes.contains(modeName);
     if (ok){
-        int numFrames = PM()->parts[partName]->modes[modeName].numFrames;
+        int numFrames = PM()->getPart(mPart)->modes[modeName].numFrames;
         ok = ok && (index>=0 && index<numFrames);
     }
 }
 
 void CopyFrameCommand::undo(){
-    Part* part = PM()->parts[mPartName];
+    Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     QImage* img = mode.images.takeAt(mIndex+1);
     if (img) delete img;
@@ -656,15 +658,15 @@ void CopyFrameCommand::undo(){
         mode.pivots[i].removeAt(mIndex+1);
     }
     mode.numFrames--;
-    MainWindow::Instance()->partFramesUpdated(mPartName, mModeName);
+    MainWindow::Instance()->partFramesUpdated(mPart, mModeName);
 }
 
 void CopyFrameCommand::redo(){
     // Create the new frame
-    Part* part = PM()->parts[mPartName];
+    Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
 
-    QImage* image = NULL;
+    QImage* image = nullptr;
     if (mIndex<mode.numFrames){
         mode.anchor.insert(mIndex+1, mode.anchor.at(mIndex));
         image = new QImage(mode.images.at(mIndex)->copy());
@@ -690,22 +692,22 @@ void CopyFrameCommand::redo(){
     }
     mode.numFrames++;
 
-    MainWindow::Instance()->partFramesUpdated(mPartName, mModeName);
+    MainWindow::Instance()->partFramesUpdated(mPart, mModeName);
 }
 
-DeleteFrameCommand::DeleteFrameCommand(QString partName, QString modeName, int index)
-    :mPartName(partName), mModeName(modeName), mIndex(index){
-    ok = PM()->parts.contains(partName) &&
-         PM()->parts[partName]->modes.contains(modeName);
+DeleteFrameCommand::DeleteFrameCommand(AssetRef part, QString modeName, int index)
+    :mPart(part), mModeName(modeName), mIndex(index){
+    ok = PM()->hasPart(part) &&
+         PM()->getPart(part)->modes.contains(modeName);
     if (ok){
-        int numFrames = PM()->parts[partName]->modes[modeName].numFrames;
+        int numFrames = PM()->getPart(mPart)->modes[modeName].numFrames;
         ok = ok && (index>=0 && index<numFrames);
     }
 }
 
 void DeleteFrameCommand::undo(){
     // Create the new frame
-    Part* part = PM()->parts[mPartName];
+    Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     QImage* image = new QImage(mImage);
     mode.images.insert(mIndex, image);
@@ -715,13 +717,13 @@ void DeleteFrameCommand::undo(){
     }
     mode.numFrames++;
 
-    MainWindow::Instance()->partFramesUpdated(mPartName, mModeName);
+    MainWindow::Instance()->partFramesUpdated(mPart, mModeName);
 
 }
 
 void DeleteFrameCommand::redo(){
     // NB: Remember old frame info (image, etc..)
-    Part* part = PM()->parts[mPartName];
+    Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     QImage* img = mode.images.takeAt(mIndex);
     mImage = img->copy();
@@ -732,9 +734,13 @@ void DeleteFrameCommand::redo(){
     }
     mode.numFrames--;
 
-    MainWindow::Instance()->partFramesUpdated(mPartName, mModeName);
+    MainWindow::Instance()->partFramesUpdated(mPart, mModeName);
 }
 
+
+/*
+ *
+ *
 UpdateAnchorAndPivotsCommand::UpdateAnchorAndPivotsCommand(QString partName, QString modeName, int index, QPoint anchor, QPoint p1, QPoint p2, QPoint p3, QPoint p4)
     :mPartName(partName), mModeName(modeName), mIndex(index), mAnchor(anchor) {
     mPivots[0] = p1;
@@ -745,7 +751,7 @@ UpdateAnchorAndPivotsCommand::UpdateAnchorAndPivotsCommand(QString partName, QSt
     ok = PM()->parts.contains(partName) &&
             PM()->parts[partName]->modes.contains(mModeName) &&
             PM()->parts[partName]->modes[mModeName].numFrames>mIndex &&
-            PM()->parts[partName]->modes[mModeName].images.at(mIndex)!=NULL;
+            PM()->parts[partName]->modes[mModeName].images.at(mIndex)!=nullptr;
 }
 
 void UpdateAnchorAndPivotsCommand::undo(){
