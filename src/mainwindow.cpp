@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // SETUP actions etc
     mPartList = findChild<PartList*>("partList");
     // mPartList->resize(1,1);
-    connect(mPartList, SIGNAL(assetDoubleClicked(AssetRef,AssetType)), this, SLOT(assetDoubleClicked(AssetRef,AssetType)));
+    connect(mPartList, SIGNAL(assetDoubleClicked(AssetRef)), this, SLOT(assetDoubleClicked(AssetRef)));
 
     // Set MDI Area
     mMdiArea = findChild<QMdiArea*>(tr("mdiArea"));
@@ -322,9 +322,9 @@ void MainWindow::closeEvent(QCloseEvent*){
     settings.setValue("main_window_state", saveState());
 }
 
-void MainWindow::assetDoubleClicked(AssetRef ref, AssetType type){
-    if (type==AssetType::Part) openPartWidget(ref);
-    else if (type==AssetType::Composite) openCompositeWidget(ref);
+void MainWindow::assetDoubleClicked(AssetRef ref){
+    if (ref.type==AssetType::Part) openPartWidget(ref);
+    else if (ref.type==AssetType::Composite) openCompositeWidget(ref);
 }
 
 void MainWindow::partWidgetClosed(PartWidget* pw){
@@ -380,7 +380,7 @@ void MainWindow::subWindowActivated(QMdiSubWindow* win){
 
             Part* part = PM()->getPart(pw->partRef());
             Q_ASSERT(part);
-            mPartList->setSelection(part->ref, AssetType::Part);
+            mPartList->setSelection(part->ref);
 
             mStackedWidget->setCurrentIndex(mPToolsIndex);
         }
@@ -390,7 +390,7 @@ void MainWindow::subWindowActivated(QMdiSubWindow* win){
             mCompositeToolsWidget->setTargetCompWidget(cw);
 
             Composite* comp = PM()->getComposite(cw->compRef());
-            mPartList->setSelection(comp->ref, AssetType::Composite);
+            mPartList->setSelection(comp->ref);
 
             mStackedWidget->setCurrentIndex(mCToolsIndex);
         }
@@ -604,6 +604,12 @@ void MainWindow::compositeUpdatedMinorChanges(AssetRef ref){
          mCompositeToolsWidget->compositeUpdated(ref);
     }
 }
+
+void MainWindow::folderRenamed(AssetRef ref, const QString& newName){
+    mPartList->updateList();
+    qDebug() << "TODO: Update the visual names/refs of parts and comps that are in this folder";
+}
+
 
 void MainWindow::changeBackgroundColour(){
     QSettings settings;

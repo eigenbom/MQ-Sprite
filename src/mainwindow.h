@@ -49,6 +49,8 @@ public:
     void compositeUpdatedMinorChanges(AssetRef ref);
     void compPropertiesUpdated(AssetRef ref);
 
+    void folderRenamed(AssetRef ref, const QString& newName);
+
     PartWidget* activePartWidget();
     CompositeWidget* activeCompositeWidget();
 
@@ -56,7 +58,7 @@ protected:
     void closeEvent(QCloseEvent* event);
 
 public slots:
-    void assetDoubleClicked(AssetRef ref, AssetType type);
+    void assetDoubleClicked(AssetRef ref);
     void partWidgetClosed(PartWidget*);
     void openPartWidget(AssetRef ref);
     void compositeWidgetClosed(CompositeWidget*);

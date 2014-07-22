@@ -29,11 +29,11 @@ AssetRef::AssetRef():uuid(){
 }
 
 bool operator==(const AssetRef& a, const AssetRef& b){
-    return a.uuid == b.uuid;
+    return a.uuid == b.uuid && a.type == b.type;
 }
 
 bool operator!=(const AssetRef& a, const AssetRef& b){
-    return a.uuid != b.uuid;
+    return !(a==b);
 }
 
 bool operator<(const AssetRef& a, const AssetRef& b){
@@ -239,7 +239,7 @@ bool ProjectModel::load(const QString& fileName){
                 // Load the part..
                 Part* part = new Part;
                 part->ref.uuid = QUuid(uuid);
-                part->type = AssetType::Part;
+                part->ref.type = AssetType::Part;
                 part->properties = QString();
                 JsonToPart(partObj, imageMap, part);
                 // Add <partName, part> to mParts
@@ -254,7 +254,7 @@ bool ProjectModel::load(const QString& fileName){
                 // Load the part..
                 Composite* composite = new Composite;
                 composite->ref.uuid = QUuid(uuid);
-                composite->type = AssetType::Composite;
+                composite->ref.type = AssetType::Composite;
                 composite->properties = QString();
                 JsonToComposite(compObj, composite);
                 // Add <partName, part> to mParts

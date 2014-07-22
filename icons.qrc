@@ -33,6 +33,9 @@
         <file>icons/flask-empty.png</file>
         <file>icons/stamp.png</file>
         <file>icons/stamp-2.png</file>
+        <file>icons/composite.png</file>
+        <file>icons/folder.png</file>
+        <file>icons/sprite.png</file>
     </qresource>
     <qresource prefix="/palette">
         <file>24bit.png</file>

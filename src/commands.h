@@ -129,6 +129,28 @@ private:
     AssetRef mRef;
 };
 
+class CDeleteFolder: public Command {
+public:
+    CDeleteFolder(AssetRef ref);
+    ~CDeleteFolder();
+    void undo();
+    void redo();
+
+private:
+    AssetRef mRef;
+    Folder* mCopy;
+};
+
+class CRenameFolder: public Command {
+public:
+    CRenameFolder(AssetRef ref, QString newName);
+    void undo();
+    void redo();
+
+private:
+    AssetRef mRef;
+    QString mOldName, mNewName;
+};
 
 
 

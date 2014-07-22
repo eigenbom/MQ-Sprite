@@ -1,9 +1,11 @@
 #ifndef PARTLIST_H
 #define PARTLIST_H
 
-#include "assetlistwidget.h"
 #include <QWidget>
 #include <QListWidget>
+
+#include "assetlistwidget.h"
+#include "assettreewidget.h"
 
 namespace Ui {
 class PartList;
@@ -18,7 +20,7 @@ public:
     ~PartList();
 
 signals:
-    void assetDoubleClicked(AssetRef ref, AssetType type);
+    void assetDoubleClicked(AssetRef ref);
 
 public slots:    
     void newPart();
@@ -31,11 +33,12 @@ public slots:
     
     void updateList();
 
-    void setSelection(AssetRef ref, AssetType type);
+    void setSelection(AssetRef ref);
 
 private:
     Ui::PartList *ui;
     AssetListWidget* mAssetListWidget;
+    AssetTreeWidget* mAssetTreeWidget;
 };
 
 #endif // PARTLIST_H

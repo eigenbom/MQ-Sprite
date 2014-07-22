@@ -21,7 +21,8 @@ HEADERS += \
            src/partwidget.h \
            src/projectmodel.h \
            src/resizemodedialog.h \
-           src/tarball.h
+           src/tarball.h \
+    src/assettreewidget.h
 FORMS += src/compositetoolswidget.ui \
          src/mainwindow.ui \
          src/partlist.ui \
@@ -40,7 +41,8 @@ SOURCES += \
            src/partwidget.cpp \
            src/projectmodel.cpp \
            src/resizemodedialog.cpp \
-           src/tarball.cpp
+           src/tarball.cpp \
+    src/assettreewidget.cpp
 RESOURCES += icons.qrc
 
 OTHER_FILES += \

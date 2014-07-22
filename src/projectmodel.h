@@ -27,6 +27,7 @@ enum class AssetType {
 
 struct AssetRef {
     QUuid uuid;
+    AssetType type;
     AssetRef();
 };
 
@@ -92,7 +93,6 @@ protected:
 
 struct Asset {
     AssetRef ref;
-    AssetType type;
     QString name;
 
     AssetRef parentFolder; // NULL if none

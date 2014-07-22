@@ -19,6 +19,7 @@ bool TryCommand(Command* command){
 
 CNewPart::CNewPart() {
     mUuid = PM()->createAssetRef();
+    mUuid.type = AssetType::Part;
     ok = true;
 }
 
@@ -35,14 +36,13 @@ void CNewPart::redo()
     QString name;
     int number = 0;
     do {
-      name = (number==0)?QString("part"):(QObject::tr("part_") + QString::number(number));
-      number++;
+        name = (number==0)?QString("part"):(QObject::tr("part_") + QString::number(number));
+        number++;
     } while (PM()->findPartByName(name)!=nullptr);
 
     Part* part = new Part;
     part->ref = mUuid;
     part->name = name;
-    part->type = AssetType::Part;
     Part::Mode mode;
     mode.numFrames = 1;
     mode.numPivots = 0;
@@ -73,6 +73,7 @@ CCopyPart::CCopyPart(AssetRef ref){
             mNewPartName = part->name + "_" + QString::number(copyNumber++);
         } while (PM()->findPartByName(mNewPartName)!=nullptr);
         mCopy = PM()->createAssetRef();
+        mCopy.type = AssetType::Part;
     }
 }
 
@@ -88,7 +89,6 @@ void CCopyPart::redo(){
     Part* part = new Part;
     part->ref = mCopy;
     part->name = mNewPartName;
-    part->type = AssetType::Part;
 
     const Part* partToCopy = PM()->parts.value(mOriginal);
     Q_ASSERT(partToCopy);
@@ -132,7 +132,7 @@ void CDeletePart::redo()
 {
     mCopy = PM()->parts[mRef];
     PM()->parts.remove(mRef);
-    MainWindow::Instance()->partListChanged();    
+    MainWindow::Instance()->partListChanged();
 }
 
 CRenamePart::CRenamePart(AssetRef ref, QString newName):mRef(ref){
@@ -170,6 +170,7 @@ CNewComposite::CNewComposite() {
     }
     while (PM()->findCompositeByName(mName)!=nullptr);
     mRef = PM()->createAssetRef();
+    mRef.type = AssetType::Composite;
     ok = true;
 }
 
@@ -186,7 +187,6 @@ void CNewComposite::redo()
     comp->root = -1;
     comp->name = mName;
     comp->ref = mRef;
-    comp->type = AssetType::Composite;
     PM()->composites.insert(comp->ref, comp);
     MainWindow::Instance()->partListChanged();
     MainWindow::Instance()->openCompositeWidget(mRef);
@@ -197,7 +197,7 @@ CCopyComposite::CCopyComposite(AssetRef ref){
     ok = (comp!=nullptr);
     if (ok){
         mOriginal = ref;
-        int copyNumber = 0;        
+        int copyNumber = 0;
         do {
             mNewCompositeName = comp->name + "_" + QString::number(copyNumber++);
         }
@@ -213,11 +213,11 @@ void CCopyComposite::undo(){
 
 void CCopyComposite::redo(){
     const Composite* comp = PM()->getComposite(mOriginal);
-    Composite* copy = new Composite;    
+    Composite* copy = new Composite;
     mCopy = PM()->createAssetRef();
+    mCopy.type = AssetType::Composite;
     copy->ref = mCopy;
     copy->name = mNewCompositeName;
-    copy->type = AssetType::Composite;
     copy->root = comp->root;
     copy->properties = comp->properties;
     copy->children = comp->children;
@@ -278,6 +278,7 @@ void CRenameComposite::redo(){
 
 CNewFolder::CNewFolder() {
     mRef = PM()->createAssetRef();
+    mRef.type = AssetType::Folder;
     ok = true;
 }
 
@@ -294,23 +295,68 @@ void CNewFolder::redo()
     QString name;
     int number = 0;
     do {
-      name = (number==0)?QString("folder"):(QObject::tr("folder_") + QString::number(number));
-      number++;
+        name = (number==0)?QString("folder"):(QObject::tr("folder_") + QString::number(number));
+        number++;
     } while (PM()->findFolderByName(name)!=nullptr);
 
     Folder* folder = new Folder;
     folder->ref = mRef;
     folder->name = name;
-    folder->type = AssetType::Folder;
     PM()->folders.insert(folder->ref, folder);
 
     MainWindow::Instance()->partListChanged();
 }
 
+CDeleteFolder::CDeleteFolder(AssetRef ref):mRef(ref),mCopy(nullptr) {
+    ok = PM()->hasFolder(ref);
+}
 
+CDeleteFolder::~CDeleteFolder(){
+    delete mCopy;
+}
 
+void CDeleteFolder::undo()
+{
+    qDebug() << "TODO: Undelete the folder contents";
 
+    PM()->folders.insert(mRef, mCopy);
+    mCopy = nullptr;
+    MainWindow::Instance()->partListChanged();
+}
 
+void CDeleteFolder::redo()
+{
+    qDebug() << "TODO: Deleting the folder contents";
+
+    mCopy = PM()->folders.take(mRef);
+    MainWindow::Instance()->partListChanged();
+}
+
+CRenameFolder::CRenameFolder(AssetRef ref, QString newName):mRef(ref){
+    ok = PM()->folders.contains(ref);
+
+    // Find new name with newName as base
+    int num = 0;
+    do {
+        mNewName = (num==0)?newName:(newName + "_" + QString::number(num));
+        num++;
+    } while (PM()->findFolderByName(mNewName)!=nullptr);
+}
+
+void CRenameFolder::undo(){
+    Folder* f = PM()->getFolder(mRef);
+    f->name = mOldName;
+
+    MainWindow::Instance()->folderRenamed(mRef, mOldName);
+}
+
+void CRenameFolder::redo(){
+    Folder* f = PM()->getFolder(mRef);
+    mOldName = f->name;
+    f->name = mNewName;
+
+    MainWindow::Instance()->folderRenamed(mRef, mNewName);
+}
 
 
 
@@ -507,11 +553,11 @@ void CRenameMode::undo(){
 }
 
 void CRenameMode::redo(){
-     Part* p = PM()->getPart(mPart);
-     Part::Mode m = p->modes.take(mOldModeName);
-     p->modes.insert(mNewModeName, m);
+    Part* p = PM()->getPart(mPart);
+    Part::Mode m = p->modes.take(mOldModeName);
+    p->modes.insert(mNewModeName, m);
 
-     MainWindow::Instance()->partModeRenamed(mPart, mOldModeName, mNewModeName);
+    MainWindow::Instance()->partModeRenamed(mPart, mOldModeName, mNewModeName);
 }
 
 
@@ -556,7 +602,7 @@ void CDrawOnPart::redo(){
 
 CEraseOnPart::CEraseOnPart(AssetRef part, QString mode, int frame, QImage data, QPoint offset)
     :mPart(part),mMode(mode),mFrame(frame),mData(data),mOffset(offset){
-     Part* p = PM()->getPart(part);
+    Part* p = PM()->getPart(part);
     ok = p &&
             p->modes.contains(mode) &&
             p->modes[mode].numFrames>=frame &&
@@ -592,7 +638,7 @@ void CEraseOnPart::redo(){
 CNewFrame::CNewFrame(AssetRef part, QString modeName, int index)
     :mPart(part), mModeName(modeName), mIndex(index){
     ok = PM()->hasPart(part) &&
-         PM()->getPart(part)->modes.contains(modeName);
+            PM()->getPart(part)->modes.contains(modeName);
     if (ok){
         int numFrames = PM()->getPart(part)->modes[modeName].numFrames;
         ok = ok && (index>=0 && index<=numFrames);
@@ -626,7 +672,7 @@ void CNewFrame::redo(){
     else if (mode.numFrames>0)
         mode.anchor.insert(mIndex, mode.anchor.at(0));
     else
-       mode.anchor.insert(mIndex, QPoint(0,0));
+        mode.anchor.insert(mIndex, QPoint(0,0));
 
     for(int i=0;i<MAX_PIVOTS;i++){
         if (mIndex<mode.numFrames)
@@ -644,7 +690,7 @@ void CNewFrame::redo(){
 CCopyFrame::CCopyFrame(AssetRef part, QString modeName, int index)
     :mPart(part), mModeName(modeName), mIndex(index){
     ok = PM()->hasPart(part) &&
-         PM()->getPart(part)->modes.contains(modeName);
+            PM()->getPart(part)->modes.contains(modeName);
     if (ok){
         int numFrames = PM()->getPart(mPart)->modes[modeName].numFrames;
         ok = ok && (index>=0 && index<numFrames);
@@ -679,9 +725,9 @@ void CCopyFrame::redo(){
         image = new QImage(mode.images.at(0)->copy());
     }
     else {
-       mode.anchor.insert(mIndex+1, QPoint(0,0));
-       image = new QImage(mode.width, mode.height, QImage::Format_ARGB32);
-       image->fill(0x00FFFFFF);
+        mode.anchor.insert(mIndex+1, QPoint(0,0));
+        image = new QImage(mode.width, mode.height, QImage::Format_ARGB32);
+        image->fill(0x00FFFFFF);
     }
     mode.images.insert(mIndex+1, image);
 
@@ -701,7 +747,7 @@ void CCopyFrame::redo(){
 CDeleteFrame::CDeleteFrame(AssetRef part, QString modeName, int index)
     :mPart(part), mModeName(modeName), mIndex(index){
     ok = PM()->hasPart(part) &&
-         PM()->getPart(part)->modes.contains(modeName);
+            PM()->getPart(part)->modes.contains(modeName);
     if (ok){
         int numFrames = PM()->getPart(mPart)->modes[modeName].numFrames;
         ok = ok && (index>=0 && index<numFrames);
@@ -784,7 +830,7 @@ void CUpdateAnchorAndPivots::redo(){
 CChangeNumPivots::CChangeNumPivots(AssetRef part, QString modeName, int numPivots)
     :mPart(part), mModeName(modeName), mNumPivots(numPivots){
     ok = PM()->hasPart(part) &&
-         PM()->getPart(part)->modes.contains(modeName);
+            PM()->getPart(part)->modes.contains(modeName);
 }
 
 void CChangeNumPivots::undo(){
@@ -805,9 +851,9 @@ void CChangeNumPivots::redo(){
 }
 
 CChangeModeSize::CChangeModeSize(AssetRef part, QString modeName, int width, int height, int offsetx, int offsety)
-   :mPart(part), mModeName(modeName), mWidth(width), mHeight(height), mOffsetX(offsetx), mOffsetY(offsety){
+    :mPart(part), mModeName(modeName), mWidth(width), mHeight(height), mOffsetX(offsetx), mOffsetY(offsety){
     ok = PM()->hasPart(mPart) &&
-         PM()->getPart(mPart)->modes.contains(modeName);
+            PM()->getPart(mPart)->modes.contains(modeName);
     ok = ok && mWidth>0 && mHeight>0;
 }
 
@@ -822,7 +868,7 @@ void CChangeModeSize::undo(){
 
     part->modes[mModeName] = mOldMode;
 
-     MainWindow::Instance()->partModesChanged(mPart);
+    MainWindow::Instance()->partModesChanged(mPart);
 }
 
 void CChangeModeSize::redo(){
@@ -867,7 +913,7 @@ void CChangeModeSize::redo(){
 CChangeModeFPS::CChangeModeFPS(AssetRef part, QString modeName, int fps)
     :mPart(part), mModeName(modeName), mFPS(fps){
     ok = PM()->hasPart(mPart) &&
-         PM()->getPart(mPart)->modes.contains(modeName);
+            PM()->getPart(mPart)->modes.contains(modeName);
     ok = ok && mFPS>0;
 }
 
@@ -997,7 +1043,7 @@ void CEditCompositeChild::redo(){
 }
 
 CNewCompositeChild::CNewCompositeChild(AssetRef comp):
-   mComp(comp){
+    mComp(comp){
     ok = PM()->hasComposite(mComp);
 
     if (ok){

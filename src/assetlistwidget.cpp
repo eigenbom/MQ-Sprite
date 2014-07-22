@@ -13,7 +13,7 @@ AssetListWidget::AssetListWidget(QWidget *parent) :
 bool AssetListWidget::eventFilter(QObject *object, QEvent *event)
 {
     if (object == viewport() && event->type()==QEvent::KeyPress){
-        QKeyEvent* key = dynamic_cast<QKeyEvent*>(event);
+        // QKeyEvent* key = dynamic_cast<QKeyEvent*>(event);
         // qDebug() << key->key();
         /*
         if (mAssetView->selectionModel()->hasSelection() && key->key()==Qt::Key_Delete){
@@ -28,7 +28,7 @@ bool AssetListWidget::eventFilter(QObject *object, QEvent *event)
         QListWidgetItem* item = this->currentItem();
         if (item){
             int index = item->data(Qt::UserRole).toInt();
-            emit assetDoubleClicked(mAssetRefs.at(index), mAssetTypes.at(index));
+            emit assetDoubleClicked(mAssetRefs.at(index));
         }
         return true;
     }
@@ -45,15 +45,9 @@ const QString& AssetListWidget::assetName(int id) const {
     return mAssetNames.at(id);
 }
 
-AssetType AssetListWidget::assetType(int id) const {
-    Q_ASSERT(id>=0 && id<mAssetTypes.size());
-    return mAssetTypes.at(id);
-}
-
 void AssetListWidget::updateList(){
     mAssetRefs.clear();
     mAssetNames.clear();
-    mAssetTypes.clear();
     this->clear();
 
     QFont font;
@@ -72,7 +66,6 @@ void AssetListWidget::updateList(){
 
         mAssetRefs.push_back(part->ref);
         mAssetNames.push_back(part->name);
-        mAssetTypes.push_back(AssetType::Part);
 
         this->addItem(item);
     }
@@ -86,7 +79,6 @@ void AssetListWidget::updateList(){
 
         mAssetRefs.push_back(comp->ref);
         mAssetNames.push_back(comp->name);
-        mAssetTypes.push_back(AssetType::Composite);
 
         this->addItem(item);
     }
@@ -100,7 +92,6 @@ void AssetListWidget::updateList(){
 
         mAssetRefs.push_back(folder->ref);
         mAssetNames.push_back(folder->name);
-        mAssetTypes.push_back(AssetType::Folder);
 
         this->addItem(item);
     }

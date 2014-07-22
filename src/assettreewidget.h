@@ -1,23 +1,23 @@
-#ifndef ASSETLISTWIDGET_H
-#define ASSETLISTWIDGET_H
+#ifndef ASSETTREEWIDGET_H
+#define ASSETTREEWIDGET_H
 
-#include <QListWidget>
+#include <QTreeWidget>
 #include <QVector>
 #include <QString>
 #include "projectmodel.h"
 
-class AssetListWidget : public QListWidget
+class AssetTreeWidget : public QTreeWidget
 {
     Q_OBJECT
 public:
-    explicit AssetListWidget(QWidget *parent = 0);
+    explicit AssetTreeWidget(QWidget *parent = 0);
     bool eventFilter(QObject *object, QEvent *event);
     AssetRef assetRef(int id) const;
     const QString& assetName(int id) const;
 
 signals:
     void assetDoubleClicked(AssetRef ref);
-    
+
 public slots:
     void updateList();
 
@@ -26,4 +26,4 @@ protected:
     QVector<QString> mAssetNames;
 };
 
-#endif // ASSETLISTWIDGET_H
+#endif // ASSETTREEWIDGET_H
