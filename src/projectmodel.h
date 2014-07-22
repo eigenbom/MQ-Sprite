@@ -12,6 +12,7 @@
 static const int MAX_PIVOTS = 4;
 static const int MAX_CHILDREN = 4;
 
+struct Asset;
 struct Part;
 struct Composite;
 struct Folder;
@@ -19,7 +20,7 @@ struct Folder;
 enum class AssetType {
     Part = 0,
     Composite = 1,
-    Folder = 2,
+    Folder = 2
 };
 
 // TODO: Convert my v1 save files
@@ -29,13 +30,14 @@ struct AssetRef {
     QUuid uuid;
     AssetType type;
     AssetRef();
+    bool isNull() const {return uuid.isNull();}
 };
 
 bool operator==(const AssetRef& a, const AssetRef& b);
 bool operator!=(const AssetRef& a, const AssetRef& b);
 bool operator<(const AssetRef& a, const AssetRef& b);
 
-// using AssetRef = QUuid;
+uint qHash(const AssetRef &key);
 
 // Global access
 class ProjectModel;
@@ -59,6 +61,9 @@ public:
     QString fileName;
 
     // Access assets
+    Asset* getAsset(const AssetRef& ref);
+    bool hasAsset(const AssetRef& ref);
+
     Part* getPart(const AssetRef& ref);
     bool hasPart(const AssetRef& ref);
 
@@ -95,11 +100,11 @@ struct Asset {
     AssetRef ref;
     QString name;
 
-    AssetRef parentFolder; // NULL if none
+    AssetRef parent; // isNull if none
 };
 
 struct Folder: public Asset {
-    QList<AssetRef> mChildren;
+    QList<AssetRef> children;
 };
 
 struct Part: public Asset {

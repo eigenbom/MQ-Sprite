@@ -24,12 +24,12 @@
 
 #include "tarball.h"
 
-AssetRef::AssetRef():uuid(){
+AssetRef::AssetRef():uuid(),type(AssetType::Folder){
 
 }
 
 bool operator==(const AssetRef& a, const AssetRef& b){
-    return a.uuid == b.uuid && a.type == b.type;
+    return (a.uuid.isNull() && b.uuid.isNull()) ||  a.uuid == b.uuid && a.type == b.type;
 }
 
 bool operator!=(const AssetRef& a, const AssetRef& b){
@@ -38,6 +38,10 @@ bool operator!=(const AssetRef& a, const AssetRef& b){
 
 bool operator<(const AssetRef& a, const AssetRef& b){
     return a.uuid > b.uuid;
+}
+
+uint qHash(const AssetRef &key){
+    return qHash(key.uuid);
 }
 
 static ProjectModel* sInstance = nullptr;
@@ -61,6 +65,19 @@ AssetRef ProjectModel::createAssetRef(){
     AssetRef ref;
     ref.uuid = QUuid::createUuid();
     return ref;
+}
+
+Asset* ProjectModel::getAsset(const AssetRef& ref){
+    switch (ref.type){
+        case AssetType::Part: return getPart(ref); break;
+        case AssetType::Composite: return getComposite(ref); break;
+        case AssetType::Folder: return getFolder(ref); break;
+    }
+    return nullptr;
+}
+
+bool ProjectModel::hasAsset(const AssetRef& ref){
+    return getAsset(ref)!=nullptr;
 }
 
 Part* ProjectModel::getPart(const AssetRef& uuid){

@@ -153,6 +153,15 @@ private:
 };
 
 
+class CMoveAsset: public Command {
+public:
+    CMoveAsset(AssetRef ref, AssetRef newParent);
+    void undo();
+    void redo();
+private:
+    AssetRef mRef, mOldParent, mNewParent;
+};
+
 
 
 

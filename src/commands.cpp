@@ -360,6 +360,59 @@ void CRenameFolder::redo(){
 
 
 
+CMoveAsset::CMoveAsset(AssetRef ref, AssetRef newParent):mRef(ref),mNewParent(newParent){
+    ok = PM()->hasAsset(ref);
+    ok = ok && (newParent.isNull() || PM()->hasFolder(newParent));
+    if (ok){
+        mOldParent = PM()->getAsset(ref)->parent;
+    }
+}
+
+void CMoveAsset::undo(){
+    // Move the asset back
+    Asset* asset = PM()->getAsset(mRef);
+    asset->parent = mOldParent;
+
+    Folder* newParent = PM()->getFolder(mNewParent);
+    if (newParent){
+        newParent->children.removeAll(asset->parent);
+    }
+
+    Folder* oldParent = PM()->getFolder(mOldParent);
+    if (oldParent){
+        oldParent->children.append(asset->ref);
+    }
+
+    MainWindow::Instance()->partListChanged();
+}
+
+void CMoveAsset::redo(){
+    // Move the asset
+    Asset* asset = PM()->getAsset(mRef);
+    asset->parent = mNewParent;
+
+    Folder* newParent = PM()->getFolder(mNewParent);
+    if (newParent){
+        newParent->children.append(asset->parent);
+    }
+
+    Folder* oldParent = PM()->getFolder(mOldParent);
+    if (oldParent){
+        oldParent->children.removeAll(asset->ref);
+    }
+
+    // NB: partListChanged() is called just once from PartList after all its moves are done
+    // MainWindow::Instance()->partListChanged();
+}
+
+
+
+
+
+
+
+
+
 
 
 
