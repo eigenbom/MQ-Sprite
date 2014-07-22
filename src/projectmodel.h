@@ -11,13 +11,15 @@
 
 static const int MAX_PIVOTS = 4;
 static const int MAX_CHILDREN = 4;
+
 struct Part;
 struct Composite;
+struct Folder;
 
 enum class AssetType {
-  Part = 0,
-  Composite = 1,
-  Folder = 2,
+    Part = 0,
+    Composite = 1,
+    Folder = 2,
 };
 
 // TODO: Convert my v1 save files
@@ -54,24 +56,26 @@ public:
 
     // globally accessible assets of the model
     QString fileName;
-    // QMap<QString,Part*> parts;
-    // QMap<QString,Composite*> composites;
 
-    // TODO: Access assets
+    // Access assets
     Part* getPart(const AssetRef& ref);
     bool hasPart(const AssetRef& ref);
+
     Composite* getComposite(const AssetRef& ref);
     bool hasComposite(const AssetRef& ref);
 
-    Part* findPartByName(const QString& name); // NB: Returns the first part with this name, but may have similar named assets
-    Composite* findCompositeByName(const QString& name); // NB: Returns the first part with this name, but may have similar named assets
+    Folder* getFolder(const AssetRef& ref);
+    bool hasFolder(const AssetRef& ref);
 
-    // @deprecated because assets are referred to with the assetref/uuid
-    // Part* getPart(const QString& name); // NB: Returns the first part with this name, but may have similar named assets
-    // bool hasPart(const QString& name);
+     // NB: Returns the first part with this name
+    Part* findPartByName(const QString& name);
+    Composite* findCompositeByName(const QString& name);
+    Folder* findFolderByName(const QString& name);
 
+    // Direct access (be careful!)
     QMap<AssetRef, Part*> parts;
     QMap<AssetRef, Composite*> composites;
+    QMap<AssetRef, Folder*> folders;
 
     // Change the project model
     void clear();
@@ -87,8 +91,15 @@ protected:
 
 
 struct Asset {
-  AssetRef ref;
-  QString name;
+    AssetRef ref;
+    AssetType type;
+    QString name;
+
+    AssetRef parentFolder; // NULL if none
+};
+
+struct Folder: public Asset {
+    QList<AssetRef> mChildren;
 };
 
 struct Part: public Asset {
@@ -102,7 +113,7 @@ struct Part: public Asset {
         // bool looping; // we know whether something is looping in the driver that runs it
         QList<QImage*> images; // test: QImage img(16,16); img.fill(QColor(255,0,0));
         QList<QPoint> anchor;
-        QList<QPoint> pivots[MAX_PIVOTS];        
+        QList<QPoint> pivots[MAX_PIVOTS];
     };
 
     QMap<QString,Mode> modes; // fourcc->mode

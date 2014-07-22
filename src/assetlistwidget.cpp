@@ -14,7 +14,7 @@ bool AssetListWidget::eventFilter(QObject *object, QEvent *event)
 {
     if (object == viewport() && event->type()==QEvent::KeyPress){
         QKeyEvent* key = dynamic_cast<QKeyEvent*>(event);
-        qDebug() << key->key();
+        // qDebug() << key->key();
         /*
         if (mAssetView->selectionModel()->hasSelection() && key->key()==Qt::Key_Delete){
             // Delete
@@ -87,6 +87,20 @@ void AssetListWidget::updateList(){
         mAssetRefs.push_back(comp->ref);
         mAssetNames.push_back(comp->name);
         mAssetTypes.push_back(AssetType::Composite);
+
+        this->addItem(item);
+    }
+    foreach(AssetRef ref, ProjectModel::Instance()->folders.keys()){
+        Folder* folder = PM()->getFolder(ref);
+
+        QListWidgetItem* item = new QListWidgetItem(folder->name);
+        item->setData(Qt::UserRole, index++);
+        item->setFont(font); // cfont
+        item->setBackgroundColor(QColor(230,230,230));
+
+        mAssetRefs.push_back(folder->ref);
+        mAssetNames.push_back(folder->name);
+        mAssetTypes.push_back(AssetType::Folder);
 
         this->addItem(item);
     }

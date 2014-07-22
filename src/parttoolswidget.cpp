@@ -29,6 +29,7 @@ PartToolsWidget::PartToolsWidget(QWidget *parent) :
     connect(mLineEditColour, SIGNAL(textEdited(QString)), this, SLOT(chooseColourByText(QString)));
 
     mTextEditProperties = findChild<QPlainTextEdit*>("textEditProperties");
+    Q_ASSERT(mTextEditProperties);
     connect(mTextEditProperties, SIGNAL(textChanged()), this, SLOT(textPropertiesEdited()));
 
     mPaletteView = findChild<PaletteView*>("paletteView");
@@ -194,14 +195,17 @@ void PartToolsWidget::setTargetPartWidget(PartWidget* p){
         hSliderNumPivots->setValue(p->numPivots());
 
         // set properties
-        mTextEditProperties->blockSignals(true);
-        mTextEditProperties->setPlainText(p->properties());
-        mTextEditProperties->blockSignals(false);
-
-        targetPartModesChanged();
-
         Part* part = PM()->getPart(p->partRef());
         Q_ASSERT(part);
+
+        mTextEditProperties->blockSignals(true);
+
+        QTextCursor cursor = mTextEditProperties->textCursor();
+        cursor.movePosition(QTextCursor::Start);
+        mTextEditProperties->setPlainText(part->properties);
+        mTextEditProperties->blockSignals(false);
+        targetPartModesChanged();
+
         Part::Mode m = part->modes.value(p->modeName());
         mPushButtonModeSize->setText(QString("%1x%2").arg(m.width).arg(m.height));
         mPushButtonModeFPS->setText(QString::number(m.framesPerSecond));
@@ -295,7 +299,7 @@ void PartToolsWidget::colourSelected(QColor colour){
 
 void PartToolsWidget::textPropertiesEdited(){
     if (mTarget){
-        TryCommand(new ChangePropertiesCommand(mTarget->partRef(), mTextEditProperties->toPlainText()));
+        TryCommand(new CChangePartProperties(mTarget->partRef(), mTextEditProperties->toPlainText()));
     }
 }
 
@@ -442,7 +446,7 @@ void PartToolsWidget::addFrame(){
         // qDebug() << "addFrame";
         stop();
 
-        if (TryCommand(new NewFrameCommand(mTarget->partRef(), mTarget->modeName(), mTarget->numFrames()))){
+        if (TryCommand(new CNewFrame(mTarget->partRef(), mTarget->modeName(), mTarget->numFrames()))){
             goToFrame(mTarget->numFrames()-1);
         }
     }
@@ -451,7 +455,7 @@ void PartToolsWidget::addFrame(){
 void PartToolsWidget::copyFrame(){
     if (mTarget){
         stop();
-        if (TryCommand(new CopyFrameCommand(mTarget->partRef(), mTarget->modeName(), mTarget->frame()))){
+        if (TryCommand(new CCopyFrame(mTarget->partRef(), mTarget->modeName(), mTarget->frame()))){
             goToFrame(mTarget->numFrames()-1);
         }
     }
@@ -462,7 +466,7 @@ void PartToolsWidget::deleteFrame(){
         stop();
         // Do it...
         if (mTarget->numFrames()>1){
-            TryCommand(new DeleteFrameCommand(mTarget->partRef(), mTarget->modeName(), mTarget->frame()));
+            TryCommand(new CDeleteFrame(mTarget->partRef(), mTarget->modeName(), mTarget->frame()));
         }
         else {
             // TODO: show error in status bar
@@ -530,7 +534,7 @@ void PartToolsWidget::goToFrame(int f){
 void PartToolsWidget::setNumPivots(int p){
     if (mTarget){
         // Create command
-        TryCommand(new ChangeNumPivotsCommand(mTarget->partRef(), mTarget->modeName(), p));
+        TryCommand(new CChangeNumPivots(mTarget->partRef(), mTarget->modeName(), p));
     }
 }
 
@@ -553,7 +557,7 @@ void PartToolsWidget::addMode(){
     if (mTarget){
         stop();
         QString mode = mComboBoxModes->currentText();
-        TryCommand(new NewModeCommand(mTarget->partRef(), mode));
+        TryCommand(new CNewMode(mTarget->partRef(), mode));
     }
 }
 
@@ -561,7 +565,7 @@ void PartToolsWidget::copyMode(){
     if (mTarget){
         stop();
         QString mode = mComboBoxModes->currentText();
-        TryCommand(new CopyModeCommand(mTarget->partRef(), mode));
+        TryCommand(new CCopyMode(mTarget->partRef(), mode));
     }
 }
 
@@ -570,11 +574,11 @@ void PartToolsWidget::deleteMode(){
         stop();
         QString mode = mComboBoxModes->currentText();
         if (mComboBoxModes->count()>1){
-            TryCommand(new DeleteModeCommand(mTarget->partRef(), mode));
+            TryCommand(new CDeleteMode(mTarget->partRef(), mode));
         }
         else if (mComboBoxModes->count()==1){
             // Don't delete mode, but instead clear it..
-            TryCommand(new ResetModeCommand(mTarget->partRef(), mode));
+            TryCommand(new CResetMode(mTarget->partRef(), mode));
         }
     }
 }
@@ -588,7 +592,7 @@ void PartToolsWidget::renameMode(){
                                              tr("Rename ") + currentMode + ":", QLineEdit::Normal,
                                              currentMode, &ok);
         if (ok && !text.isEmpty()){
-            TryCommand(new RenameModeCommand(mTarget->partRef(), currentMode, text));
+            TryCommand(new CRenameMode(mTarget->partRef(), currentMode, text));
         }
     }
 }
@@ -615,7 +619,7 @@ void PartToolsWidget::resizeModeDialogAccepted(){
         int offsetx = mResizeModeDialog->mLineEditOffsetX->text().toInt();
         int offsety = mResizeModeDialog->mLineEditOffsetY->text().toInt();
         QString currentMode = mComboBoxModes->currentText();
-        TryCommand(new ChangeModeSizeCommand(mTarget->partRef(), currentMode, width, height, offsetx, offsety));
+        TryCommand(new CChangeModeSize(mTarget->partRef(), currentMode, width, height, offsetx, offsety));
     }
 }
 
@@ -625,7 +629,7 @@ void PartToolsWidget::setModeFPS(){
         bool ok;
         int fps = QInputDialog::getInt(this, "Set FPS", tr("Set FPS:"), mPushButtonModeFPS->text().toInt(),1,600,1,&ok);
         if (ok){
-            TryCommand(new ChangeModeFPSCommand(mTarget->partRef(), currentMode, fps));
+            TryCommand(new CChangeModeFPS(mTarget->partRef(), currentMode, fps));
         }
     }
 }

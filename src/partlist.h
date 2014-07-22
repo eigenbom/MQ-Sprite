@@ -20,9 +20,10 @@ public:
 signals:
     void assetDoubleClicked(AssetRef ref, AssetType type);
 
-public slots:
+public slots:    
     void newPart();
     void newComp();
+    void newFolder();
     void renameAsset();
     void copyAsset();
     void deleteAsset();

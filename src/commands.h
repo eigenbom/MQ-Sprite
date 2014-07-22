@@ -6,6 +6,10 @@
 #include <QDebug>
 #include "projectmodel.h"
 
+// All undoable actions follow the Command pattern and inherit from QUndoCommand
+// TODO: Can compress the undo stack by implementing mergesWith() for some commands
+// Example command execution: TryCommand(new CRenamePart(ref, "New part name"));
+
 class Command: public QUndoCommand {
 public:
     bool ok; // is true if command can be processed    
@@ -112,8 +116,18 @@ private:
     QString mOldName, mNewName;
 };
 
+// Folders
 
+class CNewFolder: public Command
+{
+public:
+    CNewFolder();
+    void undo();
+    void redo();
 
+private:
+    AssetRef mRef;
+};
 
 
 

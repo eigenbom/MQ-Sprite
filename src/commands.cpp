@@ -17,19 +17,19 @@ bool TryCommand(Command* command){
     }
 }
 
-NewPartCommand::NewPartCommand() {    
+CNewPart::CNewPart() {
     mUuid = PM()->createAssetRef();
     ok = true;
 }
 
-void NewPartCommand::undo()
+void CNewPart::undo()
 {
     Part* p = PM()->parts.take(mUuid);
     delete p;
     MainWindow::Instance()->partListChanged();
 }
 
-void NewPartCommand::redo()
+void CNewPart::redo()
 {
     // Find a unique name
     QString name;
@@ -40,8 +40,9 @@ void NewPartCommand::redo()
     } while (PM()->findPartByName(name)!=nullptr);
 
     Part* part = new Part;
-    part->ref = PM()->createAssetRef();
+    part->ref = mUuid;
     part->name = name;
+    part->type = AssetType::Part;
     Part::Mode mode;
     mode.numFrames = 1;
     mode.numPivots = 0;
@@ -60,10 +61,9 @@ void NewPartCommand::redo()
 
     MainWindow::Instance()->partListChanged();
     MainWindow::Instance()->openPartWidget(part->ref);
-
 }
 
-CopyPartCommand::CopyPartCommand(AssetRef ref){
+CCopyPart::CCopyPart(AssetRef ref){
     mOriginal = ref;
     ok = PM()->hasPart(ref);
     if (ok){
@@ -76,7 +76,7 @@ CopyPartCommand::CopyPartCommand(AssetRef ref){
     }
 }
 
-void CopyPartCommand::undo(){
+void CCopyPart::undo(){
     Part* p = PM()->parts.take(mCopy);
     delete p;
     // NB: images are deleted in the parts destructor
@@ -84,10 +84,11 @@ void CopyPartCommand::undo(){
     MainWindow::Instance()->partListChanged();
 }
 
-void CopyPartCommand::redo(){
+void CCopyPart::redo(){
     Part* part = new Part;
     part->ref = mCopy;
     part->name = mNewPartName;
+    part->type = AssetType::Part;
 
     const Part* partToCopy = PM()->parts.value(mOriginal);
     Q_ASSERT(partToCopy);
@@ -112,29 +113,29 @@ void CopyPartCommand::redo(){
     MainWindow::Instance()->partListChanged();
 }
 
-DeletePartCommand::DeletePartCommand(AssetRef ref):mRef(ref),mCopy(nullptr) {
+CDeletePart::CDeletePart(AssetRef ref):mRef(ref),mCopy(nullptr) {
     ok = PM()->parts.contains(ref);
 }
 
-DeletePartCommand::~DeletePartCommand(){
+CDeletePart::~CDeletePart(){
     delete mCopy;
 }
 
-void DeletePartCommand::undo()
+void CDeletePart::undo()
 {
     PM()->parts.insert(mRef, mCopy);
     mCopy = nullptr;
     MainWindow::Instance()->partListChanged();
 }
 
-void DeletePartCommand::redo()
+void CDeletePart::redo()
 {
     mCopy = PM()->parts[mRef];
     PM()->parts.remove(mRef);
     MainWindow::Instance()->partListChanged();    
 }
 
-RenamePartCommand::RenamePartCommand(AssetRef ref, QString newName):mRef(ref){
+CRenamePart::CRenamePart(AssetRef ref, QString newName):mRef(ref){
     ok = PM()->parts.contains(ref);
 
     // Find new name with newName as base
@@ -145,14 +146,14 @@ RenamePartCommand::RenamePartCommand(AssetRef ref, QString newName):mRef(ref){
     } while (PM()->findPartByName(mNewName)!=nullptr);
 }
 
-void RenamePartCommand::undo(){
+void CRenamePart::undo(){
     Part* p = PM()->parts[mRef];
     p->name = mOldName;
 
     MainWindow::Instance()->partRenamed(mRef, mOldName);
 }
 
-void RenamePartCommand::redo(){
+void CRenamePart::redo(){
     Part* p = PM()->parts[mRef];
     mOldName = p->name;
     p->name = mNewName;
@@ -160,7 +161,7 @@ void RenamePartCommand::redo(){
     MainWindow::Instance()->partRenamed(mRef, mNewName);
 }
 
-NewCompositeCommand::NewCompositeCommand() {
+CNewComposite::CNewComposite() {
     // Find a name
     int compSuffix = 0;
     do {
@@ -172,25 +173,26 @@ NewCompositeCommand::NewCompositeCommand() {
     ok = true;
 }
 
-void NewCompositeCommand::undo()
+void CNewComposite::undo()
 {
     Composite* c = PM()->composites.take(mRef);
     delete c;
     MainWindow::Instance()->partListChanged();
 }
 
-void NewCompositeCommand::redo()
+void CNewComposite::redo()
 {
     Composite* comp = new Composite;
     comp->root = -1;
     comp->name = mName;
     comp->ref = mRef;
+    comp->type = AssetType::Composite;
     PM()->composites.insert(comp->ref, comp);
     MainWindow::Instance()->partListChanged();
     MainWindow::Instance()->openCompositeWidget(mRef);
 }
 
-CopyCompositeCommand::CopyCompositeCommand(AssetRef ref){
+CCopyComposite::CCopyComposite(AssetRef ref){
     Composite* comp = PM()->getComposite(ref);
     ok = (comp!=nullptr);
     if (ok){
@@ -203,18 +205,19 @@ CopyCompositeCommand::CopyCompositeCommand(AssetRef ref){
     }
 }
 
-void CopyCompositeCommand::undo(){
+void CCopyComposite::undo(){
     Composite* copy = PM()->composites.take(mCopy);
     delete copy;
     MainWindow::Instance()->partListChanged();
 }
 
-void CopyCompositeCommand::redo(){
+void CCopyComposite::redo(){
     const Composite* comp = PM()->getComposite(mOriginal);
     Composite* copy = new Composite;    
     mCopy = PM()->createAssetRef();
     copy->ref = mCopy;
     copy->name = mNewCompositeName;
+    copy->type = AssetType::Composite;
     copy->root = comp->root;
     copy->properties = comp->properties;
     copy->children = comp->children;
@@ -224,28 +227,28 @@ void CopyCompositeCommand::redo(){
     MainWindow::Instance()->partListChanged();
 }
 
-DeleteCompositeCommand::DeleteCompositeCommand(AssetRef ref): mRef(ref), mCopy(nullptr){
+CDeleteComposite::CDeleteComposite(AssetRef ref): mRef(ref), mCopy(nullptr){
     ok = PM()->hasComposite(ref);
 }
 
-DeleteCompositeCommand::~DeleteCompositeCommand(){
+CDeleteComposite::~CDeleteComposite(){
     delete mCopy;
 }
 
-void DeleteCompositeCommand::undo()
+void CDeleteComposite::undo()
 {
     PM()->composites.insert(mRef, mCopy);
     mCopy = nullptr;
     MainWindow::Instance()->partListChanged();
 }
 
-void DeleteCompositeCommand::redo()
+void CDeleteComposite::redo()
 {
     mCopy = PM()->composites.take(mRef);
     MainWindow::Instance()->partListChanged();
 }
 
-RenameCompositeCommand::RenameCompositeCommand(AssetRef ref, QString newName):mRef(ref),mNewName(newName){
+CRenameComposite::CRenameComposite(AssetRef ref, QString newName):mRef(ref),mNewName(newName){
     Composite* comp = PM()->getComposite(ref);
     ok = comp!=nullptr;
     if (ok){
@@ -259,18 +262,49 @@ RenameCompositeCommand::RenameCompositeCommand(AssetRef ref, QString newName):mR
     }
 }
 
-void RenameCompositeCommand::undo(){
+void CRenameComposite::undo(){
     Composite* p = PM()->getComposite(mRef);
     p->name = mOldName;
 
     MainWindow::Instance()->compositeRenamed(mRef, mOldName);
 }
 
-void RenameCompositeCommand::redo(){
+void CRenameComposite::redo(){
     Composite* p = PM()->getComposite(mRef);
     p->name = mNewName;
 
     MainWindow::Instance()->compositeRenamed(mRef, mNewName);
+}
+
+CNewFolder::CNewFolder() {
+    mRef = PM()->createAssetRef();
+    ok = true;
+}
+
+void CNewFolder::undo()
+{
+    Folder* p = PM()->folders.take(mRef);
+    delete p;
+    MainWindow::Instance()->partListChanged();
+}
+
+void CNewFolder::redo()
+{
+    // Find a unique name
+    QString name;
+    int number = 0;
+    do {
+      name = (number==0)?QString("folder"):(QObject::tr("folder_") + QString::number(number));
+      number++;
+    } while (PM()->findFolderByName(name)!=nullptr);
+
+    Folder* folder = new Folder;
+    folder->ref = mRef;
+    folder->name = name;
+    folder->type = AssetType::Folder;
+    PM()->folders.insert(folder->ref, folder);
+
+    MainWindow::Instance()->partListChanged();
 }
 
 
@@ -285,16 +319,7 @@ void RenameCompositeCommand::redo(){
 
 
 
-
-
-
-
-
-
-
-
-
-NewModeCommand::NewModeCommand(AssetRef part, const QString& copyModeName):mPart(part), mCopyModeName(copyModeName){
+CNewMode::CNewMode(AssetRef part, const QString& copyModeName):mPart(part), mCopyModeName(copyModeName){
     ok = PM()->hasPart(mPart) && PM()->getPart(mPart)->modes.contains(mCopyModeName);
 
     if (ok){
@@ -310,7 +335,7 @@ NewModeCommand::NewModeCommand(AssetRef part, const QString& copyModeName):mPart
     }
 }
 
-void NewModeCommand::undo(){
+void CNewMode::undo(){
     // remove the mode..
     Part* p = PM()->getPart(mPart);
     Part::Mode mode = p->modes.take(mModeName);
@@ -321,7 +346,7 @@ void NewModeCommand::undo(){
     MainWindow::Instance()->partModesChanged(mPart);
 }
 
-void NewModeCommand::redo(){
+void CNewMode::redo(){
     Part* p = PM()->parts.value(mPart);
     Part::Mode copyMode = p->modes.value(mCopyModeName);
     Part::Mode m;
@@ -345,19 +370,19 @@ void NewModeCommand::redo(){
 }
 
 
-DeleteModeCommand::DeleteModeCommand(AssetRef part, const QString& modeName):mPart(part),mModeName(modeName){
+CDeleteMode::CDeleteMode(AssetRef part, const QString& modeName):mPart(part),mModeName(modeName){
     // mModeCopy
     ok = PM()->hasPart(mPart) && PM()->getPart(mPart)->modes.contains(mModeName);
 }
 
-void DeleteModeCommand::undo(){
+void CDeleteMode::undo(){
     // re-add the mode..
     Part* p = PM()->getPart(mPart);
     p->modes.insert(mModeName, mModeCopy);
     MainWindow::Instance()->partModesChanged(mPart);
 }
 
-void DeleteModeCommand::redo(){
+void CDeleteMode::redo(){
     // remove the mode..
     Part* p = PM()->getPart(mPart);
     mModeCopy = p->modes.take(mModeName);
@@ -365,12 +390,12 @@ void DeleteModeCommand::redo(){
 }
 
 
-ResetModeCommand::ResetModeCommand(AssetRef part, const QString& modeName):mPart(part),mModeName(modeName){
+CResetMode::CResetMode(AssetRef part, const QString& modeName):mPart(part),mModeName(modeName){
     // mModeCopy
     ok = PM()->hasPart(mPart) && PM()->getPart(mPart)->modes.contains(mModeName);
 }
 
-void ResetModeCommand::undo(){
+void CResetMode::undo(){
     // re-add the mode..
     Part* p = PM()->getPart(mPart);
     Part::Mode& mode = p->modes[mModeName];
@@ -382,7 +407,7 @@ void ResetModeCommand::undo(){
     MainWindow::Instance()->partModesChanged(mPart);
 }
 
-void ResetModeCommand::redo(){
+void CResetMode::redo(){
     // remove the mode..
     Part* p = PM()->getPart(mPart);
     Part::Mode& mode = p->modes[mModeName];
@@ -414,7 +439,7 @@ void ResetModeCommand::redo(){
 }
 
 
-CopyModeCommand::CopyModeCommand(AssetRef part, const QString& modeName):mPart(part), mModeName(modeName){
+CCopyMode::CCopyMode(AssetRef part, const QString& modeName):mPart(part), mModeName(modeName){
     ok = PM()->hasPart(mPart) && PM()->getPart(mPart)->modes.contains(mModeName);
 
     if (ok){
@@ -430,7 +455,7 @@ CopyModeCommand::CopyModeCommand(AssetRef part, const QString& modeName):mPart(p
     }
 }
 
-void CopyModeCommand::undo(){
+void CCopyMode::undo(){
     // remove the mode..
     Part* p = PM()->getPart(mPart);
     Part::Mode mode = p->modes.take(mNewModeName);
@@ -440,7 +465,7 @@ void CopyModeCommand::undo(){
     MainWindow::Instance()->partModesChanged(mPart);
 }
 
-void CopyModeCommand::redo(){
+void CCopyMode::redo(){
     Part* p = PM()->getPart(mPart);
     Part::Mode copyMode = p->modes.value(mModeName);
     Part::Mode m;
@@ -461,7 +486,7 @@ void CopyModeCommand::redo(){
 }
 
 
-RenameModeCommand::RenameModeCommand(AssetRef part, const QString& oldModeName, const QString& newModeName)
+CRenameMode::CRenameMode(AssetRef part, const QString& oldModeName, const QString& newModeName)
     :mPart(part), mOldModeName(oldModeName), mNewModeName(newModeName){
     mNewModeName = mNewModeName.trimmed(); // .simplified();
     mNewModeName.replace(' ','_');
@@ -473,7 +498,7 @@ RenameModeCommand::RenameModeCommand(AssetRef part, const QString& oldModeName, 
     ok =PM()->hasPart(mPart) && PM()->getPart(mPart)->modes.contains(mOldModeName) && !PM()->getPart(mPart)->modes.contains(mNewModeName);
 }
 
-void RenameModeCommand::undo(){
+void CRenameMode::undo(){
     Part* p = PM()->getPart(mPart);
     Part::Mode m = p->modes.take(mNewModeName);
     p->modes.insert(mOldModeName, m);
@@ -481,7 +506,7 @@ void RenameModeCommand::undo(){
     MainWindow::Instance()->partModeRenamed(mPart, mNewModeName, mOldModeName);
 }
 
-void RenameModeCommand::redo(){
+void CRenameMode::redo(){
      Part* p = PM()->getPart(mPart);
      Part::Mode m = p->modes.take(mOldModeName);
      p->modes.insert(mNewModeName, m);
@@ -494,7 +519,7 @@ void RenameModeCommand::redo(){
 
 
 
-DrawOnPartCommand::DrawOnPartCommand(AssetRef part, QString mode, int frame, QImage data, QPoint offset)
+CDrawOnPart::CDrawOnPart(AssetRef part, QString mode, int frame, QImage data, QPoint offset)
     :mPart(part),mMode(mode),mFrame(frame),mData(data),mOffset(offset){
     Part* p = PM()->getPart(mPart);
     ok = p &&
@@ -503,8 +528,8 @@ DrawOnPartCommand::DrawOnPartCommand(AssetRef part, QString mode, int frame, QIm
             p->modes[mode].images.at(frame)!=nullptr;
 }
 
-void DrawOnPartCommand::undo(){
-    //qDebug() << "DrawOnPartCommand::undo()";
+void CDrawOnPart::undo(){
+    //qDebug() << "CDrawOnPart::undo()";
     // Reload the old frame
     QImage* img = PM()->getPart(mPart)->modes[mMode].images.at(mFrame);
     QPainter painter(img);
@@ -516,8 +541,8 @@ void DrawOnPartCommand::undo(){
     MainWindow::Instance()->partFrameUpdated(mPart, mMode, mFrame);
 }
 
-void DrawOnPartCommand::redo(){    
-    //qDebug() << "DrawOnPartCommand::redo()";
+void CDrawOnPart::redo(){
+    //qDebug() << "CDrawOnPart::redo()";
     // Record the old frame
     // Draw the image into the part
     QImage* img = PM()->getPart(mPart)->modes[mMode].images.at(mFrame);
@@ -529,7 +554,7 @@ void DrawOnPartCommand::redo(){
     MainWindow::Instance()->partFrameUpdated(mPart, mMode, mFrame);
 }
 
-EraseOnPartCommand::EraseOnPartCommand(AssetRef part, QString mode, int frame, QImage data, QPoint offset)
+CEraseOnPart::CEraseOnPart(AssetRef part, QString mode, int frame, QImage data, QPoint offset)
     :mPart(part),mMode(mode),mFrame(frame),mData(data),mOffset(offset){
      Part* p = PM()->getPart(part);
     ok = p &&
@@ -538,7 +563,7 @@ EraseOnPartCommand::EraseOnPartCommand(AssetRef part, QString mode, int frame, Q
             p->modes[mode].images.at(frame)!=nullptr;
 }
 
-void EraseOnPartCommand::undo(){
+void CEraseOnPart::undo(){
     // Reload the old frame
     QImage* img = PM()->getPart(mPart)->modes[mMode].images.at(mFrame);
     QPainter painter(img);
@@ -549,7 +574,7 @@ void EraseOnPartCommand::undo(){
     MainWindow::Instance()->partFrameUpdated(mPart, mMode, mFrame);
 }
 
-void EraseOnPartCommand::redo(){
+void CEraseOnPart::redo(){
     // Record the old frame
     // Draw the image into the part
     QImage* img = PM()->getPart(mPart)->modes[mMode].images.at(mFrame);
@@ -564,7 +589,7 @@ void EraseOnPartCommand::redo(){
 
 
 
-NewFrameCommand::NewFrameCommand(AssetRef part, QString modeName, int index)
+CNewFrame::CNewFrame(AssetRef part, QString modeName, int index)
     :mPart(part), mModeName(modeName), mIndex(index){
     ok = PM()->hasPart(part) &&
          PM()->getPart(part)->modes.contains(modeName);
@@ -574,7 +599,7 @@ NewFrameCommand::NewFrameCommand(AssetRef part, QString modeName, int index)
     }
 }
 
-void NewFrameCommand::undo(){
+void CNewFrame::undo(){
     Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     QImage* img = mode.images.takeAt(mIndex);
@@ -588,7 +613,7 @@ void NewFrameCommand::undo(){
     MainWindow::Instance()->partFramesUpdated(mPart, mModeName);
 }
 
-void NewFrameCommand::redo(){
+void CNewFrame::redo(){
     // Create the new frame
     Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
@@ -616,7 +641,7 @@ void NewFrameCommand::redo(){
     MainWindow::Instance()->partFramesUpdated(mPart, mModeName);
 }
 
-CopyFrameCommand::CopyFrameCommand(AssetRef part, QString modeName, int index)
+CCopyFrame::CCopyFrame(AssetRef part, QString modeName, int index)
     :mPart(part), mModeName(modeName), mIndex(index){
     ok = PM()->hasPart(part) &&
          PM()->getPart(part)->modes.contains(modeName);
@@ -626,7 +651,7 @@ CopyFrameCommand::CopyFrameCommand(AssetRef part, QString modeName, int index)
     }
 }
 
-void CopyFrameCommand::undo(){
+void CCopyFrame::undo(){
     Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     QImage* img = mode.images.takeAt(mIndex+1);
@@ -639,7 +664,7 @@ void CopyFrameCommand::undo(){
     MainWindow::Instance()->partFramesUpdated(mPart, mModeName);
 }
 
-void CopyFrameCommand::redo(){
+void CCopyFrame::redo(){
     // Create the new frame
     Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
@@ -673,7 +698,7 @@ void CopyFrameCommand::redo(){
     MainWindow::Instance()->partFramesUpdated(mPart, mModeName);
 }
 
-DeleteFrameCommand::DeleteFrameCommand(AssetRef part, QString modeName, int index)
+CDeleteFrame::CDeleteFrame(AssetRef part, QString modeName, int index)
     :mPart(part), mModeName(modeName), mIndex(index){
     ok = PM()->hasPart(part) &&
          PM()->getPart(part)->modes.contains(modeName);
@@ -683,7 +708,7 @@ DeleteFrameCommand::DeleteFrameCommand(AssetRef part, QString modeName, int inde
     }
 }
 
-void DeleteFrameCommand::undo(){
+void CDeleteFrame::undo(){
     // Create the new frame
     Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
@@ -699,7 +724,7 @@ void DeleteFrameCommand::undo(){
 
 }
 
-void DeleteFrameCommand::redo(){
+void CDeleteFrame::redo(){
     // NB: Remember old frame info (image, etc..)
     Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
@@ -719,7 +744,7 @@ void DeleteFrameCommand::redo(){
 
 
 
-UpdateAnchorAndPivotsCommand::UpdateAnchorAndPivotsCommand(AssetRef part, QString modeName, int index, QPoint anchor, QPoint p1, QPoint p2, QPoint p3, QPoint p4)
+CUpdateAnchorAndPivots::CUpdateAnchorAndPivots(AssetRef part, QString modeName, int index, QPoint anchor, QPoint p1, QPoint p2, QPoint p3, QPoint p4)
     :mPart(part), mModeName(modeName), mIndex(index), mAnchor(anchor) {
     mPivots[0] = p1;
     mPivots[1] = p2;
@@ -733,7 +758,7 @@ UpdateAnchorAndPivotsCommand::UpdateAnchorAndPivotsCommand(AssetRef part, QStrin
             p->modes[mModeName].images.at(mIndex)!=nullptr;
 }
 
-void UpdateAnchorAndPivotsCommand::undo(){
+void CUpdateAnchorAndPivots::undo(){
     Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     mode.anchor.replace(mIndex, mOldAnchor);
@@ -743,7 +768,7 @@ void UpdateAnchorAndPivotsCommand::undo(){
     MainWindow::Instance()->partFrameUpdated(mPart, mModeName, mIndex);
 }
 
-void UpdateAnchorAndPivotsCommand::redo(){
+void CUpdateAnchorAndPivots::redo(){
     Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     mOldAnchor = mode.anchor.at(mIndex);
@@ -756,13 +781,13 @@ void UpdateAnchorAndPivotsCommand::redo(){
     MainWindow::Instance()->partFrameUpdated(mPart, mModeName, mIndex);
 }
 
-ChangeNumPivotsCommand::ChangeNumPivotsCommand(AssetRef part, QString modeName, int numPivots)
+CChangeNumPivots::CChangeNumPivots(AssetRef part, QString modeName, int numPivots)
     :mPart(part), mModeName(modeName), mNumPivots(numPivots){
     ok = PM()->hasPart(part) &&
          PM()->getPart(part)->modes.contains(modeName);
 }
 
-void ChangeNumPivotsCommand::undo(){
+void CChangeNumPivots::undo(){
     Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     mode.numPivots = mOldNumPivots;
@@ -770,7 +795,7 @@ void ChangeNumPivotsCommand::undo(){
     MainWindow::Instance()->partNumPivotsUpdated(mPart, mModeName);
 }
 
-void ChangeNumPivotsCommand::redo(){
+void CChangeNumPivots::redo(){
     Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     mOldNumPivots = mode.numPivots;
@@ -779,14 +804,14 @@ void ChangeNumPivotsCommand::redo(){
     MainWindow::Instance()->partNumPivotsUpdated(mPart, mModeName);
 }
 
-ChangeModeSizeCommand::ChangeModeSizeCommand(AssetRef part, QString modeName, int width, int height, int offsetx, int offsety)
+CChangeModeSize::CChangeModeSize(AssetRef part, QString modeName, int width, int height, int offsetx, int offsety)
    :mPart(part), mModeName(modeName), mWidth(width), mHeight(height), mOffsetX(offsetx), mOffsetY(offsety){
     ok = PM()->hasPart(mPart) &&
          PM()->getPart(mPart)->modes.contains(modeName);
     ok = ok && mWidth>0 && mHeight>0;
 }
 
-void ChangeModeSizeCommand::undo(){
+void CChangeModeSize::undo(){
     Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
 
@@ -800,7 +825,7 @@ void ChangeModeSizeCommand::undo(){
      MainWindow::Instance()->partModesChanged(mPart);
 }
 
-void ChangeModeSizeCommand::redo(){
+void CChangeModeSize::redo(){
     Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     mOldWidth = mode.width;
@@ -839,14 +864,14 @@ void ChangeModeSizeCommand::redo(){
     MainWindow::Instance()->partModesChanged(mPart);
 }
 
-ChangeModeFPSCommand::ChangeModeFPSCommand(AssetRef part, QString modeName, int fps)
+CChangeModeFPS::CChangeModeFPS(AssetRef part, QString modeName, int fps)
     :mPart(part), mModeName(modeName), mFPS(fps){
     ok = PM()->hasPart(mPart) &&
          PM()->getPart(mPart)->modes.contains(modeName);
     ok = ok && mFPS>0;
 }
 
-void ChangeModeFPSCommand::undo(){
+void CChangeModeFPS::undo(){
     Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     mode.framesPerSecond = mOldFPS;
@@ -854,7 +879,7 @@ void ChangeModeFPSCommand::undo(){
     MainWindow::Instance()->partModesChanged(mPart);
 }
 
-void ChangeModeFPSCommand::redo(){
+void CChangeModeFPS::redo(){
     Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     mOldFPS = mode.framesPerSecond;
@@ -870,13 +895,13 @@ void ChangeModeFPSCommand::redo(){
 
 
 
-EditCompositeChildCommand::EditCompositeChildCommand(AssetRef comp, const QString& childName, AssetRef newPart, int newZ, int newParent, int newParentPivot)
+CEditCompositeChild::CEditCompositeChild(AssetRef comp, const QString& childName, AssetRef newPart, int newZ, int newParent, int newParentPivot)
     :mComp(comp), mChildName(childName), mNewPart(newPart), mNewParent(newParent), mNewParentPivot(newParentPivot), mNewZ(newZ)
 {
     ok = PM()->hasComposite(mComp) && PM()->getComposite(mComp)->childrenMap.contains(mChildName);
 }
 
-void EditCompositeChildCommand::undo(){
+void CEditCompositeChild::undo(){
     Composite* comp = PM()->getComposite(mComp);
     Composite::Child& child = comp->childrenMap[mChildName];
 
@@ -886,7 +911,7 @@ void EditCompositeChildCommand::undo(){
     child.part = mOldPart;
     child.z = mOldZ;
 
-    // qDebug() << "EditCompositeChildCommand: Updating child: " << mChildName << child.part << mNewZ << child.parent << child.parentPivot;
+    // qDebug() << "CEditCompositeChild: Updating child: " << mChildName << child.part << mNewZ << child.parent << child.parentPivot;
 
     // Fix all parent/children links...
     if (mOldParent!=mNewParent){
@@ -895,7 +920,7 @@ void EditCompositeChildCommand::undo(){
             Composite::Child& parent = comp->childrenMap[comp->children[mNewParent]];
             int index = parent.children.indexOf(child.index);
             if (index>=0){
-                // qDebug() << "EditCompositeChildCommand: Removing child from " << comp->children[mOldParent];
+                // qDebug() << "CEditCompositeChild: Removing child from " << comp->children[mOldParent];
                 parent.children.removeAt(index);
             }
         }
@@ -905,7 +930,7 @@ void EditCompositeChildCommand::undo(){
             Composite::Child& parent = comp->childrenMap[comp->children[mOldParent]];
             int index = parent.children.indexOf(child.index);
             if (index==-1){
-                // qDebug() << "EditCompositeChildCommand: Adding child to " << comp->children[mNewParent];
+                // qDebug() << "CEditCompositeChild: Adding child to " << comp->children[mNewParent];
                 parent.children.append(child.index);
             }
         }
@@ -918,7 +943,7 @@ void EditCompositeChildCommand::undo(){
     MainWindow::Instance()->compositeUpdatedMinorChanges(mComp);
 }
 
-void EditCompositeChildCommand::redo(){
+void CEditCompositeChild::redo(){
     Composite* comp = PM()->getComposite(mComp);
     Composite::Child& child = comp->childrenMap[mChildName];
 
@@ -941,7 +966,7 @@ void EditCompositeChildCommand::redo(){
             Composite::Child& parent = comp->childrenMap[comp->children[mOldParent]];
             int index = parent.children.indexOf(child.index);
             if (index>=0){
-                // qDebug() << "EditCompositeChildCommand: Removing child from " << comp->children[mOldParent];
+                // qDebug() << "CEditCompositeChild: Removing child from " << comp->children[mOldParent];
                 parent.children.removeAt(index);
             }
         }
@@ -952,7 +977,7 @@ void EditCompositeChildCommand::redo(){
             Composite::Child& parent = comp->childrenMap[comp->children[mNewParent]];
             int index = parent.children.indexOf(child.index);
             if (index==-1){
-                // qDebug() << "EditCompositeChildCommand: Adding child to " << comp->children[mNewParent];
+                // qDebug() << "CEditCompositeChild: Adding child to " << comp->children[mNewParent];
                 parent.children.append(child.index);
             }
         }
@@ -971,7 +996,7 @@ void EditCompositeChildCommand::redo(){
     MainWindow::Instance()->compositeUpdatedMinorChanges(mComp);
 }
 
-NewCompositeChildCommand::NewCompositeChildCommand(AssetRef comp):
+CNewCompositeChild::CNewCompositeChild(AssetRef comp):
    mComp(comp){
     ok = PM()->hasComposite(mComp);
 
@@ -988,7 +1013,7 @@ NewCompositeChildCommand::NewCompositeChildCommand(AssetRef comp):
     }
 }
 
-void NewCompositeChildCommand::undo(){
+void CNewCompositeChild::undo(){
     // Delete the child..
     Composite* comp = PM()->getComposite(mComp);
     comp->children.removeAll(mChildName);
@@ -998,7 +1023,7 @@ void NewCompositeChildCommand::undo(){
     MainWindow::Instance()->compositeUpdated(mComp);
 }
 
-void NewCompositeChildCommand::redo(){
+void CNewCompositeChild::redo(){
     // Add a new blank child..
     Composite* comp = PM()->getComposite(mComp);
     comp->children.append(mChildName);
@@ -1015,7 +1040,7 @@ void NewCompositeChildCommand::redo(){
     MainWindow::Instance()->compositeUpdated(mComp);
 }
 
-EditCompositeChildNameCommand::EditCompositeChildNameCommand(AssetRef ref, const QString& child, const QString& newChildName)
+CEditCompositeChildName::CEditCompositeChildName(AssetRef ref, const QString& child, const QString& newChildName)
     :mComp(ref), mOldChildName(child), mNewChildName(newChildName){
     Composite* comp = PM()->getComposite(mComp);
     ok = comp && comp->children.contains(child);
@@ -1028,7 +1053,7 @@ EditCompositeChildNameCommand::EditCompositeChildNameCommand(AssetRef ref, const
     }
 }
 
-void EditCompositeChildNameCommand::undo(){
+void CEditCompositeChildName::undo(){
     // Unchange the child name
     Composite* comp = PM()->getComposite(mComp);
     comp->children.replace(comp->children.indexOf(mNewChildName), mOldChildName);
@@ -1036,7 +1061,7 @@ void EditCompositeChildNameCommand::undo(){
     MainWindow::Instance()->compositeUpdated(mComp);
 }
 
-void EditCompositeChildNameCommand::redo(){
+void CEditCompositeChildName::redo(){
     // Change the child name
     Composite* comp = PM()->getComposite(mComp);
     comp->children.replace(comp->children.indexOf(mOldChildName), mNewChildName);
@@ -1044,7 +1069,7 @@ void EditCompositeChildNameCommand::redo(){
     MainWindow::Instance()->compositeUpdated(mComp);
 }
 
-DeleteCompositeChildCommand::DeleteCompositeChildCommand(AssetRef ref, const QString& childName)
+CDeleteCompositeChild::CDeleteCompositeChild(AssetRef ref, const QString& childName)
     :mComp(ref), mChildName(childName){
 
     Composite* comp = PM()->getComposite(mComp);
@@ -1055,7 +1080,7 @@ DeleteCompositeChildCommand::DeleteCompositeChildCommand(AssetRef ref, const QSt
     }
 }
 
-void DeleteCompositeChildCommand::undo(){
+void CDeleteCompositeChild::undo(){
     Composite* comp = new Composite(mCompCopy);
     delete PM()->composites.take(mComp);
     PM()->composites.insert(mComp, comp);
@@ -1068,7 +1093,7 @@ int FixIndex(int i, int ci){
     else return i;
 }
 
-void DeleteCompositeChildCommand::redo(){
+void CDeleteCompositeChild::redo(){
     Composite* comp = PM()->getComposite(mComp);
     mCompCopy = *comp; // make a copy so we can undo it
 
@@ -1119,18 +1144,18 @@ void DeleteCompositeChildCommand::redo(){
 }
 
 
-ChangePropertiesCommand::ChangePropertiesCommand(AssetRef part, QString properties)
+CChangePartProperties::CChangePartProperties(AssetRef part, QString properties)
     :mPart(part), mProperties(properties){
     ok = PM()->hasPart(mPart);
 }
 
-void ChangePropertiesCommand::undo(){
+void CChangePartProperties::undo(){
     Part* part = PM()->getPart(mPart);
     part->properties = mOldProperties;
     MainWindow::Instance()->partPropertiesUpdated(mPart);
 }
 
-void ChangePropertiesCommand::redo(){
+void CChangePartProperties::redo(){
     Part* part = PM()->getPart(mPart);
     mOldProperties = part->properties;
     part->properties = mProperties;
@@ -1138,19 +1163,19 @@ void ChangePropertiesCommand::redo(){
     MainWindow::Instance()->partPropertiesUpdated(mPart);
 }
 
-ChangeCompPropertiesCommand::ChangeCompPropertiesCommand(AssetRef comp, QString properties)
+CChangeCompProperties::CChangeCompProperties(AssetRef comp, QString properties)
     :mComp(comp), mProperties(properties){
     ok = PM()->hasComposite(mComp);
 }
 
-void ChangeCompPropertiesCommand::undo(){
+void CChangeCompProperties::undo(){
     Composite* comp = PM()->getComposite(mComp);
     comp->properties = mOldProperties;
 
     MainWindow::Instance()->compPropertiesUpdated(mComp);
 }
 
-void ChangeCompPropertiesCommand::redo(){
+void CChangeCompProperties::redo(){
     Composite* comp = PM()->getComposite(mComp);
     mOldProperties = comp->properties;
     comp->properties = mProperties;

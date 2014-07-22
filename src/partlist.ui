@@ -26,21 +26,6 @@
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
-   <property name="spacing">
-    <number>2</number>
-   </property>
-   <property name="leftMargin">
-    <number>0</number>
-   </property>
-   <property name="topMargin">
-    <number>0</number>
-   </property>
-   <property name="rightMargin">
-    <number>0</number>
-   </property>
-   <property name="bottomMargin">
-    <number>0</number>
-   </property>
    <item>
     <widget class="AssetListWidget" name="assetList">
      <property name="sizePolicy">
@@ -84,12 +69,6 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <property name="spacing">
-      <number>2</number>
-     </property>
-     <property name="sizeConstraint">
-      <enum>QLayout::SetDefaultConstraint</enum>
-     </property>
-     <property name="bottomMargin">
       <number>0</number>
      </property>
      <item>
@@ -110,6 +89,20 @@
       <widget class="QToolButton" name="toolButtonNewComp">
        <property name="toolTip">
         <string>New Comp</string>
+       </property>
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../icons.qrc">
+         <normaloff>:/icon/icons/browser-new-window-2.png</normaloff>:/icon/icons/browser-new-window-2.png</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="toolButtonNewFolder">
+       <property name="toolTip">
+        <string>New Folder</string>
        </property>
        <property name="text">
         <string>...</string>

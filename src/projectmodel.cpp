@@ -67,6 +67,28 @@ Part* ProjectModel::getPart(const AssetRef& uuid){
     return parts.value(uuid);
 }
 
+
+bool ProjectModel::hasPart(const AssetRef& uuid){
+    return getPart(uuid)!=nullptr;
+}
+
+Composite* ProjectModel::getComposite(const AssetRef& uuid){
+    return composites.value(uuid);
+}
+
+bool ProjectModel::hasComposite(const AssetRef& uuid){
+    return getComposite(uuid)!=nullptr;
+}
+
+Folder* ProjectModel::getFolder(const AssetRef& uuid){
+    return folders.value(uuid);
+}
+
+bool ProjectModel::hasFolder(const AssetRef& uuid){
+    return getFolder(uuid)!=nullptr;
+}
+
+
 Part* ProjectModel::findPartByName(const QString& name){
     for(Part* p: parts.values()){
         if (p->name==name){
@@ -74,19 +96,6 @@ Part* ProjectModel::findPartByName(const QString& name){
         }
     }
     return nullptr;
-}
-
-bool ProjectModel::hasPart(const AssetRef& uuid){
-    return getPart(uuid)!=nullptr;
-}
-/*
-bool ProjectModel::hasPart(const QString& name){
-    return getPart(name)!=nullptr;
-}
-*/
-
-Composite* ProjectModel::getComposite(const AssetRef& uuid){
-    return composites.value(uuid);
 }
 
 Composite* ProjectModel::findCompositeByName(const QString& name){
@@ -98,8 +107,13 @@ Composite* ProjectModel::findCompositeByName(const QString& name){
     return nullptr;
 }
 
-bool ProjectModel::hasComposite(const AssetRef& uuid){
-    return getComposite(uuid)!=nullptr;
+Folder* ProjectModel::findFolderByName(const QString& name){
+    for(Folder* f: folders.values()){
+        if (f->name==name){
+            return f;
+        }
+    }
+    return nullptr;
 }
 
 void ProjectModel::clear(){
@@ -107,12 +121,15 @@ void ProjectModel::clear(){
     foreach(AssetRef key, parts.keys()){
         delete parts[key];
     }
-    foreach(AssetRef key, composites.keys())
-    {
+    foreach(AssetRef key, composites.keys()){
         delete composites[key];
+    }
+    foreach(AssetRef key, folders.keys()){
+        delete folders[key];
     }
     parts.clear();
     composites.clear();
+    folders.clear();
     fileName = QString();
 }
 
@@ -222,6 +239,7 @@ bool ProjectModel::load(const QString& fileName){
                 // Load the part..
                 Part* part = new Part;
                 part->ref.uuid = QUuid(uuid);
+                part->type = AssetType::Part;
                 part->properties = QString();
                 JsonToPart(partObj, imageMap, part);
                 // Add <partName, part> to mParts
@@ -236,6 +254,7 @@ bool ProjectModel::load(const QString& fileName){
                 // Load the part..
                 Composite* composite = new Composite;
                 composite->ref.uuid = QUuid(uuid);
+                composite->type = AssetType::Composite;
                 composite->properties = QString();
                 JsonToComposite(compObj, composite);
                 // Add <partName, part> to mParts

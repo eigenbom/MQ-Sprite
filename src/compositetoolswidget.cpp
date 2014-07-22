@@ -308,14 +308,14 @@ void CompositeToolsWidget::targetCompPropertiesChanged(){
 
 void CompositeToolsWidget::textPropertiesEdited(){
     if (mTarget){
-        TryCommand(new ChangeCompPropertiesCommand(mTarget->compRef(), mTextEditProperties->toPlainText()));
+        TryCommand(new CChangeCompProperties(mTarget->compRef(), mTextEditProperties->toPlainText()));
     }
 }
 
 void CompositeToolsWidget::addPart(){
     if (mTarget){
         if (mTarget->isPlaying()) mTarget->play(false);
-        TryCommand(new NewCompositeChildCommand(mTarget->compRef()));
+        TryCommand(new CNewCompositeChild(mTarget->compRef()));
     }
 }
 
@@ -329,7 +329,7 @@ void CompositeToolsWidget::deletePart(){
         if (comp){
             if (row>=0 && row<comp->children.size()){
                 const QString& childName = comp->children.at(row);
-                TryCommand(new DeleteCompositeChildCommand(mTarget->compRef(), childName));
+                TryCommand(new CDeleteCompositeChild(mTarget->compRef(), childName));
             }
         }
     }
@@ -348,7 +348,7 @@ void CompositeToolsWidget::cellChanged(int row, int /*column*/){
         int parentPivot = mTableWidgetParts->item(row, 4)->text().toInt(&ok);
         if (!ok) parentPivot = -1;
         if (comp->children.at(row)!=childName){
-            TryCommand(new EditCompositeChildNameCommand(mTarget->compRef(), comp->children.at(row), childName));
+            TryCommand(new CEditCompositeChildName(mTarget->compRef(), comp->children.at(row), childName));
         }
         else {
             const Composite::Child& child = comp->childrenMap.value(childName);
@@ -366,7 +366,7 @@ void CompositeToolsWidget::cellChanged(int row, int /*column*/){
             // QString oldPartName = part?(part->name):QString();
             if (child.part!=pRef || child.parent!=parent || child.parentPivot!=parentPivot || child.z!=z){
                 // Update..
-                TryCommand(new EditCompositeChildCommand(mTarget->compRef(), childName, pRef, z, parent, parentPivot));
+                TryCommand(new CEditCompositeChild(mTarget->compRef(), childName, pRef, z, parent, parentPivot));
             }
         }
     }

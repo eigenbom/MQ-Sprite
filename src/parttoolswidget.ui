@@ -895,11 +895,8 @@
       </property>
       <item>
        <widget class="QPlainTextEdit" name="textEditProperties">
-        <property name="documentTitle">
-         <string/>
-        </property>
-        <property name="tabStopWidth">
-         <number>10</number>
+        <property name="placeholderText">
+         <string>Properties</string>
         </property>
        </widget>
       </item>

@@ -15,6 +15,7 @@ PartList::PartList(QWidget *parent) :
     connect(mAssetListWidget, SIGNAL(assetDoubleClicked(AssetRef,AssetType)), this, SIGNAL(assetDoubleClicked(AssetRef,AssetType)));
     connect(findChild<QToolButton*>("toolButtonNewPart"), SIGNAL(clicked()), this, SLOT(newPart()));
     connect(findChild<QToolButton*>("toolButtonNewComp"), SIGNAL(clicked()), this, SLOT(newComp()));
+    connect(findChild<QToolButton*>("toolButtonNewFolder"), SIGNAL(clicked()), this, SLOT(newFolder()));
     connect(findChild<QToolButton*>("toolButtonRenameAsset"), SIGNAL(clicked()), this, SLOT(renameAsset()));
     connect(findChild<QToolButton*>("toolButtonCopyAsset"), SIGNAL(clicked()), this, SLOT(copyAsset()));
     connect(findChild<QToolButton*>("toolButtonDeleteAsset"), SIGNAL(clicked()), this, SLOT(deleteAsset()));
@@ -34,6 +35,11 @@ void PartList::newPart()
 void PartList::newComp()
 {
     TryCommand(new CNewComposite());
+}
+
+void PartList::newFolder()
+{
+    TryCommand(new CNewFolder());
 }
 
 void PartList::renameAsset()
