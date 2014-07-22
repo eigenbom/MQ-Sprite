@@ -11,8 +11,8 @@ PartList::PartList(QWidget *parent) :
     ui(new Ui::PartList)
 {
     ui->setupUi(this);
-    mAssetListWidget = findChild<AssetListWidget*>("assetList");    
-    connect(mAssetListWidget, SIGNAL(assetDoubleClicked(AssetRef)), this, SIGNAL(assetDoubleClicked(AssetRef)));
+    // mAssetListWidget = findChild<AssetListWidget*>("assetList");
+    // connect(mAssetListWidget, SIGNAL(assetDoubleClicked(AssetRef)), this, SIGNAL(assetDoubleClicked(AssetRef)));
 
     mAssetTreeWidget = findChild<AssetTreeWidget*>("assetTree");
     connect(mAssetTreeWidget, SIGNAL(assetDoubleClicked(AssetRef)), this, SIGNAL(assetDoubleClicked(AssetRef)));
@@ -48,20 +48,20 @@ void PartList::newFolder()
 
 void PartList::renameAsset()
 {
-    QListWidgetItem* item = mAssetListWidget->currentItem();
+    QTreeWidgetItem* item = mAssetTreeWidget->currentItem();
     if (item){
-        int id = item->data(Qt::UserRole).toInt();
-        AssetRef ref = mAssetListWidget->assetRef(id);
-        const QString& name = mAssetListWidget->assetName(id);        
+        int id = item->data(0, Qt::UserRole).toInt();
+        AssetRef ref = mAssetTreeWidget->assetRef(id);
+        const QString& name = mAssetTreeWidget->assetName(id);
         bool ok;
         QString text = QInputDialog::getText(this, tr("Rename Asset"),
                                              tr("Rename ") + name + ":", QLineEdit::Normal,
                                              name, &ok);
         if (ok && !text.isEmpty()){
             switch(ref.type){
-                case AssetType::Part: TryCommand(new CRenamePart(ref, text)); break;
-                case AssetType::Composite: TryCommand(new CRenameComposite(ref, text)); break;
-                case AssetType::Folder: TryCommand(new CRenameFolder(ref, text)); break;
+            case AssetType::Part: TryCommand(new CRenamePart(ref, text)); break;
+            case AssetType::Composite: TryCommand(new CRenameComposite(ref, text)); break;
+            case AssetType::Folder: TryCommand(new CRenameFolder(ref, text)); break;
             }
         }
     }
@@ -69,44 +69,48 @@ void PartList::renameAsset()
 
 void PartList::copyAsset()
 {
-    QListWidgetItem* item = mAssetListWidget->currentItem();
-    if (item){
-        int id = item->data(Qt::UserRole).toInt();
-        AssetRef ref = mAssetListWidget->assetRef(id);
-        switch(ref.type){
+
+    for(QTreeWidgetItem* item: mAssetTreeWidget->selectedItems()){
+        if (item){
+            int id = item->data(0, Qt::UserRole).toInt();
+            AssetRef ref = mAssetTreeWidget->assetRef(id);
+            switch(ref.type){
             case AssetType::Part: TryCommand(new CCopyPart(ref)); break;
             case AssetType::Composite: TryCommand(new CCopyComposite(ref)); break;
             case AssetType::Folder: qDebug() << "TODO: Copy folder"; break;
-            // case AssetType::Folder: TryCommand(new CCopyFolder(ref)); break;
+                // case AssetType::Folder: TryCommand(new CCopyFolder(ref)); break;
+            }
         }
     }
 }
 
 void PartList::deleteAsset()
 {
-    QListWidgetItem* item = mAssetListWidget->currentItem();
-    if (item){
-        int id = item->data(Qt::UserRole).toInt();        
-        AssetRef ref = mAssetListWidget->assetRef(id);
-        switch(ref.type){
+    for(QTreeWidgetItem* item: mAssetTreeWidget->selectedItems()){
+        if (item){
+            int id = item->data(0, Qt::UserRole).toInt();
+            AssetRef ref = mAssetTreeWidget->assetRef(id);
+            switch(ref.type){
             case AssetType::Part: TryCommand(new CDeletePart(ref)); break;
             case AssetType::Composite: TryCommand(new CDeleteComposite(ref)); break;
             case AssetType::Folder: TryCommand(new CDeleteFolder(ref)); break;
+            }
         }
     }
 }
 
 void PartList::sortAssets(){
-    mAssetListWidget->sortItems();
+    // mAssetListWidget->sortItems();
 }
 
 void PartList::updateList(){
-    mAssetListWidget->updateList();
+    // mAssetListWidget->updateList();
     mAssetTreeWidget->updateList();
 }
 
 void PartList::setSelection(AssetRef){
-    qDebug() << "setSelection: ref";
+    // qDebug() << "TODO: setSelection: ref";
+
     /*
     for(int i=0;i<mAssetListWidget->count();i++){
         QListWidgetItem* item = mAssetListWidget->item(i);

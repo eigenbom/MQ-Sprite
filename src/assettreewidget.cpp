@@ -9,6 +9,8 @@
 AssetTreeWidget::AssetTreeWidget(QWidget *parent):QTreeWidget(parent)
 {
     connect(this, SIGNAL(itemActivated(QTreeWidgetItem*,int)), this, SLOT(activateItem(QTreeWidgetItem*,int)));
+    connect(this, SIGNAL(itemExpanded(QTreeWidgetItem*)), this, SLOT(expandItem(QTreeWidgetItem*)));
+    connect(this, SIGNAL(itemCollapsed(QTreeWidgetItem*)), this, SLOT(collapseItem(QTreeWidgetItem*)));
 
     setDragDropMode(QAbstractItemView::InternalMove);
     setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -180,6 +182,7 @@ void AssetTreeWidget::activateItem(QTreeWidgetItem* item, int){
 }
 
 void AssetTreeWidget::expandItem(QTreeWidgetItem* item){
+
     int index = item->data(0, Qt::UserRole).toInt();
     mOpenFolders.insert(mAssetRefs[index]);
 }

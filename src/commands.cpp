@@ -86,12 +86,14 @@ void CCopyPart::undo(){
 }
 
 void CCopyPart::redo(){
+    const Part* partToCopy = PM()->parts.value(mOriginal);
+
+    Q_ASSERT(partToCopy);
+
     Part* part = new Part;
     part->ref = mCopy;
     part->name = mNewPartName;
-
-    const Part* partToCopy = PM()->parts.value(mOriginal);
-    Q_ASSERT(partToCopy);
+    part->parent = partToCopy->parent;
     part->properties = partToCopy->properties;
     QMapIterator<QString, Part::Mode> it(partToCopy->modes);
     while (it.hasNext()) {
@@ -218,6 +220,7 @@ void CCopyComposite::redo(){
     mCopy.type = AssetType::Composite;
     copy->ref = mCopy;
     copy->name = mNewCompositeName;
+    copy->parent = comp->parent;
     copy->root = comp->root;
     copy->properties = comp->properties;
     copy->children = comp->children;

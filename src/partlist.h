@@ -4,7 +4,6 @@
 #include <QWidget>
 #include <QListWidget>
 
-#include "assetlistwidget.h"
 #include "assettreewidget.h"
 
 namespace Ui {
@@ -37,7 +36,7 @@ public slots:
 
 private:
     Ui::PartList *ui;
-    AssetListWidget* mAssetListWidget;
+    // AssetListWidget* mAssetListWidget;
     AssetTreeWidget* mAssetTreeWidget;
 };
 
