@@ -112,7 +112,8 @@ void CCopyPart::redo(){
     }
     PM()->parts.insert(mCopy, part);
 
-    MainWindow::Instance()->partListChanged();
+    // NB: Called from partlist
+    // MainWindow::Instance()->partListChanged();
 }
 
 CDeletePart::CDeletePart(AssetRef ref):mRef(ref),mCopy(nullptr) {
@@ -134,7 +135,7 @@ void CDeletePart::redo()
 {
     mCopy = PM()->parts[mRef];
     PM()->parts.remove(mRef);
-    MainWindow::Instance()->partListChanged();
+    // MainWindow::Instance()->partListChanged();
 }
 
 CRenamePart::CRenamePart(AssetRef ref, QString newName):mRef(ref){
@@ -227,7 +228,7 @@ void CCopyComposite::redo(){
     copy->childrenMap = comp->childrenMap;
     PM()->composites.insert(copy->ref, copy);
 
-    MainWindow::Instance()->partListChanged();
+    // MainWindow::Instance()->partListChanged();
 }
 
 CDeleteComposite::CDeleteComposite(AssetRef ref): mRef(ref), mCopy(nullptr){
@@ -248,7 +249,7 @@ void CDeleteComposite::undo()
 void CDeleteComposite::redo()
 {
     mCopy = PM()->composites.take(mRef);
-    MainWindow::Instance()->partListChanged();
+    // MainWindow::Instance()->partListChanged();
 }
 
 CRenameComposite::CRenameComposite(AssetRef ref, QString newName):mRef(ref),mNewName(newName){
@@ -324,6 +325,8 @@ void CDeleteFolder::undo()
 
     PM()->folders.insert(mRef, mCopy);
     mCopy = nullptr;
+
+
     MainWindow::Instance()->partListChanged();
 }
 
@@ -332,7 +335,8 @@ void CDeleteFolder::redo()
     qDebug() << "TODO: Deleting the folder contents";
 
     mCopy = PM()->folders.take(mRef);
-    MainWindow::Instance()->partListChanged();
+
+    // MainWindow::Instance()->partListChanged();
 }
 
 CRenameFolder::CRenameFolder(AssetRef ref, QString newName):mRef(ref){

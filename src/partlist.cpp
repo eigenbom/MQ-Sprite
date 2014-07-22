@@ -65,6 +65,8 @@ void PartList::renameAsset()
             }
         }
     }
+
+    MainWindow::Instance()->partListChanged();
 }
 
 void PartList::copyAsset()
@@ -82,6 +84,8 @@ void PartList::copyAsset()
             }
         }
     }
+
+    MainWindow::Instance()->partListChanged();
 }
 
 void PartList::deleteAsset()
@@ -97,6 +101,8 @@ void PartList::deleteAsset()
             }
         }
     }
+
+    MainWindow::Instance()->partListChanged();
 }
 
 void PartList::sortAssets(){
