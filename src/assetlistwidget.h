@@ -6,6 +6,7 @@
 #include <QString>
 #include "projectmodel.h"
 
+/// @deprecated use AssetTreeWidget instead
 class AssetListWidget : public QListWidget
 {
     Q_OBJECT
@@ -17,7 +18,7 @@ public:
 
 signals:
     void assetDoubleClicked(AssetRef ref);
-    
+
 public slots:
     void updateList();
 

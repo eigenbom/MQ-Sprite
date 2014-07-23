@@ -12,6 +12,7 @@ AssetTreeWidget::AssetTreeWidget(QWidget *parent):QTreeWidget(parent)
     connect(this, SIGNAL(itemExpanded(QTreeWidgetItem*)), this, SLOT(expandItem(QTreeWidgetItem*)));
     connect(this, SIGNAL(itemCollapsed(QTreeWidgetItem*)), this, SLOT(collapseItem(QTreeWidgetItem*)));
 
+    // setEditTriggers(QAbstractItemView::SelectedClicked | QAbstractItemView::EditKeyPressed);
     setDragDropMode(QAbstractItemView::InternalMove);
     setSelectionMode(QAbstractItemView::ExtendedSelection);
     setDropIndicatorShown(true);
@@ -43,6 +44,7 @@ void AssetTreeWidget::addAssetsWithParent(const QList<AssetRef>& assets, AssetRe
                 item->setText(0, asset->name);
                 item->setData(0, Qt::UserRole, index++);
                 item->setIcon(0, QIcon(":/icon/icons/folder.png"));
+
                 // item->setChildIndicatorPolicy(QTreeWidgetItem::ShowIndicator);
                 mAssetRefs.push_back(asset->ref);
                 mAssetNames.push_back(asset->name);
@@ -246,6 +248,30 @@ void AssetTreeWidget::dropEvent(QDropEvent *event)
     }
 
     // QTreeWidget::dropEvent(event);
+}
+
+void AssetTreeWidget::keyPressEvent(QKeyEvent* event){
+    if (event->key()==Qt::Key_Delete || event->key()==Qt::Key_Backspace){
+        // delete selected item
+        for(QTreeWidgetItem* item: selectedItems()){
+            // Delete ...
+
+            if (item){
+                int id = item->data(0, Qt::UserRole).toInt();
+                AssetRef ref = assetRef(id);
+                switch(ref.type){
+                case AssetType::Part: TryCommand(new CDeletePart(ref)); break;
+                case AssetType::Composite: TryCommand(new CDeleteComposite(ref)); break;
+                case AssetType::Folder: TryCommand(new CDeleteFolder(ref)); break;
+                }
+            }
+        }
+
+        MainWindow::Instance()->partListChanged();
+    }
+    else {
+        QTreeWidget::keyPressEvent(event);
+    }
 }
 
 /*

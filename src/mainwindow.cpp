@@ -179,7 +179,7 @@ void MainWindow::showViewOptionsDialog(){
         dsoSlider->setMaximum(10);
         dsoSlider->setSingleStep(1);
         dsoSlider->setPageStep(2);
-        dsoSlider->setValue(settings.value("drop_shadow_opacity", QVariant(100.0/255)).toFloat()*10);
+        dsoSlider->setValue(settings.value("drop_shadow_opacity", QVariant(0.f)).toFloat()*10);
         connect(dsoSlider, SIGNAL(valueChanged(int)), this, SLOT(setDropShadowOpacity(int)));
         QWidget* widget = new QWidget;
         widget->setLayout(new QHBoxLayout);
@@ -239,7 +239,7 @@ void MainWindow::showViewOptionsDialog(){
         osTransparencySlider->setMaximum(10);
         osTransparencySlider->setSingleStep(1);
         osTransparencySlider->setPageStep(2);
-        osTransparencySlider->setValue(settings.value("onion_skinning_transparency", 0.3).toFloat()*10);
+        osTransparencySlider->setValue(settings.value("onion_skinning_transparency", 0.0f).toFloat()*10);
         connect(osTransparencySlider, SIGNAL(valueChanged(int)), this, SLOT(setOnionSkinningTransparency(int)));
         QWidget* widget = new QWidget;
         widget->setLayout(new QHBoxLayout);
@@ -248,7 +248,7 @@ void MainWindow::showViewOptionsDialog(){
         layout->addWidget(widget);
 
         QCheckBox* osCheckBox = new QCheckBox("Enabled During Playback");
-        osCheckBox->setChecked(settings.value("onion_skinning_enabled_during_playback", true).toBool());
+        osCheckBox->setChecked(settings.value("onion_skinning_enabled_during_playback", false).toBool());
         connect(osCheckBox, SIGNAL(toggled(bool)), this, SLOT(setOnionSkinningEnabledDuringPlayback(bool)));
         layout->addWidget(osCheckBox);
     }

@@ -125,7 +125,8 @@ void PartWidget::updatePartFrames(){
             int h = mPart->modes.value(mModeName).height;
             setWindowTitle(mPartName + tr("/") + mModeName);
 
-            mBoundsItem = mPartView->scene()->addRect(-0.5,-0.5,w+1,h+1, QPen(QColor(0,0,0), 1, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin), QBrush(QColor(0,0,0,0)));
+            float boundsWidth = 0.1f; // 1.0f;
+            mBoundsItem = mPartView->scene()->addRect(-boundsWidth/2,-boundsWidth/2,w+boundsWidth,h+boundsWidth, QPen(QColor(0,0,0), boundsWidth, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin), QBrush(QColor(0,0,0,0)));
 
             if (m.numFrames>0){
                 for(int i=0;i<m.numFrames;i++){
@@ -418,7 +419,7 @@ void PartWidget::fitToWindow(){
 
 void PartWidget::updateDropShadow(){
     QSettings settings;
-    float opacity = settings.value("drop_shadow_opacity", QVariant(100.f/255)).toFloat();
+    float opacity = settings.value("drop_shadow_opacity", QVariant(0.f)).toFloat();
     float blur = settings.value("drop_shadow_blur", QVariant(0.5f)).toFloat();
     float dx = settings.value("drop_shadow_offset_x", QVariant(0.5f)).toFloat();
     float dy = settings.value("drop_shadow_offset_y", QVariant(0.5f)).toFloat();
@@ -436,8 +437,8 @@ void PartWidget::updateDropShadow(){
 
 void PartWidget::updateOnionSkinning(){
     QSettings settings;
-    float trans = settings.value("onion_skinning_transparency", 0.3f).toFloat();
-    bool edp = settings.value("onion_skinning_enabled_during_playback", true).toBool();
+    float trans = settings.value("onion_skinning_transparency", 0.0f).toFloat();
+    bool edp = settings.value("onion_skinning_enabled_during_playback", false).toBool();
     if (mPartView){
         mOnionSkinningEnabled = (trans>0);
         mOnionSkinningTransparency = trans*0.3;
@@ -980,7 +981,8 @@ void PartView::keyPressEvent(QKeyEvent *event){
 void PartView::drawBackground(QPainter *painter, const QRectF &rect)
 {
     QSettings settings;
-    QColor backgroundColour = QColor(settings.value("background_colour", QColor(111,198,143).rgba()).toUInt());       
+    QColor backgroundColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
+    // QColor backgroundColour = QColor(settings.value("background_colour", QColor(111,198,143).rgba()).toUInt());
     painter->fillRect(rect, backgroundColour);
 
     // Calculate good colour for bounds rect

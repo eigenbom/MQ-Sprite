@@ -820,7 +820,7 @@ void CompositeWidget::updateAnimation(){
 
 void CompositeWidget::updateDropShadow(){
     QSettings settings;
-    float opacity = settings.value("drop_shadow_opacity", QVariant(100.f/255)).toFloat();
+    float opacity = settings.value("drop_shadow_opacity", QVariant(0.f)).toFloat();
     float blur = settings.value("drop_shadow_blur", QVariant(0.5f)).toFloat();
     float dx = settings.value("drop_shadow_offset_x", QVariant(0.1f)).toFloat();
     float dy = settings.value("drop_shadow_offset_y", QVariant(0.1f)).toFloat();

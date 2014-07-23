@@ -46,10 +46,10 @@ void CNewPart::redo()
     Part::Mode mode;
     mode.numFrames = 1;
     mode.numPivots = 0;
-    mode.width = 8;
-    mode.height = 8;
+    mode.width = 16;
+    mode.height = 16;
     mode.framesPerSecond = 12;
-    mode.anchor.push_back(QPoint(4,4));
+    mode.anchor.push_back(QPoint(mode.width/2,mode.height-1));
     for(int i=0;i<MAX_PIVOTS;i++){
         mode.pivots[i].push_back(QPoint(0,0));
     }

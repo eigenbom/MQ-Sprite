@@ -30,8 +30,9 @@ signals:
 
 protected:
     Qt::DropActions supportedDropActions() const;
-     void dropEvent(QDropEvent *event);
-     void addAssetsWithParent(const QList<AssetRef>& assets, AssetRef parentRef, QTreeWidgetItem* parentItem, int& index);
+    void dropEvent(QDropEvent *event);
+    void addAssetsWithParent(const QList<AssetRef>& assets, AssetRef parentRef, QTreeWidgetItem* parentItem, int& index);
+    void keyPressEvent(QKeyEvent* event);
 
 protected:
     QVector<AssetRef> mAssetRefs;

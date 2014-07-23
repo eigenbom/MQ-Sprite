@@ -141,7 +141,7 @@ PartToolsWidget::PartToolsWidget(QWidget *parent) :
         mComboBoxPalettes->addItem(str);
     }
 
-    QString selectedPalette = settings.value("selected_palette", tr(":/palette/db16.png")).toString();
+    QString selectedPalette = settings.value("selected_palette", tr(":/palette/24bit.png")).toString();
     // qDebug() << "!" << selectedPalette << mComboBoxPalettes->findText(selectedPalette);
     mComboBoxPalettes->setCurrentIndex(mComboBoxPalettes->findText(selectedPalette));
     paletteActivated(selectedPalette);
