@@ -106,7 +106,7 @@ struct Asset {
 };
 
 struct Folder: public Asset {
-    QList<AssetRef> children;
+    QList<AssetRef> children; // NB: not used properly yet
 };
 
 struct Part: public Asset {
