@@ -89,6 +89,8 @@ public:
     bool save(const QString& fileName);
 
 protected:
+    static void JsonToFolder(const QJsonObject& obj, Folder* folder);
+    static void FolderToJson(const QString& name, const Folder& folder, QJsonObject* obj);
     static void JsonToPart(const QJsonObject& obj, const QMap<QString,QImage*>& imageMap, Part* part);
     static void PartToJson(const QString& name, const Part& part, QJsonObject* obj, QMap<QString,QImage*>* imageMap);
     static void CompositeToJson(const QString& name, const Composite& comp, QJsonObject* obj);

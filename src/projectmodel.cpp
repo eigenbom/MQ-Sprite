@@ -246,8 +246,23 @@ bool ProjectModel::load(const QString& fileName){
 
     // Load data.json, connecting the Images* too
     {
+        QJsonObject folders = dataObj.value("folders").toObject();
         QJsonObject parts = dataObj.value("parts").toObject();
         QJsonObject comps = dataObj.value("comps").toObject();
+
+        if (!folders.isEmpty()){
+            for(QJsonObject::iterator it = folders.begin(); it!=folders.end(); it++){
+                const QString& uuid = it.key();
+                const QJsonObject& folderObj = it.value().toObject();
+
+                // Load the part..
+                Folder* folder = new Folder;
+                folder->ref.uuid = QUuid(uuid);
+                folder->ref.type = AssetType::Folder;
+                JsonToFolder(folderObj, folder);
+                this->folders.insert(folder->ref, folder);
+            }
+        }
 
         if (!parts.isEmpty()){
             for(QJsonObject::iterator it = parts.begin(); it!=parts.end(); it++){
@@ -304,7 +319,21 @@ bool ProjectModel::save(const QString& fileName){
 
         // version etc
         data.insert("version", PROJECT_SAVE_FILE_VERSION);
-        // data.insert("test", QString("booo"));
+
+        // folder
+        QJsonObject foldersObject;
+
+        QMapIterator<AssetRef, Folder*> fit(this->folders);
+        while (fit.hasNext()){
+            fit.next();
+            QJsonObject folderObject;
+            const Folder* f = fit.value();
+            FolderToJson(f->name, *f, &folderObject);
+
+            QString& uuid = f->ref.uuid.toString();
+            foldersObject.insert(uuid, folderObject);
+        }
+        data.insert("folders", foldersObject);
 
         // parts
         QJsonObject partsObject;
@@ -413,9 +442,34 @@ bool ProjectModel::save(const QString& fileName){
     */
 }
 
+
+void ProjectModel::JsonToFolder(const QJsonObject& obj, Folder* folder){
+    // Load name
+    folder->name = obj["name"].toString();
+
+    if (obj.contains("parent")){
+        folder->parent.uuid = QUuid(obj["parent"].toString());
+        folder->parent.type = AssetType::Folder;
+    }
+}
+
+void ProjectModel::FolderToJson(const QString& name, const Folder& folder, QJsonObject* obj){
+
+    obj->insert("name", name);
+    if (!folder.parent.isNull()){
+        obj->insert("parent", folder.parent.uuid.toString());
+    }
+}
+
+
 void ProjectModel::JsonToPart(const QJsonObject& obj, const QMap<QString,QImage*>& imageMap, Part* part){
     // Load name
     part->name = obj["name"].toString();
+
+    if (obj.contains("parent")){
+        part->parent.uuid = QUuid(obj["parent"].toString());
+        part->parent.type = AssetType::Folder;
+    }
 
     // foreach mode
     for(QJsonObject::const_iterator it=obj.begin();it!=obj.end();it++){        
@@ -473,10 +527,15 @@ void ProjectModel::PartToJson(const QString& name, const Part& part, QJsonObject
         obj->insert("properties", part.properties);
     }
 
+
     QMapIterator<QString,Part::Mode> mit(part.modes);
     QString partNameFixed = name;
     partNameFixed.replace(' ', '_');
     obj->insert("name", name);
+
+    if (!part.parent.isNull()){
+        obj->insert("parent", part.parent.uuid.toString());
+    }
 
     while (mit.hasNext()){
         mit.next();
@@ -524,6 +583,10 @@ void ProjectModel::CompositeToJson(const QString& name, const Composite& comp, Q
     obj->insert("properties", comp.properties);
     obj->insert("name", name);
 
+    if (!comp.parent.isNull()){
+        obj->insert("parent", comp.parent.uuid.toString());
+    }
+
     QJsonArray compChildren;
     foreach(const QString& childName, comp.children){
         QString fixedChildName = childName;
@@ -554,6 +617,11 @@ void ProjectModel::JsonToComposite(const QJsonObject& obj, Composite* comp){
     comp->name = obj["name"].toString();
     comp->properties = obj.value("properties").toString();
 
+    if (obj.contains("parent")){
+        comp->parent.uuid = QUuid(obj["parent"].toString());
+        comp->parent.type = AssetType::Folder;
+    }
+
     QJsonArray children = obj.value("parts").toArray();
     int index = 0;
     foreach(const QJsonValue& value, children){
@@ -566,6 +634,7 @@ void ProjectModel::JsonToComposite(const QJsonObject& obj, Composite* comp){
         child.parentPivot = childObject.value("parentPivot").toVariant().toInt();
         child.z = childObject.value("z").toVariant().toInt();
         child.part.uuid = QUuid(childObject.value("part").toString());
+        child.part.type = AssetType::Part;
         child.index = index;
 
         QJsonArray childrenOfChild = childObject.value("children").toArray();
