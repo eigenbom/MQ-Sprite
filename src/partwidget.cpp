@@ -23,7 +23,6 @@
 #include <QBuffer>
 #include <QQueue>
 
-
 PartWidget::PartWidget(AssetRef ref, QWidget *parent) :
     QMdiSubWindow(parent),
     mPartRef(ref),
@@ -128,64 +127,67 @@ void PartWidget::updatePartFrames(){
             float boundsWidth = 0.1f; // 1.0f;
             mBoundsItem = mPartView->scene()->addRect(-boundsWidth/2,-boundsWidth/2,w+boundsWidth,h+boundsWidth, QPen(QColor(0,0,0), boundsWidth, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin), QBrush(QColor(0,0,0,0)));
 
-            if (m.numFrames>0){
-                for(int i=0;i<m.numFrames;i++){
-                    QImage* img = m.images.at(i);
-                    if (img!=nullptr){
-                        QGraphicsPixmapItem* pi = mPartView->scene()->addPixmap(QPixmap::fromImage(*img));
-                        QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect();
-                        pi->setGraphicsEffect(effect);
-                        mPixmapItems.push_back(pi);
-                    }
-                    else {
-                        mPartView->scene()->addSimpleText(tr("!"));
-                    }
+            Q_ASSERT(m.numFrames>0);
 
-                    QPen pivotPen = QPen(QColor(255,0,255), 0.1);
-                    QFont font("monospace");
-                    font.setHintingPreference(QFont::PreferFullHinting);
+            for(int i=0;i<m.numFrames;i++){
+                QImage* img = m.images.at(i);
+                if (img!=nullptr){
+                    QGraphicsPixmapItem* pi = mPartView->scene()->addPixmap(QPixmap::fromImage(*img));
+                    QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect();
+                    pi->setGraphicsEffect(effect);
+                    mPixmapItems.push_back(pi);
+                }
+                else {
+                    mPartView->scene()->addSimpleText(tr("!"));
+                }
+            }
 
-                    {
-                        QPoint ap = m.anchor.at(i);
-                        QGraphicsSimpleTextItem* ti = mPartView->scene()->addSimpleText("a", font);
+            if (mOverlayImage!=nullptr) delete mOverlayImage;
+            mOverlayImage = new QImage(w,h,QImage::Format_ARGB32);
+            mOverlayImage->fill(0x00FFFFFF);
+            mOverlayPixmapItem = mPartView->scene()->addPixmap(QPixmap::fromImage(*mOverlayImage));
 
-                        ti->setPen(pivotPen);
-                        ti->setBrush(QBrush(QColor(255,0,255)));
-                        ti->setScale(0.05);
-                        ti->setPos(ap.x()+0.3,ap.y()-0.1);
+            for(int i=0;i<m.numFrames;i++){
+                QPen pivotPen = QPen(QColor(255,0,255), 0.1);
+                QFont font("monospace");
+                font.setHintingPreference(QFont::PreferFullHinting);
 
-                        mAnchors.push_back(ap);
-                        mAnchorItems.push_back(ti);
-                        // QGraphicsPolygonItem* pi = mPartView->scene()->addPolygon(QPolygonF(QRectF(ap.x()+0.5, ap.y()+0.5, 0.25, 0.25)), pivotPen);
-                    }
+                {
+                    QPoint ap = m.anchor.at(i);
+                    QGraphicsSimpleTextItem* ti = mPartView->scene()->addSimpleText("a", font);
 
-                    for(int p=0;p<MAX_PIVOTS;p++){
-                        QPoint pp = m.pivots[p].at(i);
-                        QGraphicsSimpleTextItem* ti = mPartView->scene()->addSimpleText(QString::number(p+1), font);
-                        ti->setPen(pivotPen);
-                        ti->setBrush(QBrush(QColor(255,0,255)));
-                        ti->setScale(0.05);
-                        ti->setPos(pp.x()+0.3,pp.y()-0.1);
-                        // QGraphicsPolygonItem* pi = mPartView->scene()->addPolygon(QPolygonF(QRectF(pp.x()+0.5, pp.y()+0.5, 0.25, 0.25)), pivotPen);
+                    ti->setPen(pivotPen);
+                    ti->setBrush(QBrush(QColor(255,0,255)));
+                    ti->setScale(0.05);
+                    ti->setPos(ap.x()+0.3,ap.y()-0.1);
 
-                        mPivots[p].push_back(pp);
-                        mPivotItems[p].push_back(ti);
-                    }
+                    mAnchors.push_back(ap);
+                    mAnchorItems.push_back(ti);
+                    // QGraphicsPolygonItem* pi = mPartView->scene()->addPolygon(QPolygonF(QRectF(ap.x()+0.5, ap.y()+0.5, 0.25, 0.25)), pivotPen);
                 }
 
-                updateDropShadow();
-                updateOnionSkinning();
-                updatePivots();
-                updatePropertiesOverlays();
+                for(int p=0;p<MAX_PIVOTS;p++){
+                    QPoint pp = m.pivots[p].at(i);
+                    QGraphicsSimpleTextItem* ti = mPartView->scene()->addSimpleText(QString::number(p+1), font);
+                    ti->setPen(pivotPen);
+                    ti->setBrush(QBrush(QColor(255,0,255)));
+                    ti->setScale(0.05);
+                    ti->setPos(pp.x()+0.3,pp.y()-0.1);
+                    // QGraphicsPolygonItem* pi = mPartView->scene()->addPolygon(QPolygonF(QRectF(pp.x()+0.5, pp.y()+0.5, 0.25, 0.25)), pivotPen);
 
-                if (mOverlayImage!=nullptr) delete mOverlayImage;
-                mOverlayImage = new QImage(w,h,QImage::Format_ARGB32);
-                mOverlayImage->fill(0x00FFFFFF);
-                mOverlayPixmapItem = mPartView->scene()->addPixmap(QPixmap::fromImage(*mOverlayImage));
-
-                // Update draw tool type
-                setDrawToolType(mDrawToolType);
+                    mPivots[p].push_back(pp);
+                    mPivotItems[p].push_back(ti);
+                }
             }
+
+            updateDropShadow();
+            updateOnionSkinning();
+            updatePivots();
+            updatePropertiesOverlays();
+
+            // Update draw tool type
+            setDrawToolType(mDrawToolType);
+
         }
         else {
             mModeName = QString();
@@ -239,6 +241,8 @@ void PartWidget::setDrawToolType(DrawToolType type){
             break;
         }
         case kDrawToolEraser: {
+            QSettings settings;
+            mEraserColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
             mPartView->setCursor(QCursor(QPixmap::fromImage(QImage(":/icon/icons/tool_erase.png")),8,8));
             break;
         }
@@ -535,7 +539,7 @@ void PartWidget::partViewMousePressEvent(QMouseEvent *event){
 
     if (mScribbling && right && (mDrawToolType==kDrawToolPaint || mDrawToolType==kDrawToolEraser)){
         mScribbling = false;
-        // Cancel
+        // Cancel        
         mOverlayImage->fill(0x00FFFFFF);
         updateOverlay();
     }
@@ -846,7 +850,7 @@ void PartWidget::eraseLineTo(const QPoint &endPoint)
 {
     float offset = penSize()/2.;
     QPainter painter(mOverlayImage);
-    painter.setPen(QPen(QColor(255,0,255), penSize(), Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
+    painter.setPen(QPen(mEraserColour, penSize(), Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
     if (endPoint==mLastPoint){
         QPointF lastPointImageCoords = mPartView->mapToScene(mLastPoint.x()+offset,mLastPoint.y()+offset);
         lastPointImageCoords.setX(floor(lastPointImageCoords.x()));

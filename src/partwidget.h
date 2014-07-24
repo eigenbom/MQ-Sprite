@@ -141,6 +141,7 @@ protected:
     QPointF mPosition;
     int mPenSize;
     QColor mPenColour;
+    QColor mEraserColour;
     DrawToolType mDrawToolType;
     QTimer* mAnimationTimer;
     int mFrameNumber;

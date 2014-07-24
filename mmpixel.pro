@@ -43,7 +43,9 @@ SOURCES += \
            src/resizemodedialog.cpp \
            src/tarball.cpp \
     src/assettreewidget.cpp
-RESOURCES += icons.qrc
+RESOURCES += icons.qrc \
+            qdarkstyle/style.qrc
+
 
 OTHER_FILES += \
     README.md \
