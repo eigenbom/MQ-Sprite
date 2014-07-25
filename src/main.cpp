@@ -47,8 +47,9 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     // DARK STYLE?!
-    /*
+
     // Set style sheet
+    /*
     QFile f(":qdarkstyle/style.qss");
     if (f.exists()){
         f.open(QFile::ReadOnly | QFile::Text);
@@ -58,7 +59,7 @@ int main(int argc, char *argv[])
     else {
         qDebug() << "Unable to set stylesheet, file not found\n";
     }
-    */
+*/
 
     MainWindow w;
     w.show();

@@ -61,6 +61,7 @@ public:
     void setPlaybackSpeedMultiplier(int index, float value);
 
     void updateDropShadow();
+    void updateBackgroundBrushes();
 
     // query
     AssetRef compRef() const {return mCompRef;}
@@ -179,6 +180,9 @@ protected:
     bool mPivotsEnabledDuringPlayback;
 
     QVector<QGraphicsRectItem*> mRectItems;
+
+    QBrush mBackgroundBrush;
+    QColor mBoundsColour;
 };
 
 #endif // COMPOSITEWIDGET_H

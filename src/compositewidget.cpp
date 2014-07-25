@@ -19,7 +19,7 @@
 #include <QJsonArray>
 
 CompositeWidget::CompositeWidget(AssetRef ref, QWidget *parent) :
-    QMdiSubWindow(parent),
+    QMdiSubWindow(parent, Qt::Dialog),
     mCompRef(ref),
     mComp(nullptr),
     mCompView(nullptr),
@@ -41,6 +41,7 @@ CompositeWidget::CompositeWidget(AssetRef ref, QWidget *parent) :
     mCompView = new CompositeView(this, new QGraphicsScene());
     mCompView->setTransform(QTransform::fromScale(mZoom,mZoom));
     setWidget(mCompView);
+    updateBackgroundBrushes();
     updateCompFrames();
 }
 
@@ -848,6 +849,85 @@ void CompositeWidget::updateDropShadow(){
     }
 }
 
+void CompositeWidget::updateBackgroundBrushes(){
+
+    QSettings settings;
+
+    bool useGridPattern =  settings.value("background_grid_pattern", false).toBool();
+
+    QColor boundsColour;
+    if (!useGridPattern){
+         QColor backgroundColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
+         // QColor backgroundColour = QColor(settings.value("background_colour", QColor(111,198,143).rgba()).toUInt());
+         mBackgroundBrush = QBrush(backgroundColour);
+         boundsColour = backgroundColour;
+    }
+    else {
+        QColor backgroundColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
+
+        QColor backgroundColour2 = backgroundColour;
+        boundsColour = backgroundColour2;
+
+        // Calculate good colour for grid
+        int h = backgroundColour2.hue();
+        int s = backgroundColour2.saturation();
+        int val = backgroundColour2.value();
+
+        if (val < 50){
+            val += 10;
+        }
+        else if (val < 255/2){
+            val *= 1.05;
+        }
+        else if (val < (255/2 - 50)){
+            val /= 1.05;
+        }
+        else {
+            val -= 10;
+        }
+        backgroundColour2.setHsv(h,s,val);
+
+        // QColor backgroundColour1 = QColor(settings.value("background_grid_colour_1", QColor(150,150,150).rgba()).toUInt());
+        // QColor backgroundColour2 = QColor(settings.value("background_grid_colour_2", QColor(140,140,140).rgba()).toUInt());
+
+        int w = 2;
+        QImage img(w, w, QImage::Format_RGB32);
+        for(int i=0;i<w;i++){
+         for(int j=0;j<w;j++){
+            bool d = (i/(w/2) + j/(w/2))%2==0;
+            if (d) img.setPixel(i, j, backgroundColour.rgb());
+            else img.setPixel(i, j, backgroundColour2.rgb());
+         }
+        }
+
+        mBackgroundBrush = QBrush(img);
+        mBackgroundBrush.setTransform(QTransform::fromScale(0.5,0.5));
+
+        boundsColour = QColor(0,0,0);
+
+    }
+
+    // Calculate good colour for bounds rect
+    int h = boundsColour.hue();
+    int s = boundsColour.saturation();
+    int val = boundsColour.value();
+
+    if (val < 50){
+        val += 30;
+    }
+    else if (val < 255/2){
+        val *= 1.2;
+    }
+    else if (val < (255/2 - 50)){
+        val /= 1.2;
+    }
+    else {
+        val -= 30;
+    }
+    boundsColour.setHsv(h,s,val);
+}
+
+
 ////////////////////////////////////////////////
 // Composite View
 ////////////////////////////////////////////////
@@ -884,30 +964,7 @@ void CompositeView::keyPressEvent(QKeyEvent *event){
 
 void CompositeView::drawBackground(QPainter *painter, const QRectF &rect)
 {
-    QSettings settings;
-    // QColor backgroundColour = QColor(settings.value("background_colour", QColor(111,198,143).rgba()).toUInt());
-    QColor backgroundColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
-    painter->fillRect(rect, backgroundColour);
-
-    // Calculate good colour for bounds rect
-    QColor boundsColour = backgroundColour;
-    int h = backgroundColour.hue();
-    int s = backgroundColour.saturation();
-    int val = backgroundColour.value();
-
-    if (val < 50){
-        val += 30;
-    }
-    else if (val < 255/2){
-        val *= 1.2;
-    }
-    else if (val < (255/2 - 50)){
-        val /= 1.2;
-    }
-    else {
-        val -= 30;
-    }
-    boundsColour.setHsv(h,s,val);
+    painter->fillRect(rect, cw->mBackgroundBrush);
 
     QMutableMapIterator<QString,CompositeWidget::ChildDriver> it(cw->mChildrenMap);
     while (it.hasNext()){
@@ -918,7 +975,7 @@ void CompositeView::drawBackground(QPainter *painter, const QRectF &rect)
             if (m.boundsItem){
                 // qDebug() << "Setting boundsItem colour to: " << boundsColour;
                 QPen pen = m.boundsItem->pen();
-                pen.setColor(boundsColour);
+                pen.setColor(cw->mBoundsColour);
                 m.boundsItem->setPen(pen);
             }
         }

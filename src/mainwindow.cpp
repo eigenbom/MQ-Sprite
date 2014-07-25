@@ -40,15 +40,15 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(mPartList, SIGNAL(assetDoubleClicked(AssetRef)), this, SLOT(assetDoubleClicked(AssetRef)));
 
     // Set MDI Area
-    mMdiArea = findChild<QMdiArea*>(tr("mdiArea"));
+    mMdiArea = findChild<QMdiArea*>(tr("mdiArea"));    
     // mMdiArea->setSizePolicy(QSizePolicy::Maximum,QSizePolicy::Maximum);
     // mMdiArea->resize(100000,mMdiArea->height());
     connect(mMdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(subWindowActivated(QMdiSubWindow*)));
 
     // mMdiArea
     // QColor backgroundColour = QColor(settings.value("background_colour", QColor(111,198,143).rgba()).toUInt());
-    QColor backgroundColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
-    mMdiArea->setBackground(QBrush(backgroundColour));
+    // QColor backgroundColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
+    // mMdiArea->setBackground(QBrush(backgroundColour));
 
     QDockWidget* dockWidgetAssets = findChild<QDockWidget*>("dockWidgetAssets");
     dockWidgetAssets->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
@@ -151,6 +151,11 @@ void MainWindow::showViewOptionsDialog(){
         QPushButton* chgBGColour = new QPushButton("Change Colour");
         connect(chgBGColour, SIGNAL(clicked()), this, SLOT(changeBackgroundColour()));
         layout->addWidget(chgBGColour);
+
+        QCheckBox* checkBox = new QCheckBox("Patterned");
+        checkBox->setChecked(settings.value("background_grid_pattern", true).toBool());
+        connect(checkBox, SIGNAL(toggled(bool)), this, SLOT(setBackgroundGridPattern(bool)));
+        layout->addWidget(checkBox);
     }
 
     {
@@ -343,6 +348,14 @@ void MainWindow::openPartWidget(AssetRef ref){
         connect(p, SIGNAL(closed(PartWidget*)), this, SLOT(partWidgetClosed(PartWidget*)));
         mPartWidgets.insertMulti(ref, p);
     }
+
+    /*
+    if (mCompositeWidgets.size()==0 && mPartWidgets.size()==1){
+        mMdiArea->tileSubWindows();
+    }
+    */
+
+    // mMdiArea->tileSubWindows();
 }
 
 void MainWindow::compositeWidgetClosed(CompositeWidget* cw){
@@ -363,6 +376,14 @@ void MainWindow::openCompositeWidget(AssetRef ref){
         connect(p, SIGNAL(closed(CompositeWidget*)), this, SLOT(compositeWidgetClosed(CompositeWidget*)));
         mCompositeWidgets.insertMulti(ref, p);
     }
+
+    /*
+    if (mCompositeWidgets.size()==1 && mPartWidgets.size()==0){
+        mMdiArea->tileSubWindows();
+    }
+    */
+
+    // mMdiArea->tileSubWindows();
 }
 
 void MainWindow::subWindowActivated(QMdiSubWindow* win){
@@ -617,16 +638,39 @@ void MainWindow::changeBackgroundColour(){
     QColor backgroundColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
     QColor col = QColorDialog::getColor(backgroundColour, this, tr("Select Background Colour"));
     if (col.isValid()){
+
         settings.setValue("background_colour", col.rgba());
-        mMdiArea->setBackground(QBrush(col));
+
+        // mMdiArea->setBackground(QBrush(col));
 
         // Update all view
-        foreach (QWidget* w, this->mPartWidgets.values()){
-            w->update();
+        foreach (PartWidget* w, this->mPartWidgets.values()){
+            w->updateBackgroundBrushes();
+            w->updatePartFrames();
+            w->repaint();
+            // w->update();
         }
-        foreach (QWidget* w, this->mCompositeWidgets.values()){
-            w->update();
+        foreach (CompositeWidget* w, this->mCompositeWidgets.values()){
+            w->updateBackgroundBrushes();
+            w->updateCompFrames();
+            w->repaint();
         }
+    }
+}
+
+void MainWindow::setBackgroundGridPattern(bool b){
+    QSettings settings;
+    settings.setValue("background_grid_pattern", b);
+
+    // Update all view
+    foreach (PartWidget* w, this->mPartWidgets.values()){
+        w->updateBackgroundBrushes();
+        w->updatePartFrames();
+        w->repaint();
+    }
+    foreach (CompositeWidget* w, this->mCompositeWidgets.values()){
+        w->update();
+        w->repaint();
     }
 }
 
@@ -829,8 +873,8 @@ void MainWindow::loadProject(const QString& fileName){
 
         QSettings settings;
         // QColor backgroundColour = QColor(settings.value("background_colour", QColor(111,198,143).rgba()).toUInt());
-        QColor backgroundColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
-        mMdiArea->setBackground(QBrush(backgroundColour));
+        // QColor backgroundColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
+        // mMdiArea->setBackground(QBrush(backgroundColour));
 
         mProjectModifiedSinceLastSave = false;
         setWindowTitle(APP_NAME + " [" + fileName + "]");

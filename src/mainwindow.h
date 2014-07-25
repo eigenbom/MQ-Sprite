@@ -68,6 +68,7 @@ public slots:
 
     // Misc actions
     void changeBackgroundColour();
+    void setBackgroundGridPattern(bool);
     void changePivotColour();
     void setPivotsEnabled(bool);
     void setPivotsEnabledDuringPlayback(bool);

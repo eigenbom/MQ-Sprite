@@ -64,6 +64,7 @@ public:
     void updatePropertiesOverlays();
     void updateOverlay();
     void updatePartFrames();
+    void updateBackgroundBrushes();
 
     // setters
     void setDrawToolType(DrawToolType type);
@@ -119,6 +120,7 @@ public slots:
     void updateDropShadow();
     void updateOnionSkinning();
     void updatePivots();
+
     void setPosition(QPointF);
 
     void selectColourUnderPoint(QPointF);
@@ -181,6 +183,9 @@ protected:
     QGraphicsPixmapItem* mClipboardItem;
 
     QGraphicsRectItem* mCopyRectItem;
+
+    QBrush mBackgroundBrush;
+    QColor mBoundsColour;
 };
 
 #endif // PARTWIDGET_H
