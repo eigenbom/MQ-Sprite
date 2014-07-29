@@ -3,6 +3,7 @@
 #include <QStyleFactory>
 #include <QStatusBar>
 #include <QFile>
+#include <QUrl>
 #include <QDebug>
 #include <iostream>
 
@@ -57,9 +58,20 @@ int main(int argc, char *argv[])
         a.setStyleSheet(ts.readAll());
     }
     else {
-        qDebug() << "Unable to set stylesheet, file not found\n";
+        std::cerr << "Unable to set stylesheet, file not found\n";
     }
 */
+
+    // Dark orange style
+    QFile f(":darkorange/do.qss");
+    if (f.exists()){
+        f.open(QFile::ReadOnly | QFile::Text);
+        QTextStream ts(&f);
+        a.setStyleSheet(ts.readAll());
+    }
+    else {
+        std::cerr << "Unable to set stylesheet, file not found\n";
+    }
 
     MainWindow w;
     w.show();

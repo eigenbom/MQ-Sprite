@@ -44,9 +44,10 @@ SOURCES += \
            src/tarball.cpp \
     src/assettreewidget.cpp
 RESOURCES += icons.qrc \
-            qdarkstyle/style.qrc
+            qdarkstyle/style.qrc \
+    darkorange/darkorange.qrc
 
 
 OTHER_FILES += \
     README.md \
-    .gitignore
+    darkorange/do.qss

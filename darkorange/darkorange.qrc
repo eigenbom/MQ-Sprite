@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/qss_icons">
+        <file>images/checkbox.png</file>
+        <file alias="down_arrow.png">images/down_arrow.png</file>
+        <file>images/handle.png</file>
+    </qresource>
+    <qresource prefix="/darkorange">
+        <file>do.qss</file>
+    </qresource>
+</RCC>
