@@ -8,6 +8,7 @@
 #include <QPushButton>
 #include <QPlainTextEdit>
 
+class AnimatorWidget;
 class PartWidget;
 class PaletteView;
 
@@ -32,7 +33,6 @@ public slots:
     void textPropertiesEdited();
     void penChanged();
     void zoomChanged();
-    void frameChanged(int f);
     void targetPartNumFramesChanged();
     void targetPartNumPivotsChanged();
     void targetPartModesChanged();
@@ -45,20 +45,6 @@ public slots:
     void setToolTypeCopy();
     void setToolTypeFill();
 
-    void addFrame();
-    void copyFrame();
-    void deleteFrame();
-
-
-    void play(bool);
-    void playActivated(bool);
-    void stop();
-    void goToLastFrame();
-    void goToFirstFrame();
-    void goToNextFrame();
-    void goToPrevFrame();
-    void goToFrame(int);
-
     void setNumPivots(int);
 
     void modeActivated(QString);
@@ -69,9 +55,6 @@ public slots:
     void renameMode();
     void resizeMode();
     void resizeModeDialogAccepted();
-    void setModeFPS();
-
-    void setPlaybackSpeedMultiplier(int);
 
     void addPalette();
     void deletePalette();
@@ -83,16 +66,15 @@ public slots:
 private:
     Ui::PartToolsWidget *ui;
     PartWidget* mTarget;
+    AnimatorWidget* mAnimatorWidget;
 
     QColor mPenColour;
     QToolButton* mToolButtonColour;
     QLineEdit* mLineEditColour;
     QPlainTextEdit* mTextEditProperties;
     QComboBox* mComboBoxModes;
-    QPushButton* mPushButtonModeSize;
-    QPushButton* mPushButtonModeFPS;
-    QSlider* mHSliderPlaybackSpeedMultiplier;
-    QLineEdit* mLineEditPlaybackSpeedMultiplier;
+    QPushButton* mPushButtonModeSize;    
+
     QComboBox* mComboBoxPalettes;
     PaletteView* mPaletteView;
     QStringList mDefaultPalettes;

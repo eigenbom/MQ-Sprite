@@ -10,10 +10,6 @@
 #include <QMessageBox>
 #include <QInputDialog>
 
-static const int NUM_PLAYBACK_SPEED_MULTIPLIERS = 7;
-static float PLAYBACK_SPEED_MULTIPLIERS[NUM_PLAYBACK_SPEED_MULTIPLIERS] = {1./8,1./4,1./2,1,2,4,8};
-static const char* PLAYBACK_SPEED_MULTIPLIER_LABELS[NUM_PLAYBACK_SPEED_MULTIPLIERS] = {"1/8","1/4","1/2","1","2","4","8"};
-
 PartToolsWidget::PartToolsWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::PartToolsWidget),
@@ -76,19 +72,6 @@ PartToolsWidget::PartToolsWidget(QWidget *parent) :
     aGroup->addAction(mActionFill);
     mActionDraw->setChecked(true);
 
-    connect(findChild<QToolButton*>("toolButtonPlay"), SIGNAL(clicked(bool)), this, SLOT(play(bool)));
-    connect(findChild<QToolButton*>("toolButtonStop"), SIGNAL(clicked()), this, SLOT(stop()));
-    connect(findChild<QToolButton*>("toolButtonNextFrame"), SIGNAL(clicked()), this, SLOT(goToNextFrame()));
-    connect(findChild<QToolButton*>("toolButtonPrevFrame"), SIGNAL(clicked()), this, SLOT(goToPrevFrame()));
-    connect(findChild<QToolButton*>("toolButtonFirstFrame"), SIGNAL(clicked()), this, SLOT(goToFirstFrame()));
-    connect(findChild<QToolButton*>("toolButtonLastFrame"), SIGNAL(clicked()), this, SLOT(goToLastFrame()));
-
-    connect(findChild<QSlider*>("hSliderTimeLine"), SIGNAL(valueChanged(int)), this, SLOT(goToFrame(int)));
-
-    connect(findChild<QToolButton*>("toolButtonAddFrame"), SIGNAL(clicked()), this, SLOT(addFrame()));
-    connect(findChild<QToolButton*>("toolButtonCopyFrame"), SIGNAL(clicked()), this, SLOT(copyFrame()));
-    connect(findChild<QToolButton*>("toolButtonDeleteFrame"), SIGNAL(clicked()), this, SLOT(deleteFrame()));
-
     connect(findChild<QToolButton*>("toolButtonAddMode"), SIGNAL(clicked()), this, SLOT(addMode()));
     connect(findChild<QToolButton*>("toolButtonCopyMode"), SIGNAL(clicked()), this, SLOT(copyMode()));
     connect(findChild<QToolButton*>("toolButtonDeleteMode"), SIGNAL(clicked()), this, SLOT(deleteMode()));
@@ -105,21 +88,16 @@ PartToolsWidget::PartToolsWidget(QWidget *parent) :
     mPushButtonModeSize = findChild<QPushButton*>("pushButtonModeSize");
     connect(mPushButtonModeSize, SIGNAL(clicked()), this, SLOT(resizeMode()));
 
-    mPushButtonModeFPS = findChild<QPushButton*>("pushButtonModeFPS");
-    connect(mPushButtonModeFPS, SIGNAL(clicked()), this, SLOT(setModeFPS()));
-
     mResizeModeDialog = new ResizeModeDialog(this);
     mResizeModeDialog->hide();
     connect(mResizeModeDialog, SIGNAL(accepted()), this, SLOT(resizeModeDialogAccepted()));
-
-    mHSliderPlaybackSpeedMultiplier = findChild<QSlider*>("hSliderPlaybackSpeedMultiplier");
-    mLineEditPlaybackSpeedMultiplier = findChild<QLineEdit*>("lineEditPlaybackSpeedMultiplier");
-    connect(mHSliderPlaybackSpeedMultiplier, SIGNAL(valueChanged(int)), this, SLOT(setPlaybackSpeedMultiplier(int)));
 
     connect(findChild<QToolButton*>("toolButtonAddPalette"), SIGNAL(clicked()), this, SLOT(addPalette()));
     connect(findChild<QToolButton*>("toolButtonDeletePalette"), SIGNAL(clicked()), this, SLOT(deletePalette()));
     mComboBoxPalettes = findChild<QComboBox*>("comboBoxPalette");
     connect(mComboBoxPalettes, SIGNAL(activated(QString)), this, SLOT(paletteActivated(QString)));
+
+    mAnimatorWidget = findChild<AnimatorWidget*>("animatorWidget");
 
     // Load palette filenames...
     // (And verify them)
@@ -159,6 +137,8 @@ PartWidget* PartToolsWidget::targetPartWidget(){
 }
 
 void PartToolsWidget::setTargetPartWidget(PartWidget* p){
+    mAnimatorWidget->setTargetPartWidget(p);
+
     // Disconnect and connect signals
     if (mTarget){
         // disconnect
@@ -166,9 +146,7 @@ void PartToolsWidget::setTargetPartWidget(PartWidget* p){
         disconnect(findChild<QToolButton*>("toolButtonFitToWindow"), SIGNAL(clicked()), mTarget, SLOT(fitToWindow()));
         disconnect(findChild<QSlider*>("hSliderPenSize"), SIGNAL(valueChanged(int)), mTarget, SLOT(setPenSize(int)));
         disconnect(mTarget, SIGNAL(penChanged()), this, SLOT(penChanged()));
-        disconnect(mTarget, SIGNAL(zoomChanged()), this, SLOT(zoomChanged()));
-        disconnect(mTarget, SIGNAL(frameChanged(int)), this, SLOT(frameChanged(int)));
-        disconnect(mTarget, SIGNAL(playActivated(bool)), this, SLOT(playActivated(bool)));
+        disconnect(mTarget, SIGNAL(zoomChanged()), this, SLOT(zoomChanged()));                
         disconnect(mTarget, SIGNAL(selectNextMode()), this, SLOT(selectNextMode()));
         disconnect(mTarget, SIGNAL(selectPreviousMode()), this, SLOT(selectPreviousMode()));
 
@@ -184,11 +162,6 @@ void PartToolsWidget::setTargetPartWidget(PartWidget* p){
         if (mActionDraw->isChecked()) p->setDrawToolType(kDrawToolPaint);
         else if (mActionErase->isChecked()) p->setDrawToolType(kDrawToolEraser);
         else if (mActionPickColour->isChecked()) p->setDrawToolType(kDrawToolPickColour);
-        findChild<QToolButton*>("toolButtonPlay")->setChecked(p->isPlaying());
-        QSlider* hSliderTimeLine = findChild<QSlider*>("hSliderTimeLine");
-        hSliderTimeLine->setMaximum(p->numFrames()-1);
-        hSliderTimeLine->setValue(p->frame());
-        findChild<QLineEdit*>("lineEditFrameNumber")->setText(QString::number(p->frame()+1) + "/" + QString::number(p->numFrames()));
 
         QSlider* hSliderNumPivots = findChild<QSlider*>("hSliderNumPivots");
         hSliderNumPivots->setMaximum(MAX_PIVOTS);
@@ -208,30 +181,17 @@ void PartToolsWidget::setTargetPartWidget(PartWidget* p){
 
         Part::Mode m = part->modes.value(p->modeName());
         mPushButtonModeSize->setText(QString("%1x%2").arg(m.width).arg(m.height));
-        mPushButtonModeFPS->setText(QString::number(m.framesPerSecond));
-
-        int psmi = p->playbackSpeedMultiplierIndex();
-        if (psmi==-1){
-            p->setPlaybackSpeedMultiplier(3, 1.0);
-            psmi = 3;
-        }
-
-        mHSliderPlaybackSpeedMultiplier->setValue(psmi);
-        mLineEditPlaybackSpeedMultiplier->setText(tr("x") + PLAYBACK_SPEED_MULTIPLIER_LABELS[psmi]);
 
         // connect
         connect(findChild<QSlider*>("hSliderZoom"), SIGNAL(valueChanged(int)), p, SLOT(setZoom(int)));
         connect(findChild<QToolButton*>("toolButtonFitToWindow"), SIGNAL(clicked()), p, SLOT(fitToWindow()));
         connect(findChild<QSlider*>("hSliderPenSize"), SIGNAL(valueChanged(int)), p, SLOT(setPenSize(int)));
         connect(p, SIGNAL(penChanged()), this, SLOT(penChanged()));
-        connect(p, SIGNAL(zoomChanged()), this, SLOT(zoomChanged()));
-        connect(p, SIGNAL(frameChanged(int)), this, SLOT(frameChanged(int)));        
-        connect(p, SIGNAL(playActivated(bool)), this, SLOT(playActivated(bool)));
+        connect(p, SIGNAL(zoomChanged()), this, SLOT(zoomChanged()));        
         connect(p, SIGNAL(selectNextMode()), this, SLOT(selectNextMode()));
         connect(p, SIGNAL(selectPreviousMode()), this, SLOT(selectPreviousMode()));
 
         this->setEnabled(true);
-
     }
     else {
         this->setEnabled(false);
@@ -329,25 +289,8 @@ void PartToolsWidget::zoomChanged(){
     }
 }
 
-void PartToolsWidget::frameChanged(int f){
-    if (mTarget){
-        findChild<QLineEdit*>("lineEditFrameNumber")->setText(QString::number(mTarget->frame()+1) + "/" + QString::number(mTarget->numFrames()));
-
-        QSlider* sl = findChild<QSlider*>("hSliderTimeLine");
-        bool wha = sl->blockSignals(true);
-        sl->setValue(f);
-        sl->blockSignals(wha);
-    }
-}
-
 void PartToolsWidget::targetPartNumFramesChanged(){
-    // update number of frames
-    if (mTarget){
-        QSlider* hSliderTimeLine = findChild<QSlider*>("hSliderTimeLine");
-        hSliderTimeLine->setMaximum(mTarget->numFrames()-1);
-        hSliderTimeLine->setValue(mTarget->frame());
-        findChild<QLineEdit*>("lineEditFrameNumber")->setText(QString::number(mTarget->frame()+1) + "/" + QString::number(mTarget->numFrames()));
-    }
+    mAnimatorWidget->targetPartNumFramesChanged();
 }
 
 void PartToolsWidget::targetPartNumPivotsChanged(){
@@ -372,20 +315,12 @@ void PartToolsWidget::targetPartModesChanged(){
 
             // Update size
             Part::Mode m = part->modes.value(mTarget->modeName());
-            mPushButtonModeSize->setText(QString("%1x%2").arg(m.width).arg(m.height));
-            mPushButtonModeFPS->setText(QString::number(m.framesPerSecond));
+            mPushButtonModeSize->setText(QString("%1x%2").arg(m.width).arg(m.height));            
         }
 
-        targetPartNumFramesChanged();
         targetPartNumPivotsChanged();
 
-        int psmi = mTarget->playbackSpeedMultiplierIndex();
-        if (psmi==-1){
-            mTarget->setPlaybackSpeedMultiplier(3, 1.0);
-            psmi = 3;
-        }
-        mHSliderPlaybackSpeedMultiplier->setValue(psmi);
-        mLineEditPlaybackSpeedMultiplier->setText(tr("x") + PLAYBACK_SPEED_MULTIPLIER_LABELS[psmi]);
+        mAnimatorWidget->targetPartModesChanged();
     }
 }
 
@@ -441,96 +376,6 @@ void PartToolsWidget::setToolTypeFill(){
     }
 }
 
-void PartToolsWidget::addFrame(){
-    if (mTarget){
-        // qDebug() << "addFrame";
-        stop();
-
-        if (TryCommand(new CNewFrame(mTarget->partRef(), mTarget->modeName(), mTarget->numFrames()))){
-            goToFrame(mTarget->numFrames()-1);
-        }
-    }
-}
-
-void PartToolsWidget::copyFrame(){
-    if (mTarget){
-        stop();
-        if (TryCommand(new CCopyFrame(mTarget->partRef(), mTarget->modeName(), mTarget->frame()))){
-            goToFrame(mTarget->numFrames()-1);
-        }
-    }
-}
-
-void PartToolsWidget::deleteFrame(){
-    if (mTarget){
-        stop();
-        // Do it...
-        if (mTarget->numFrames()>1){
-            TryCommand(new CDeleteFrame(mTarget->partRef(), mTarget->modeName(), mTarget->frame()));
-        }
-        else {
-            // TODO: show error in status bar
-        }
-
-    }
-}
-
-void PartToolsWidget::play(bool b){
-    if (mTarget){
-        mTarget->play(b);
-    }
-}
-
-void PartToolsWidget::playActivated(bool b){
-    findChild<QToolButton*>("toolButtonPlay")->setChecked(b);
-}
-
-void PartToolsWidget::stop(){
-    if (mTarget){
-        if (mTarget->isPlaying()){
-            mTarget->stop();
-            // uncheck play button
-            findChild<QToolButton*>("toolButtonPlay")->setChecked(false);
-        }
-    }
-}
-
-void PartToolsWidget::goToLastFrame(){
-    if (mTarget){
-        goToFrame(mTarget->numFrames()-1);
-    }
-}
-
-void PartToolsWidget::goToFirstFrame(){
-    if (mTarget){
-        goToFrame(0);
-    }
-}
-
-void PartToolsWidget::goToNextFrame(){
-    if (mTarget){
-        int f = std::min(mTarget->frame()+1, mTarget->numFrames()-1);
-        goToFrame(f);
-    }
-}
-
-void PartToolsWidget::goToPrevFrame(){
-    if (mTarget){
-        int f = std::max(mTarget->frame()-1, 0);
-        goToFrame(f);
-    }
-}
-
-void PartToolsWidget::goToFrame(int f){
-    if (mTarget){
-        // if playing then stop..
-        if (mTarget->isPlaying()){
-            stop();
-        }
-        mTarget->setFrame(f);
-    }
-}
-
 void PartToolsWidget::setNumPivots(int p){
     if (mTarget){
         // Create command
@@ -540,22 +385,22 @@ void PartToolsWidget::setNumPivots(int p){
 
 void PartToolsWidget::modeActivated(QString mode){
     if (mTarget){
-        stop();
+        mAnimatorWidget->stop();
         mTarget->setMode(mode);
+        mAnimatorWidget->modeActivated(mode);
 
         // update num frames etc
         Part* part = PM()->getPart(mTarget->partRef());
         Part::Mode m = part->modes.value(mode);
         mPushButtonModeSize->setText(QString("%1x%2").arg(m.width).arg(m.height));
-        mPushButtonModeFPS->setText(QString::number(m.framesPerSecond));
-        targetPartNumFramesChanged();
+
         targetPartNumPivotsChanged();
     }
 }
 
 void PartToolsWidget::addMode(){
     if (mTarget){
-        stop();
+        mAnimatorWidget->stop();
         QString mode = mComboBoxModes->currentText();
         TryCommand(new CNewMode(mTarget->partRef(), mode));
     }
@@ -563,7 +408,7 @@ void PartToolsWidget::addMode(){
 
 void PartToolsWidget::copyMode(){
     if (mTarget){
-        stop();
+        mAnimatorWidget->stop();
         QString mode = mComboBoxModes->currentText();
         TryCommand(new CCopyMode(mTarget->partRef(), mode));
     }
@@ -571,7 +416,7 @@ void PartToolsWidget::copyMode(){
 
 void PartToolsWidget::deleteMode(){
     if (mTarget){
-        stop();
+        mAnimatorWidget->stop();
         QString mode = mComboBoxModes->currentText();
         if (mComboBoxModes->count()>1){
             TryCommand(new CDeleteMode(mTarget->partRef(), mode));
@@ -585,7 +430,7 @@ void PartToolsWidget::deleteMode(){
 
 void PartToolsWidget::renameMode(){
     if (mTarget){
-        stop();
+        mAnimatorWidget->stop();
         QString currentMode = mComboBoxModes->currentText();
         bool ok;
         QString text = QInputDialog::getText(this, tr("Rename Mode"),
@@ -599,7 +444,7 @@ void PartToolsWidget::renameMode(){
 
 void PartToolsWidget::resizeMode(){
     if (mTarget){
-        stop();
+        mAnimatorWidget->stop();
         // Get current size
         QString currentMode = mComboBoxModes->currentText();
         Part* part = PM()->getPart(mTarget->partRef());
@@ -620,27 +465,6 @@ void PartToolsWidget::resizeModeDialogAccepted(){
         int offsety = mResizeModeDialog->mLineEditOffsetY->text().toInt();
         QString currentMode = mComboBoxModes->currentText();
         TryCommand(new CChangeModeSize(mTarget->partRef(), currentMode, width, height, offsetx, offsety));
-    }
-}
-
-void PartToolsWidget::setModeFPS(){
-    if (mTarget){
-        QString currentMode = mComboBoxModes->currentText();
-        bool ok;
-        int fps = QInputDialog::getInt(this, "Set FPS", tr("Set FPS:"), mPushButtonModeFPS->text().toInt(),1,600,1,&ok);
-        if (ok){
-            TryCommand(new CChangeModeFPS(mTarget->partRef(), currentMode, fps));
-        }
-    }
-}
-
-void PartToolsWidget::setPlaybackSpeedMultiplier(int i){
-    Q_ASSERT(i>=0 && i<NUM_PLAYBACK_SPEED_MULTIPLIERS);
-    if (mTarget){
-        float playbackSpeed = PLAYBACK_SPEED_MULTIPLIERS[i];
-        const char* label = PLAYBACK_SPEED_MULTIPLIER_LABELS[i];
-        mLineEditPlaybackSpeedMultiplier->setText(tr("x") + label);
-        mTarget->setPlaybackSpeedMultiplier(i, playbackSpeed);
     }
 }
 

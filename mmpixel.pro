@@ -22,12 +22,14 @@ HEADERS += \
            src/projectmodel.h \
            src/resizemodedialog.h \
            src/tarball.h \
-    src/assettreewidget.h
+    src/assettreewidget.h \
+    src/animatorwidget.h
 FORMS += src/compositetoolswidget.ui \
          src/mainwindow.ui \
          src/partlist.ui \
          src/parttoolswidget.ui \
-         src/resizemodedialog.ui
+         src/resizemodedialog.ui \
+    src/animatorwidget.ui
 SOURCES += \
            src/assetlistwidget.cpp \
            src/commands.cpp \
@@ -42,7 +44,8 @@ SOURCES += \
            src/projectmodel.cpp \
            src/resizemodedialog.cpp \
            src/tarball.cpp \
-    src/assettreewidget.cpp
+    src/assettreewidget.cpp \
+    src/animatorwidget.cpp
 RESOURCES += icons.qrc \
             qdarkstyle/style.qrc \
     darkorange/darkorange.qrc
