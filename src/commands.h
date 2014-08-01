@@ -45,13 +45,12 @@ private:
 class CDeletePart: public Command {
 public:    
     CDeletePart(AssetRef ref);
-    ~CDeletePart();
     void undo();
     void redo();
 
 private:
     AssetRef mRef;
-    Part* mCopy;
+    QSharedPointer<Part> mCopy;
 };
 
 class CRenamePart: public Command {
@@ -96,13 +95,12 @@ private:
 class CDeleteComposite: public Command {
 public:
     CDeleteComposite(AssetRef ref);
-    ~CDeleteComposite();
     void undo();
     void redo();
 
 private:
     AssetRef mRef;
-    Composite* mCopy;
+    QSharedPointer<Composite> mCopy;
 };
 
 class CRenameComposite: public Command {
@@ -132,13 +130,12 @@ private:
 class CDeleteFolder: public Command {
 public:
     CDeleteFolder(AssetRef ref);
-    ~CDeleteFolder();
     void undo();
     void redo();
 
 private:
     AssetRef mRef;
-    Folder* mCopy;
+    QSharedPointer<Folder> mCopy;
 };
 
 class CRenameFolder: public Command {
@@ -300,7 +297,7 @@ private:
     AssetRef mPart;
     QString mModeName;
     int mIndex;
-    QImage mImage;
+    QSharedPointer<QImage> mImage;
     QPoint mAnchor;
     QPoint mPivots[MAX_PIVOTS];
 };
@@ -415,7 +412,7 @@ private:
     AssetRef mComp;
     QString mChildName;
     int mChildIndex;
-    Composite mCompCopy;
+    QSharedPointer<Composite> mCompCopy;
 };
 
 class CChangePartProperties: public Command {

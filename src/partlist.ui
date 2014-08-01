@@ -56,7 +56,7 @@
        </property>
        <property name="icon">
         <iconset resource="../icons.qrc">
-         <normaloff>:/icon/icons/sprite.png</normaloff>:/icon/icons/sprite.png</iconset>
+         <normaloff>:/icons/cc_white/png/cube_icon&amp;16.png</normaloff>:/icons/cc_white/png/cube_icon&amp;16.png</iconset>
        </property>
       </widget>
      </item>
@@ -70,7 +70,7 @@
        </property>
        <property name="icon">
         <iconset resource="../icons.qrc">
-         <normaloff>:/icon/icons/composite.png</normaloff>:/icon/icons/composite.png</iconset>
+         <normaloff>:/icons/cc_white/png/layers_1_icon&amp;16.png</normaloff>:/icons/cc_white/png/layers_1_icon&amp;16.png</iconset>
        </property>
       </widget>
      </item>
@@ -84,7 +84,7 @@
        </property>
        <property name="icon">
         <iconset resource="../icons.qrc">
-         <normaloff>:/icon/icons/folder.png</normaloff>:/icon/icons/folder.png</iconset>
+         <normaloff>:/icons/cc_white/png/folder_plus_icon&amp;16.png</normaloff>:/icons/cc_white/png/folder_plus_icon&amp;16.png</iconset>
        </property>
       </widget>
      </item>
@@ -98,7 +98,7 @@
        </property>
        <property name="icon">
         <iconset resource="../icons.qrc">
-         <normaloff>:/icon/icons/paragraph-justify-2.png</normaloff>:/icon/icons/paragraph-justify-2.png</iconset>
+         <normaloff>:/icons/cc_white/png/align_just_icon&amp;16.png</normaloff>:/icons/cc_white/png/align_just_icon&amp;16.png</iconset>
        </property>
       </widget>
      </item>
@@ -112,7 +112,7 @@
        </property>
        <property name="icon">
         <iconset resource="../icons.qrc">
-         <normaloff>:/icon/icons/browser-windows-2.png</normaloff>:/icon/icons/browser-windows-2.png</iconset>
+         <normaloff>:/icons/cc_white/png/clipboard_copy_icon&amp;16.png</normaloff>:/icons/cc_white/png/clipboard_copy_icon&amp;16.png</iconset>
        </property>
       </widget>
      </item>
@@ -126,7 +126,7 @@
        </property>
        <property name="icon">
         <iconset resource="../icons.qrc">
-         <normaloff>:/icon/icons/browser-minimise-2.png</normaloff>:/icon/icons/browser-minimise-2.png</iconset>
+         <normaloff>:/icons/cc_white/png/trash_icon&amp;16.png</normaloff>:/icons/cc_white/png/trash_icon&amp;16.png</iconset>
        </property>
       </widget>
      </item>

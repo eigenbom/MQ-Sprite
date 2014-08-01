@@ -275,6 +275,22 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical
       background: none;
 }
 
+/*
+QSlider::groove:horizontal#hSliderTimeLine {
+     border: 1px solid #1b1b19;
+     height: 16px; / * the groove expands to the size of the slider by default. by giving it a height, it has a fixed size * /
+     background: #242424;
+     margin: 2px 0;
+ }*/
+
+ QSlider::handle:horizontal#hSliderTimeLine {
+     background: #242424; /* qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #b4b4b4, stop:1 #8f8f8f); */
+     border: 1px solid #5c5c5c;
+     width: 24px;
+     /* margin: -2px 0; /* handle is placed by default on the contents rect of the groove. Expand outside the groove */
+     /* border-radius: 3px; */
+ }
+
 QTextEdit
 {
     background-color: #242424;

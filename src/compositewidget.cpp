@@ -149,9 +149,9 @@ void CompositeWidget::updateCompFrames(){
                     }
 
                     for(int i=0;i<m.numFrames;i++){
-                        QImage* img = m.images.at(i);
+                        auto img = m.layers.at(0)->frames.at(i);
                         // qDebug() << "img: " << img;
-                        if (img!=nullptr){
+                        if (img){
                             QGraphicsPixmapItem* pi = mCompView->scene()->addPixmap(QPixmap::fromImage(*img));
                             QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect();
                             pi->setGraphicsEffect(effect);
@@ -292,9 +292,9 @@ void CompositeWidget::updateCompFramesMinorChanges(){
                     }
 
                     for(int i=0;i<m.numFrames;i++){
-                        QImage* img = m.images.at(i);
+                        auto img = m.layers.at(0)->frames.at(i);
                         // qDebug() << "img: " << img;
-                        if (img!=nullptr){
+                        if (img){
                             if (hasMode) mCompView->scene()->removeItem(mode.pixmapItems.at(i));
                             QGraphicsPixmapItem* pi = mCompView->scene()->addPixmap(QPixmap::fromImage(*img));
                             QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect();

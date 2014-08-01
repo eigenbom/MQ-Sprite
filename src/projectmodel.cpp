@@ -24,6 +24,9 @@
 
 #include "tarball.h"
 
+// TODO: Use http://quazip.sourceforge.net/ to store data as a .ZIP instead of .TAR
+// as .ZIP is more widely used? - BP
+
 AssetRef::AssetRef():uuid(),type(AssetType::Folder){
 
 }
@@ -81,7 +84,7 @@ bool ProjectModel::hasAsset(const AssetRef& ref){
 }
 
 Part* ProjectModel::getPart(const AssetRef& uuid){
-    return parts.value(uuid);
+    return parts.value(uuid).data();
 }
 
 
@@ -90,7 +93,7 @@ bool ProjectModel::hasPart(const AssetRef& uuid){
 }
 
 Composite* ProjectModel::getComposite(const AssetRef& uuid){
-    return composites.value(uuid);
+    return composites.value(uuid).data();
 }
 
 bool ProjectModel::hasComposite(const AssetRef& uuid){
@@ -98,7 +101,7 @@ bool ProjectModel::hasComposite(const AssetRef& uuid){
 }
 
 Folder* ProjectModel::getFolder(const AssetRef& uuid){
-    return folders.value(uuid);
+    return folders.value(uuid).data();
 }
 
 bool ProjectModel::hasFolder(const AssetRef& uuid){
@@ -107,43 +110,33 @@ bool ProjectModel::hasFolder(const AssetRef& uuid){
 
 
 Part* ProjectModel::findPartByName(const QString& name){
-    for(Part* p: parts.values()){
+    for(auto p: parts.values()){
         if (p->name==name){
-            return p;
+            return p.data();
         }
     }
     return nullptr;
 }
 
 Composite* ProjectModel::findCompositeByName(const QString& name){
-    for(Composite* p: composites.values()){
+    for(auto p: composites.values()){
         if (p->name==name){
-            return p;
+            return p.data();
         }
     }
     return nullptr;
 }
 
 Folder* ProjectModel::findFolderByName(const QString& name){
-    for(Folder* f: folders.values()){
+    for(auto f: folders.values()){
         if (f->name==name){
-            return f;
+            return f.data();
         }
     }
     return nullptr;
 }
 
 void ProjectModel::clear(){
-
-    foreach(AssetRef key, parts.keys()){
-        delete parts[key];
-    }
-    foreach(AssetRef key, composites.keys()){
-        delete composites[key];
-    }
-    foreach(AssetRef key, folders.keys()){
-        delete folders[key];
-    }
     parts.clear();
     composites.clear();
     folders.clear();
@@ -151,6 +144,10 @@ void ProjectModel::clear(){
 }
 
 bool ProjectModel::load(const QString& fileName){
+    qDebug() << "TODO: Implement loading of layers ";
+    return true;
+
+    /*
     std::fstream in(fileName.toStdString().c_str(), std::ios::in | std::ios::binary);
     if(!in.is_open()) qFatal("Cannot open in");
 
@@ -297,9 +294,15 @@ bool ProjectModel::load(const QString& fileName){
 
     this->fileName = fileName;
     return true;
+    */
 }
 
 bool ProjectModel::save(const QString& fileName){
+    qDebug() << "TODO: Implement saving of layers ";
+    return false;
+
+    /*
+
     std::fstream out(fileName.toStdString().c_str(), std::ios::out | std::ios::binary);
     if(!out.is_open()){
         qDebug() << "Cannot open out";
@@ -432,13 +435,6 @@ bool ProjectModel::save(const QString& fileName){
 
     this->fileName = fileName;
     return true;
-
-    /*
-    // gzip utility functions from: http://zlib.net/manual.html#Utility
-    gzFile gz = gzopen(zipFileName.toStdString().c_str(), "wbT"); // "T" no compression
-    const char* buf = "Hello";
-    gzwrite(gz, buf, strlen(buf));
-    gzclose(gz);
     */
 }
 
@@ -463,6 +459,10 @@ void ProjectModel::FolderToJson(const QString& name, const Folder& folder, QJson
 
 
 void ProjectModel::JsonToPart(const QJsonObject& obj, const QMap<QString,QImage*>& imageMap, Part* part){
+    qDebug() << "TODO: support layers";
+    return;
+
+    /*
     // Load name
     part->name = obj["name"].toString();
 
@@ -520,9 +520,13 @@ void ProjectModel::JsonToPart(const QJsonObject& obj, const QMap<QString,QImage*
             part->modes.insert(modeName, m);
         }
     }
+    */
 }
 
-void ProjectModel::PartToJson(const QString& name, const Part& part, QJsonObject* obj, QMap<QString,QImage*>* imageMap){   
+void ProjectModel::PartToJson(const QString& name, const Part& part, QJsonObject* obj, QMap<QString,QImage*>* imageMap){
+    qDebug() << "Support layers";
+
+    /*
     if (!part.properties.isEmpty()){
         obj->insert("properties", part.properties);
     }
@@ -576,6 +580,7 @@ void ProjectModel::PartToJson(const QString& name, const Part& part, QJsonObject
         modeObject.insert("frames", frameArray);
         obj->insert(mit.key(), modeObject);
     }
+    */
 }
 
 void ProjectModel::CompositeToJson(const QString& name, const Composite& comp, QJsonObject* obj){
@@ -644,17 +649,5 @@ void ProjectModel::JsonToComposite(const QJsonObject& obj, Composite* comp){
         comp->childrenMap.insert(name, child);
 
         index++;
-    }
-}
-
-Part::~Part(){
-    foreach(QString key, modes.keys()){
-        Part::Mode& m = modes[key];
-        for(int i=0;i<m.numFrames;i++){
-            if (i<m.images.size()){
-                QImage* img = m.images[i];
-                if (img) delete img;
-            }
-        }
     }
 }

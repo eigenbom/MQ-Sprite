@@ -19,7 +19,7 @@
   <property name="frameShadow">
    <enum>QFrame::Raised</enum>
   </property>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -55,7 +55,7 @@
       </property>
       <property name="icon">
        <iconset resource="../icons.qrc">
-        <normaloff>:/icon/icons/previous.png</normaloff>:/icon/icons/previous.png</iconset>
+        <normaloff>:/icons/cc_white/png/rewind_previous_icon&amp;16.png</normaloff>:/icons/cc_white/png/rewind_previous_icon&amp;16.png</iconset>
       </property>
      </widget>
     </item>
@@ -83,8 +83,7 @@
       </property>
       <property name="icon">
        <iconset resource="../icons.qrc">
-        <normaloff>:/icon/icons/play.png</normaloff>
-        <normalon>:/icon/icons/pause.png</normalon>:/icon/icons/play.png</iconset>
+        <normaloff>:/icons/cc_white/png/playback_play_icon&amp;16.png</normaloff>:/icons/cc_white/png/playback_play_icon&amp;16.png</iconset>
       </property>
       <property name="checkable">
        <bool>true</bool>
@@ -101,7 +100,7 @@
       </property>
       <property name="icon">
        <iconset resource="../icons.qrc">
-        <normaloff>:/icon/icons/stop.png</normaloff>:/icon/icons/stop.png</iconset>
+        <normaloff>:/icons/cc_white/png/playback_stop_icon&amp;16.png</normaloff>:/icons/cc_white/png/playback_stop_icon&amp;16.png</iconset>
       </property>
      </widget>
     </item>
@@ -129,18 +128,18 @@
       </property>
       <property name="icon">
        <iconset resource="../icons.qrc">
-        <normaloff>:/icon/icons/next.png</normaloff>:/icon/icons/next.png</iconset>
+        <normaloff>:/icons/cc_white/png/playback_next_icon&amp;16.png</normaloff>:/icons/cc_white/png/playback_next_icon&amp;16.png</iconset>
       </property>
      </widget>
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>160</x>
      <y>20</y>
-     <width>61</width>
+     <width>98</width>
      <height>31</height>
     </rect>
    </property>
@@ -164,7 +163,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -179,6 +178,9 @@
     </property>
     <item>
      <widget class="QSlider" name="hSliderTimeLine">
+      <property name="accessibleName">
+       <string>hSliderTimeLine</string>
+      </property>
       <property name="maximum">
        <number>10</number>
       </property>
@@ -204,7 +206,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>230</x>
@@ -257,7 +259,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -296,7 +298,7 @@
       </property>
       <property name="icon">
        <iconset resource="../icons.qrc">
-        <normaloff>:/icon/icons/browser-new-window-2.png</normaloff>:/icon/icons/browser-new-window-2.png</iconset>
+        <normaloff>:/icons/cc_white/png/doc_plus_icon&amp;16.png</normaloff>:/icons/cc_white/png/doc_plus_icon&amp;16.png</iconset>
       </property>
      </widget>
     </item>
@@ -310,7 +312,7 @@
       </property>
       <property name="icon">
        <iconset resource="../icons.qrc">
-        <normaloff>:/icon/icons/browser-windows-2.png</normaloff>:/icon/icons/browser-windows-2.png</iconset>
+        <normaloff>:/icons/cc_white/png/clipboard_copy_icon&amp;16.png</normaloff>:/icons/cc_white/png/clipboard_copy_icon&amp;16.png</iconset>
       </property>
      </widget>
     </item>
@@ -324,7 +326,7 @@
       </property>
       <property name="icon">
        <iconset resource="../icons.qrc">
-        <normaloff>:/icon/icons/browser-minimise-2.png</normaloff>:/icon/icons/browser-minimise-2.png</iconset>
+        <normaloff>:/icons/cc_white/png/trash_icon&amp;16.png</normaloff>:/icons/cc_white/png/trash_icon&amp;16.png</iconset>
       </property>
      </widget>
     </item>
@@ -364,13 +366,6 @@
     <bool>true</bool>
    </property>
   </widget>
-  <zorder>hSliderNumPivots</zorder>
-  <zorder></zorder>
-  <zorder></zorder>
-  <zorder></zorder>
-  <zorder></zorder>
-  <zorder></zorder>
-  <zorder>lineEditFrameNumber</zorder>
  </widget>
  <resources>
   <include location="../icons.qrc"/>

@@ -8,6 +8,7 @@
 #include <QPoint>
 #include <QJsonObject>
 #include <QUuid>
+#include <QSharedPointer>
 
 static const int MAX_PIVOTS = 4;
 static const int MAX_CHILDREN = 4;
@@ -79,9 +80,9 @@ public:
     Folder* findFolderByName(const QString& name);
 
     // Direct access (be careful!)
-    QMap<AssetRef, Part*> parts;
-    QMap<AssetRef, Composite*> composites;
-    QMap<AssetRef, Folder*> folders;
+    QMap<AssetRef, QSharedPointer<Part>> parts;
+    QMap<AssetRef, QSharedPointer<Composite>> composites;
+    QMap<AssetRef, QSharedPointer<Folder>> folders;
 
     // Change the project model
     void clear();
@@ -110,15 +111,22 @@ struct Folder: public Asset {
 };
 
 struct Part: public Asset {
-    ~Part();
+    struct Layer {
+        bool visible;
+        QString name;
+        QList<QSharedPointer<QImage>> frames;
+    };
 
     struct Mode {
         int width, height;
+        int numLayers;
         int numFrames;
         int numPivots;
         int framesPerSecond;
-        // bool looping; // we know whether something is looping in the driver that runs it
-        QList<QImage*> images; // test: QImage img(16,16); img.fill(QColor(255,0,0));
+
+        QList<QSharedPointer<Layer>> layers; // ordered
+
+        // Extra per-frame information
         QList<QPoint> anchor;
         QList<QPoint> pivots[MAX_PIVOTS];
     };
@@ -130,8 +138,6 @@ struct Part: public Asset {
 struct Composite: public Asset {
     struct Child {
         AssetRef part;
-        // QString part; // TODO: Ref should be a UUID
-
         int index; // in children
         int parent; // index of parent
         int parentPivot; // pivot index connected to

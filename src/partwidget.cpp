@@ -132,8 +132,8 @@ void PartWidget::updatePartFrames(){
             Q_ASSERT(m.numFrames>0);
 
             for(int i=0;i<m.numFrames;i++){
-                QImage* img = m.images.at(i);
-                if (img!=nullptr){
+                auto img = m.layers.at(0)->frames.at(i);
+                if (img){
                     QGraphicsPixmapItem* pi = mPartView->scene()->addPixmap(QPixmap::fromImage(*img));
                     QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect();
                     pi->setGraphicsEffect(effect);
@@ -569,7 +569,7 @@ void PartWidget::partViewMousePressEvent(QMouseEvent *event){
         QPoint pi(floor(pt.x()),floor(pt.y()));
 
         // Perform fill
-        const QImage* img = mPart->modes[mModeName].images.at(mFrameNumber);
+        const auto img = mPart->modes[mModeName].layers.at(0)->frames.at(mFrameNumber);
 
         if (pi.x()>=0 && pi.x()<img->width() && pi.y()>=0 && pi.y()<img->height()){
             QImage fillPattern = img->copy(); // (QSize(img->width(),img->height()), QImage::Format_ARGB32);
@@ -681,7 +681,7 @@ void PartWidget::partViewMouseReleaseEvent(QMouseEvent *event){
             // qDebug() << "Copied rect in image to clipboard";
 
             QRectF rect = mCopyRectItem->rect();
-            const QImage* img = mPart->modes[mModeName].images.at(mFrameNumber);
+            const auto img = mPart->modes[mModeName].layers.at(0)->frames.at(mFrameNumber);
             QImage subImg = img->copy(rect.x(),rect.y(),rect.width(),rect.height());
             if (subImg.isNull()){
                 qDebug() << "Can't copy image region";

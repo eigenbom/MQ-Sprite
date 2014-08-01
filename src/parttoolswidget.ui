@@ -157,7 +157,7 @@
           </property>
           <property name="icon">
            <iconset resource="../icons.qrc">
-            <normaloff>:/icon/icons/browser-new-window-2.png</normaloff>:/icon/icons/browser-new-window-2.png</iconset>
+            <normaloff>:/icons/cc_white/png/round_plus_icon&amp;16.png</normaloff>:/icons/cc_white/png/round_plus_icon&amp;16.png</iconset>
           </property>
          </widget>
         </item>
@@ -171,7 +171,7 @@
           </property>
           <property name="icon">
            <iconset resource="../icons.qrc">
-            <normaloff>:/icon/icons/paragraph-justify-2.png</normaloff>:/icon/icons/paragraph-justify-2.png</iconset>
+            <normaloff>:/icons/cc_white/png/align_just_icon&amp;16.png</normaloff>:/icons/cc_white/png/align_just_icon&amp;16.png</iconset>
           </property>
          </widget>
         </item>
@@ -191,7 +191,7 @@
           </property>
           <property name="icon">
            <iconset resource="../icons.qrc">
-            <normaloff>:/icon/icons/browser-windows-2.png</normaloff>:/icon/icons/browser-windows-2.png</iconset>
+            <normaloff>:/icons/cc_white/png/clipboard_copy_icon&amp;16.png</normaloff>:/icons/cc_white/png/clipboard_copy_icon&amp;16.png</iconset>
           </property>
          </widget>
         </item>
@@ -211,7 +211,7 @@
           </property>
           <property name="icon">
            <iconset resource="../icons.qrc">
-            <normaloff>:/icon/icons/browser-minimise-2.png</normaloff>:/icon/icons/browser-minimise-2.png</iconset>
+            <normaloff>:/icons/cc_white/png/trash_icon&amp;16.png</normaloff>:/icons/cc_white/png/trash_icon&amp;16.png</iconset>
           </property>
          </widget>
         </item>
@@ -324,7 +324,7 @@
            <string/>
           </property>
           <property name="pixmap">
-           <pixmap resource="../icons.qrc">:/icon/icons/zoom-in-2.png</pixmap>
+           <pixmap resource="../icons.qrc">:/icons/cc_white/png/zoom_icon&amp;16.png</pixmap>
           </property>
           <property name="buddy">
            <cstring>frameDraw</cstring>
@@ -378,7 +378,7 @@
           </property>
           <property name="icon">
            <iconset resource="../icons.qrc">
-            <normaloff>:/icon/icons/expand-3.png</normaloff>:/icon/icons/expand-3.png</iconset>
+            <normaloff>:/icons/cc_white/png/expand_icon&amp;16.png</normaloff>:/icons/cc_white/png/expand_icon&amp;16.png</iconset>
           </property>
          </widget>
         </item>
@@ -398,7 +398,7 @@
            <string/>
           </property>
           <property name="pixmap">
-           <pixmap resource="../icons.qrc">:/icon/icons/pencil.png</pixmap>
+           <pixmap resource="../icons.qrc">:/icons/cc_white/png/brush_icon&amp;16.png</pixmap>
           </property>
          </widget>
         </item>
@@ -480,7 +480,7 @@
           </property>
           <property name="icon">
            <iconset resource="../icons.qrc">
-            <normaloff>:/icon/icons/pencil.png</normaloff>:/icon/icons/pencil.png</iconset>
+            <normaloff>:/icons/cc_white/png/pencil_icon&amp;16.png</normaloff>:/icons/cc_white/png/pencil_icon&amp;16.png</iconset>
           </property>
           <property name="checkable">
            <bool>true</bool>
@@ -500,7 +500,7 @@
           </property>
           <property name="icon">
            <iconset resource="../icons.qrc">
-            <normaloff>:/icon/icons/eraser.png</normaloff>:/icon/icons/eraser.png</iconset>
+            <normaloff>:/icons/cc_white/png/pencil_icon&amp;16.png</normaloff>:/icons/cc_white/png/pencil_icon&amp;16.png</iconset>
           </property>
           <property name="checkable">
            <bool>true</bool>
@@ -517,7 +517,7 @@
           </property>
           <property name="icon">
            <iconset resource="../icons.qrc">
-            <normaloff>:/icon/icons/eye-2.png</normaloff>:/icon/icons/eye-2.png</iconset>
+            <normaloff>:/icons/cc_white/png/eye_icon&amp;16.png</normaloff>:/icons/cc_white/png/eye_icon&amp;16.png</iconset>
           </property>
          </widget>
         </item>
@@ -528,7 +528,7 @@
           </property>
           <property name="icon">
            <iconset resource="../icons.qrc">
-            <normaloff>:/icon/icons/stamp.png</normaloff>:/icon/icons/stamp.png</iconset>
+            <normaloff>:/icons/cc_white/png/clipboard_cut_icon&amp;16.png</normaloff>:/icons/cc_white/png/clipboard_cut_icon&amp;16.png</iconset>
           </property>
          </widget>
         </item>
@@ -542,7 +542,7 @@
           </property>
           <property name="icon">
            <iconset resource="../icons.qrc">
-            <normaloff>:/icon/icons/stamp-2.png</normaloff>:/icon/icons/stamp-2.png</iconset>
+            <normaloff>:/icons/cc_white/png/clipboard_past_icon&amp;16.png</normaloff>:/icons/cc_white/png/clipboard_past_icon&amp;16.png</iconset>
           </property>
           <property name="checkable">
            <bool>true</bool>
@@ -565,7 +565,7 @@
           </property>
           <property name="icon">
            <iconset resource="../icons.qrc">
-            <normaloff>:/icon/icons/flask-empty.png</normaloff>:/icon/icons/flask-empty.png</iconset>
+            <normaloff>:/icons/cc_white/png/fill_icon&amp;16.png</normaloff>:/icons/cc_white/png/fill_icon&amp;16.png</iconset>
           </property>
          </widget>
         </item>
@@ -620,7 +620,7 @@
        </property>
        <property name="icon">
         <iconset resource="../icons.qrc">
-         <normaloff>:/icon/icons/browser-new-window-2.png</normaloff>:/icon/icons/browser-new-window-2.png</iconset>
+         <normaloff>:/icons/cc_white/png/doc_new_icon&amp;16.png</normaloff>:/icons/cc_white/png/doc_new_icon&amp;16.png</iconset>
        </property>
       </widget>
      </item>
@@ -631,7 +631,7 @@
        </property>
        <property name="icon">
         <iconset resource="../icons.qrc">
-         <normaloff>:/icon/icons/browser-minimise-2.png</normaloff>:/icon/icons/browser-minimise-2.png</iconset>
+         <normaloff>:/icons/cc_white/png/doc_delete_icon&amp;16.png</normaloff>:/icons/cc_white/png/doc_delete_icon&amp;16.png</iconset>
        </property>
       </widget>
      </item>
@@ -697,7 +697,7 @@
    </property>
    <property name="icon">
     <iconset resource="../icons.qrc">
-     <normaloff>:/icon/icons/pencil.png</normaloff>:/icon/icons/pencil.png</iconset>
+     <normaloff>:/icons/cc_white/png/pencil_icon&amp;16.png</normaloff>:/icons/cc_white/png/pencil_icon&amp;16.png</iconset>
    </property>
    <property name="text">
     <string>draw</string>
@@ -712,7 +712,7 @@
    </property>
    <property name="icon">
     <iconset resource="../icons.qrc">
-     <normaloff>:/icon/icons/eraser.png</normaloff>:/icon/icons/eraser.png</iconset>
+     <normaloff>:/icons/cc_white/png/pencil_icon&amp;16.png</normaloff>:/icons/cc_white/png/pencil_icon&amp;16.png</iconset>
    </property>
    <property name="text">
     <string>erase</string>
@@ -727,7 +727,7 @@
    </property>
    <property name="icon">
     <iconset resource="../icons.qrc">
-     <normaloff>:/icon/icons/eye-2.png</normaloff>:/icon/icons/eye-2.png</iconset>
+     <normaloff>:/icons/cc_white/png/eye_icon&amp;16.png</normaloff>:/icons/cc_white/png/eye_icon&amp;16.png</iconset>
    </property>
    <property name="text">
     <string>pick colour</string>
@@ -775,7 +775,7 @@
    </property>
    <property name="icon">
     <iconset resource="../icons.qrc">
-     <normaloff>:/icon/icons/flask-empty.png</normaloff>:/icon/icons/flask-empty.png</iconset>
+     <normaloff>:/icons/cc_white/png/fill_icon&amp;16.png</normaloff>:/icons/cc_white/png/fill_icon&amp;16.png</iconset>
    </property>
    <property name="text">
     <string>fill</string>

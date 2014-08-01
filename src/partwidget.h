@@ -151,9 +151,14 @@ protected:
     bool mIsPlaying;
 
     QGraphicsRectItem* mBoundsItem;
+
+    // TODO: make this a (frame -> (layer -> image)) map
     QVector<QGraphicsPixmapItem*> mPixmapItems;
+
+    // Frames
     QVector<QGraphicsSimpleTextItem*> mAnchorItems;
-    QVector<QGraphicsSimpleTextItem*> mPivotItems[MAX_PIVOTS];    
+    QVector<QGraphicsSimpleTextItem*> mPivotItems[MAX_PIVOTS];        
+
     QVector<QGraphicsRectItem*> mRectItems;
     QVector<QPoint> mAnchors;
     QVector<QPoint> mPivots[MAX_PIVOTS];
