@@ -31,6 +31,37 @@ PartToolsWidget::PartToolsWidget(QWidget *parent) :
     mPaletteView = findChild<PaletteView*>("paletteView");
     connect(mPaletteView, SIGNAL(colourSelected(QColor)), this, SLOT(colourSelected(QColor)));
 
+    // TODO: connect things...
+    mLayerListView = findChild<LayerListView*>("layerListView");
+    Q_ASSERT(mLayerListView);
+
+    // NB: mLayerListView owns model
+    QStandardItemModel* m = new QStandardItemModel(mLayerListView);
+    // m->setItem(0, 0, new QStandardItem("hello"));
+    {
+        auto qs = new QStandardItem("Hello");
+        // qs->setEditable(false);
+        qs->setCheckable(true);
+        qs->setCheckState(Qt::Checked);
+        qs->setToolTip("Visible");
+        // qs->setIcon(QIcon(":/icons/cc_white/png/2x2_grid_icon&16.png"));
+        m->setItem(0, 0, qs);
+    }
+    // m->setItem(1, 0, new QStandardItem("goodbye"));
+    {
+        auto qs = new QStandardItem("Goodbye");
+        qs->setCheckable(true);
+        qs->setCheckState(Qt::Unchecked);
+        qs->setToolTip("Visible");
+        qs->setIcon(QIcon(":/icons/cc_white/png/2x2_grid_icon&16.png"));
+        m->setItem(1, 0, qs);
+    }
+
+    mLayerListView->setModel(m);
+
+    // mLayerListModel = new LayerListModel(mLayerListView);
+    // mLayerListView->setModel(mLayerListModel);
+
     QPixmap px(16, 16);
     px.fill(mPenColour);
     mToolButtonColour->setIcon(px);

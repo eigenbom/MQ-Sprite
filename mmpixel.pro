@@ -23,7 +23,8 @@ HEADERS += \
            src/resizemodedialog.h \
            src/tarball.h \
     src/assettreewidget.h \
-    src/animatorwidget.h
+    src/animatorwidget.h \
+    src/layerlistview.h
 FORMS += src/compositetoolswidget.ui \
          src/mainwindow.ui \
          src/partlist.ui \
@@ -45,7 +46,8 @@ SOURCES += \
            src/resizemodedialog.cpp \
            src/tarball.cpp \
     src/assettreewidget.cpp \
-    src/animatorwidget.cpp
+    src/animatorwidget.cpp \
+    src/layerlistview.cpp
 RESOURCES += icons.qrc \
             qdarkstyle/style.qrc \
     darkorange/darkorange.qrc

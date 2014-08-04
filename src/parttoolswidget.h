@@ -11,6 +11,8 @@
 class AnimatorWidget;
 class PartWidget;
 class PaletteView;
+class LayerListView;
+class LayerListModel;
 
 namespace Ui {
 class PartToolsWidget;
@@ -67,6 +69,8 @@ private:
     Ui::PartToolsWidget *ui;
     PartWidget* mTarget;
     AnimatorWidget* mAnimatorWidget;
+    LayerListView* mLayerListView;
+    LayerListModel* mLayerListModel;
 
     QColor mPenColour;
     QToolButton* mToolButtonColour;
