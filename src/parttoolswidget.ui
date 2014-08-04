@@ -291,6 +291,31 @@
     </widget>
    </item>
    <item>
+    <widget class="QFrame" name="frame_3">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_7">
+      <item>
+       <widget class="QListWidget" name="listWidget">
+        <property name="dragDropMode">
+         <enum>QAbstractItemView::NoDragDrop</enum>
+        </property>
+        <property name="viewMode">
+         <enum>QListView::ListMode</enum>
+        </property>
+        <property name="uniformItemSizes">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="AnimatorWidget" name="animatorWidget">
      <property name="minimumSize">
       <size>
@@ -575,6 +600,21 @@
     </widget>
    </item>
    <item>
+    <widget class="QDockWidget" name="dockWidget">
+     <widget class="QWidget" name="dockWidgetContents">
+      <layout class="QVBoxLayout" name="verticalLayout_6">
+       <item>
+        <widget class="QPlainTextEdit" name="textEditProperties">
+         <property name="placeholderText">
+          <string>Properties</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
     <widget class="QFrame" name="frame_2">
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
@@ -595,13 +635,6 @@
       <property name="bottomMargin">
        <number>0</number>
       </property>
-      <item>
-       <widget class="QPlainTextEdit" name="textEditProperties">
-        <property name="placeholderText">
-         <string>Properties</string>
-        </property>
-       </widget>
-      </item>
      </layout>
     </widget>
    </item>
