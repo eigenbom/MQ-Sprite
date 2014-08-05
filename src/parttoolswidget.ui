@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>300</width>
-    <height>830</height>
+    <height>690</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -53,13 +53,22 @@
       <enum>QFrame::StyledPanel</enum>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="spacing">
+       <number>2</number>
+      </property>
+      <property name="topMargin">
+       <number>2</number>
+      </property>
+      <property name="bottomMargin">
+       <number>2</number>
+      </property>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_4">
-        <property name="bottomMargin">
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <property name="spacing">
          <number>0</number>
         </property>
         <item>
-         <spacer name="horizontalSpacer">
+         <spacer name="horizontalSpacer_4">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
@@ -70,13 +79,6 @@
            </size>
           </property>
          </spacer>
-        </item>
-        <item>
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>mode</string>
-          </property>
-         </widget>
         </item>
         <item>
          <widget class="QComboBox" name="comboBoxModes">
@@ -120,26 +122,6 @@
            </property>
           </item>
          </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <property name="spacing">
-         <number>0</number>
-        </property>
-        <item>
-         <spacer name="horizontalSpacer_4">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
         </item>
         <item>
          <widget class="QToolButton" name="toolButtonAddMode">
@@ -215,26 +197,6 @@
           </property>
          </widget>
         </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_8">
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <spacer name="horizontalSpacer_7">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
         <item>
          <widget class="QLabel" name="label_3">
           <property name="text">
@@ -299,8 +261,14 @@
       <enum>QFrame::Raised</enum>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_7">
+      <property name="topMargin">
+       <number>2</number>
+      </property>
+      <property name="bottomMargin">
+       <number>2</number>
+      </property>
       <item>
-       <widget class="LayerListView" name="layerListView">
+       <widget class="QTreeView" name="layerListView">
         <property name="dragDropOverwriteMode">
          <bool>false</bool>
         </property>
@@ -362,6 +330,15 @@
       <enum>QFrame::StyledPanel</enum>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_4">
+      <property name="spacing">
+       <number>2</number>
+      </property>
+      <property name="topMargin">
+       <number>2</number>
+      </property>
+      <property name="bottomMargin">
+       <number>2</number>
+      </property>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_11">
         <property name="spacing">
@@ -473,58 +450,6 @@
           </property>
           <property name="tickInterval">
            <number>1</number>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <property name="spacing">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <spacer name="horizontalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QToolButton" name="toolButtonColour">
-          <property name="toolTip">
-           <string>Change Colour</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="autoRaise">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="lineEditColour">
-          <property name="maximumSize">
-           <size>
-            <width>60</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>#FFFFFF</string>
-          </property>
-          <property name="maxLength">
-           <number>8</number>
           </property>
          </widget>
         </item>
@@ -650,6 +575,48 @@
           </property>
          </widget>
         </item>
+        <item>
+         <spacer name="horizontalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButtonColour">
+          <property name="toolTip">
+           <string>Change Colour</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="autoRaise">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEditColour">
+          <property name="maximumSize">
+           <size>
+            <width>60</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>#FFFFFF</string>
+          </property>
+          <property name="maxLength">
+           <number>8</number>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
      </layout>
@@ -657,6 +624,9 @@
    </item>
    <item>
     <widget class="QDockWidget" name="dockWidget">
+     <property name="floating">
+      <bool>false</bool>
+     </property>
      <widget class="QWidget" name="dockWidgetContents">
       <layout class="QVBoxLayout" name="verticalLayout_6">
        <item>
@@ -889,11 +859,6 @@
    <extends>QFrame</extends>
    <header location="global">animatorwidget.h</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>LayerListView</class>
-   <extends>QTreeView</extends>
-   <header>layerlistview.h</header>
   </customwidget>
  </customwidgets>
  <resources>

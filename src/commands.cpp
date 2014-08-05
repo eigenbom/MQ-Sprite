@@ -57,14 +57,26 @@ void CNewPart::redo()
     // Create blank frame
     // mode.images.push_back(img);
 
-    Part::Layer* layer = new Part::Layer;
-    layer->name = "layer";
-    layer->visible = true;
+    {
+        Part::Layer* layer = new Part::Layer;
+        layer->name = "layer";
+        layer->visible = true;
+        auto img = QSharedPointer<QImage>::create(mode.width, mode.width, QImage::Format_ARGB32);
+        img->fill(0x00FFFFFF);
+        layer->frames.push_back(img);
+        mode.layers.push_back(QSharedPointer<Part::Layer>(layer));
+    }
 
-    auto img = QSharedPointer<QImage>::create(mode.width, mode.width, QImage::Format_ARGB32);
-    img->fill(0x00FFFFFF);
-    layer->frames.push_back(img);
-    mode.layers.push_back(QSharedPointer<Part::Layer>(layer));
+    {
+        Part::Layer* layer = new Part::Layer;
+        layer->name = "layer 2";
+        layer->visible = false;
+        auto img = QSharedPointer<QImage>::create(mode.width, mode.width, QImage::Format_ARGB32);
+        img->fill(0x00FFFFFF);
+        layer->frames.push_back(img);
+        mode.layers.push_back(QSharedPointer<Part::Layer>(layer));
+    }
+
 
     part->modes.insert("mode", mode);
     PM()->parts.insert(part->ref, part);

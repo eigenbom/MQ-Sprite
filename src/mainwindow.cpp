@@ -51,7 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // mMdiArea->setBackground(QBrush(backgroundColour));
 
     QDockWidget* dockWidgetAssets = findChild<QDockWidget*>("dockWidgetAssets");
-    dockWidgetAssets->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
+    dockWidgetAssets->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
     mPartToolsWidget = new PartToolsWidget(this);
     mCompositeToolsWidget = new CompositeToolsWidget(this);
@@ -76,8 +76,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QDockWidget* dockWidgetTools = new QDockWidget("Tools", this);
     dockWidgetTools->setObjectName("dockWidgetTools");
     dockWidgetTools->setWidget(mStackedWidget);
-    dockWidgetTools->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
-    dockWidgetTools->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    // dockWidgetTools->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+    // dockWidgetTools->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     this->addDockWidget(Qt::RightDockWidgetArea, dockWidgetTools);
     dockWidgetTools->show();
     dockWidgetTools->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
@@ -133,8 +133,8 @@ void MainWindow::showViewOptionsDialog(){
     }
 
     mViewOptionsDockWidget = new QDockWidget(tr("View Preferences"), this);
-    mViewOptionsDockWidget->setAllowedAreas(Qt::LeftDockWidgetArea |
-                                            Qt::RightDockWidgetArea);
+    // mViewOptionsDockWidget->setAllowedAreas(Qt::LeftDockWidgetArea |
+    //                                        Qt::RightDockWidgetArea);
     mViewOptionsDockWidget->setWindowTitle("View Preferences");
 
     QWidget* centralWidget = new QFrame();
@@ -262,7 +262,9 @@ void MainWindow::showViewOptionsDialog(){
 
     // Finally show the dockwidget
 
-    this->addDockWidget(Qt::LeftDockWidgetArea, mViewOptionsDockWidget);
+    // this->addDockWidget(Qt::LeftDockWidgetArea, mViewOptionsDockWidget);
+    this->addDockWidget(Qt::NoDockWidgetArea, mViewOptionsDockWidget);
+    mViewOptionsDockWidget->setFloating(true);
     mViewOptionsDockWidget->resize(0,250);
     mViewOptionsDockWidget->show();
 }

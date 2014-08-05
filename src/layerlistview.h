@@ -1,6 +1,10 @@
 #ifndef LAYERLISTVIEW_H
 #define LAYERLISTVIEW_H
 
+//
+// All this stuff is UNUSED
+//
+
 #include <QTreeView>
 #include <QAbstractListModel>
 
@@ -18,7 +22,7 @@ public:
 
     QVariant headerData ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const;
     int rowCount ( const QModelIndex & parent = QModelIndex() ) const;
-    int columnCount ( const QModelIndex & parent = QModelIndex() ) const { return 2; }
+    int columnCount ( const QModelIndex & parent = QModelIndex() ) const { Q_UNUSED(parent); return 2; }
 
 protected:
     // Data

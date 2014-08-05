@@ -10,6 +10,7 @@
 #include <QMessageBox>
 #include <QInputDialog>
 
+
 PartToolsWidget::PartToolsWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::PartToolsWidget),
@@ -32,35 +33,31 @@ PartToolsWidget::PartToolsWidget(QWidget *parent) :
     connect(mPaletteView, SIGNAL(colourSelected(QColor)), this, SLOT(colourSelected(QColor)));
 
     // TODO: connect things...
-    mLayerListView = findChild<LayerListView*>("layerListView");
+    mLayerListView = findChild<QTreeView*>("layerListView");
     Q_ASSERT(mLayerListView);
 
+    mLayerListView->setDragDropMode(QAbstractItemView::InternalMove);
+    mLayerListView->setUniformRowHeights(true);
+    mLayerListView->setHeaderHidden(true);
+    mLayerListView->setAllColumnsShowFocus(true);
+    mLayerListView->setSelectionBehavior(QAbstractItemView::SelectRows); //Items);
+    mLayerListView->setSelectionMode(QAbstractItemView::SingleSelection);
+    mLayerListView->setDropIndicatorShown(true);
+
     // NB: mLayerListView owns model
-    QStandardItemModel* m = new QStandardItemModel(mLayerListView);
-    // m->setItem(0, 0, new QStandardItem("hello"));
-    {
-        auto qs = new QStandardItem("Hello");
-        // qs->setEditable(false);
-        qs->setCheckable(true);
-        qs->setCheckState(Qt::Checked);
-        qs->setToolTip("Visible");
-        // qs->setIcon(QIcon(":/icons/cc_white/png/2x2_grid_icon&16.png"));
-        m->setItem(0, 0, qs);
-    }
-    // m->setItem(1, 0, new QStandardItem("goodbye"));
-    {
-        auto qs = new QStandardItem("Goodbye");
-        qs->setCheckable(true);
-        qs->setCheckState(Qt::Unchecked);
-        qs->setToolTip("Visible");
-        qs->setIcon(QIcon(":/icons/cc_white/png/2x2_grid_icon&16.png"));
-        m->setItem(1, 0, qs);
-    }
+    mLayerItemModel = new LayerItemModel(mLayerListView);
+    mLayerItemModel->setColumnCount(2);
 
-    mLayerListView->setModel(m);
 
-    // mLayerListModel = new LayerListModel(mLayerListView);
-    // mLayerListView->setModel(mLayerListModel);
+    mLayerListView->setModel(mLayerItemModel);
+    mLayerListView->setColumnWidth(0, 24);
+    mLayerListView->setColumnWidth(1, 100);
+
+    QModelIndex index = mLayerItemModel->index(0,0);
+    mLayerListView->selectionModel()->select(index, QItemSelectionModel::Rows | QItemSelectionModel::ClearAndSelect);
+
+    connect(mLayerListView, SIGNAL(clicked(QModelIndex)), this, SLOT(layerClicked(QModelIndex)));
+    connect(mLayerItemModel, SIGNAL(itemChanged(QStandardItem*)), this, SLOT(layerItemChanged(QStandardItem*)));
 
     QPixmap px(16, 16);
     px.fill(mPenColour);
@@ -210,7 +207,7 @@ void PartToolsWidget::setTargetPartWidget(PartWidget* p){
         mTextEditProperties->blockSignals(false);
         targetPartModesChanged();
 
-        Part::Mode m = part->modes.value(p->modeName());
+        const Part::Mode& m = part->modes.value(p->modeName());
         mPushButtonModeSize->setText(QString("%1x%2").arg(m.width).arg(m.height));
 
         // connect
@@ -221,6 +218,10 @@ void PartToolsWidget::setTargetPartWidget(PartWidget* p){
         connect(p, SIGNAL(zoomChanged()), this, SLOT(zoomChanged()));        
         connect(p, SIGNAL(selectNextMode()), this, SLOT(selectNextMode()));
         connect(p, SIGNAL(selectPreviousMode()), this, SLOT(selectPreviousMode()));
+
+        // Layers
+        targetPartLayersChanged();
+
 
         this->setEnabled(true);
     }
@@ -336,7 +337,7 @@ void PartToolsWidget::targetPartNumPivotsChanged(){
 
 void PartToolsWidget::targetPartModesChanged(){
     if (mTarget){
-        // Update combobox
+        // Update modes combobox
         mComboBoxModes->clear();
         Part* part = PM()->getPart(mTarget->partRef());
         if (part){
@@ -352,6 +353,52 @@ void PartToolsWidget::targetPartModesChanged(){
         targetPartNumPivotsChanged();
 
         mAnimatorWidget->targetPartModesChanged();
+    }
+}
+
+void PartToolsWidget::targetPartLayersChanged(){
+    if (mTarget){
+
+        // TODO: This code!
+        /*
+
+        // Update layer list for current mode...
+        Part* part = PM()->getPart(mTarget->partRef());
+        const Part::Mode& m = part->modes.value(mTarget->modeName());
+
+        mLayerItemModel->blockSignals(true);
+        mLayerListView->blockSignals(true);
+
+        mLayerItemModel->clear();
+        int index = 0;
+        for(auto layer: m.layers){
+            auto qs = new QStandardItem(layer->name);
+            // qs->setDropEnabled(false);
+            mLayerItemModel->setItem(index, 1, qs);
+
+            qs = new QStandardItem();
+            qs->setData(QVariant(layer->visible));
+            if (layer->visible){
+                qs->setIcon(QIcon(":/icons/cc_white/png/eye_icon&16.png"));
+            }
+            else {
+                qs->setIcon(QIcon()); // (":/icons/cc_white/png/eye_inv_icon&16.png"));
+            }
+
+            qs->setToolTip("Visible");
+            //qs->setDropEnabled(false);
+            //qs->setDragEnabled(false);
+            qs->setSelectable(false);
+            // qs->setFlags(Qt::ItemIsEnabled); // qs->flags() ^ Qt::ItemIsEditable);
+            mLayerItemModel->setItem(index, 0, qs);
+
+            index++;
+        }
+
+        mLayerItemModel->blockSignals(false);
+        mLayerListView->blockSignals(false);
+        */
+
     }
 }
 
@@ -557,5 +604,30 @@ void PartToolsWidget::selectPreviousMode(){
         i = (i+mComboBoxModes->count()-1)%mComboBoxModes->count();
         mComboBoxModes->setCurrentIndex(i);
         modeActivated(mComboBoxModes->currentText());
+    }
+}
+
+void PartToolsWidget::layerClicked(const QModelIndex& index){
+
+    if (index.column()==0){
+        QStandardItem *item = ((QStandardItemModel*) mLayerListView->model())->itemFromIndex(index);
+        if (item->data().toBool()){
+            item->setData(QVariant(false));
+            item->setIcon(QIcon()); // (":/icons/cc_white/png/eye_inv_icon&16.png"));
+        }
+        else {
+            item->setData(QVariant(true));
+            item->setIcon(QIcon(":/icons/cc_white/png/eye_icon&16.png"));
+        }
+    }
+
+    // Select layer
+    qDebug() << "Selected layer: " << index.row();
+}
+
+void PartToolsWidget::layerItemChanged(QStandardItem* item){
+    if (item->index().column()==1){
+        const QString& layerName = item->text();
+        qDebug() << "Layer " << item->index().row() << " changed name to " << layerName << "";
     }
 }

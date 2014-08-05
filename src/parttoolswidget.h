@@ -7,12 +7,70 @@
 #include <QComboBox>
 #include <QPushButton>
 #include <QPlainTextEdit>
+#include <QStandardItemModel>
+#include <QTreeView>
+#include <QDebug>
+#include <QMimeData>
 
 class AnimatorWidget;
 class PartWidget;
 class PaletteView;
-class LayerListView;
-class LayerListModel;
+
+class LayerItemModel: public QStandardItemModel {
+    Q_OBJECT
+  public:
+
+    LayerItemModel(QWidget* parent=nullptr):QStandardItemModel(parent){}
+    Qt::DropActions supportedDropActions() const override {
+        return Qt::MoveAction;
+    }
+
+    Qt::ItemFlags flags(const QModelIndex &index) const override
+     {
+         Qt::ItemFlags defaultFlags = QStandardItemModel::flags(index);
+
+         if (index.isValid())
+             return Qt::ItemIsDragEnabled | defaultFlags;
+         else
+             return Qt::ItemIsDropEnabled | defaultFlags;
+     }
+
+    bool dropMimeData(const QMimeData * data, Qt::DropAction action, int row, int column, const QModelIndex & parent){
+        if (action==Qt::MoveAction){
+            QByteArray encoded = data->data("application/x-qabstractitemmodeldatalist");
+            QDataStream stream(&encoded, QIODevice::ReadOnly);
+            int frow, fcol;
+            QMap<int,  QVariant> roleDataMap;
+            stream >> frow >> fcol >> roleDataMap;
+            // qDebug() << frow << fcol << roleDataMap;
+
+            // Dropping layer index into row
+            // qDebug() << "Dropping something into row,col: " << row << "," << column;
+
+            QModelIndex fromIndex = createIndex(frow, fcol);
+
+            // Create the operation and then get updated later..
+
+
+            /*
+            // Move row
+            QStandardItem* item = item(fromIndex);
+            QModelIndex toIndex = createIndex(row, column);
+            qDebug() << fromIndex << toIndex;
+            */
+
+
+            // qDebug() << data->
+            // return QStandardItemModel::dropMimeData(data, action, row, column, parent);
+
+            return true;
+        }
+        else return false;
+    }
+
+    signals:
+    // void layersReorganised();
+};
 
 namespace Ui {
 class PartToolsWidget;
@@ -38,6 +96,7 @@ public slots:
     void targetPartNumFramesChanged();
     void targetPartNumPivotsChanged();
     void targetPartModesChanged();
+    void targetPartLayersChanged();
     void targetPartPropertiesChanged();
 
     void setToolTypeDraw();
@@ -65,12 +124,15 @@ public slots:
     void selectNextMode();
     void selectPreviousMode();
 
+    void layerClicked(const QModelIndex& index);
+    void layerItemChanged(QStandardItem* item);
+
 private:
     Ui::PartToolsWidget *ui;
     PartWidget* mTarget;
     AnimatorWidget* mAnimatorWidget;
-    LayerListView* mLayerListView;
-    LayerListModel* mLayerListModel;
+    QTreeView* mLayerListView;
+    LayerItemModel* mLayerItemModel;
 
     QColor mPenColour;
     QToolButton* mToolButtonColour;

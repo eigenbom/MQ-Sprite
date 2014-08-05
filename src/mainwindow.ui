@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1341</width>
-    <height>741</height>
+    <width>860</width>
+    <height>636</height>
    </rect>
   </property>
   <property name="cursor">
@@ -28,6 +28,9 @@
   </property>
   <property name="tabShape">
    <enum>QTabWidget::Rounded</enum>
+  </property>
+  <property name="dockNestingEnabled">
+   <bool>true</bool>
   </property>
   <property name="unifiedTitleAndToolBarOnMac">
    <bool>false</bool>
@@ -93,14 +96,14 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1341</width>
+     <width>860</width>
      <height>21</height>
     </rect>
    </property>
   </widget>
   <widget class="QDockWidget" name="dockWidgetAssets">
    <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::AllDockWidgetFeatures</set>
    </property>
    <property name="windowTitle">
     <string>Assets</string>
