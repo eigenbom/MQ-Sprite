@@ -1,7 +1,7 @@
 MMpixel
 =======
 
-MMPixel is a tool for creating low resolution game sprites, developed by Ben Porter (<a href="https//twitter.com/eigenbom>@eigenbom</a>) to create the sprites for his game, Moonman.
+MMPixel is a tool for creating low resolution game sprites, developed by Ben Porter (<a href="https//twitter.com/eigenbom">@eigenbom</a>) to create the sprites for his game, Moonman.
 
 At a basic level it allows a user to draw frames for static or animated sprites, and then join them together with anchors and pivots. It is an all-in-one editor, containing pixel editting tools and animation tools. Extra sprite data, such as bounding boxes can also be specified.
 
