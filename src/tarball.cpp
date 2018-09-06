@@ -80,7 +80,7 @@ void LOCALNS::TarOut::_init(void* header)
 {
     std::memset(header,0,sizeof(PosixTarHeader));
     std::sprintf(TARHEADER->magic,"ustar  ");
-    std::sprintf(TARHEADER->mtime,"%011lo",time(NULL));
+    std::sprintf(TARHEADER->mtime,"%011lo", (unsigned long) time(nullptr));
     std::sprintf(TARHEADER->mode,"%07o",0644);
     std::sprintf(TARHEADER->uname,"ben");
     // char * s = ::getlogin();

@@ -495,12 +495,12 @@ void CompositeWidget::updatePropertiesOverlays(){
     }
 }
 
-void CompositeWidget::partNameChanged(AssetRef part, const QString& newPartName){
+void CompositeWidget::partNameChanged(AssetRef, const QString&){
     // Check for any children with this name...
     QMutableMapIterator<QString,ChildDriver> it(mChildrenMap);
     while (it.hasNext()){
         it.next();
-        ChildDriver& cd = it.value();
+        // ChildDriver& cd = it.value();
         // if (cd.part==part){
             // qDebug() << cd.part << "->" << newPartName;
         //    cd.part = newPartName;

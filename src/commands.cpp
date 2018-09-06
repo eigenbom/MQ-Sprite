@@ -956,7 +956,6 @@ CChangeModeSize::CChangeModeSize(AssetRef part, QString modeName, int width, int
 
 void CChangeModeSize::undo(){
     Part* part = PM()->getPart(mPart);
-    Part::Mode& mode = part->modes[mModeName];
     part->modes[mModeName] = mOldMode;
     MainWindow::Instance()->partModesChanged(mPart);
 }
