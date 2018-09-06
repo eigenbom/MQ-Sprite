@@ -15,7 +15,7 @@ class PartList : public QWidget
     Q_OBJECT
     
 public:
-    explicit PartList(QWidget *parent = 0);
+    explicit PartList(QWidget *parent = nullptr);
     ~PartList();
 
 signals:

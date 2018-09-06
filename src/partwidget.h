@@ -49,7 +49,7 @@ class PartWidget : public QMdiSubWindow
     Q_OBJECT
     friend class PartView;
 public:
-    explicit PartWidget(AssetRef partRef, QWidget *parent = 0);
+    explicit PartWidget(AssetRef partRef, QWidget *parent = nullptr);
 
     // Project Model updates
     void setMode(const QString& mode);

@@ -36,7 +36,7 @@ class CompositeWidget : public QMdiSubWindow
     Q_OBJECT
     friend class CompositeView;
 public:
-    explicit CompositeWidget(AssetRef comp, QWidget *parent = 0);
+    explicit CompositeWidget(AssetRef comp, QWidget *parent = nullptr);
     void updateCompFrames(); // loads the comp frames etc
     void updateCompFramesMinorChanges();
 

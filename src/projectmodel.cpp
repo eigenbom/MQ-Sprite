@@ -21,18 +21,14 @@
 #include <iomanip>
 #include <iostream>
 #include <ios>
-
 #include "tarball.h"
-
-// TODO: Use http://quazip.sourceforge.net/ to store data as a .ZIP instead of .TAR
-// as .ZIP is more widely used? - BP
 
 AssetRef::AssetRef():uuid(),type(AssetType::Folder){
 
 }
 
 bool operator==(const AssetRef& a, const AssetRef& b){
-    return (a.uuid.isNull() && b.uuid.isNull()) ||  a.uuid == b.uuid && a.type == b.type;
+    return (a.uuid.isNull() && b.uuid.isNull()) ||  (a.uuid == b.uuid && a.type == b.type);
 }
 
 bool operator!=(const AssetRef& a, const AssetRef& b){
@@ -72,9 +68,9 @@ AssetRef ProjectModel::createAssetRef(){
 
 Asset* ProjectModel::getAsset(const AssetRef& ref){
     switch (ref.type){
-        case AssetType::Part: return getPart(ref); break;
-        case AssetType::Composite: return getComposite(ref); break;
-        case AssetType::Folder: return getFolder(ref); break;
+        case AssetType::Part: return getPart(ref);
+        case AssetType::Composite: return getComposite(ref);
+        case AssetType::Folder: return getFolder(ref);
     }
     return nullptr;
 }
@@ -438,7 +434,6 @@ bool ProjectModel::save(const QString& fileName){
     */
 }
 
-
 void ProjectModel::JsonToFolder(const QJsonObject& obj, Folder* folder){
     // Load name
     folder->name = obj["name"].toString();
@@ -456,7 +451,6 @@ void ProjectModel::FolderToJson(const QString& name, const Folder& folder, QJson
         obj->insert("parent", folder.parent.uuid.toString());
     }
 }
-
 
 void ProjectModel::JsonToPart(const QJsonObject& obj, const QMap<QString,QImage*>& imageMap, Part* part){
     qDebug() << "TODO: support layers";

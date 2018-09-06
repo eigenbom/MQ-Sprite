@@ -29,35 +29,8 @@ PartToolsWidget::PartToolsWidget(QWidget *parent) :
     Q_ASSERT(mTextEditProperties);
     connect(mTextEditProperties, SIGNAL(textChanged()), this, SLOT(textPropertiesEdited()));
 
-    mPaletteView = findChild<PaletteView*>("paletteView");
-    connect(mPaletteView, SIGNAL(colourSelected(QColor)), this, SLOT(colourSelected(QColor)));
-
-    // TODO: connect things...
-    mLayerListView = findChild<QTreeView*>("layerListView");
-    Q_ASSERT(mLayerListView);
-
-    mLayerListView->setDragDropMode(QAbstractItemView::InternalMove);
-    mLayerListView->setUniformRowHeights(true);
-    mLayerListView->setHeaderHidden(true);
-    mLayerListView->setAllColumnsShowFocus(true);
-    mLayerListView->setSelectionBehavior(QAbstractItemView::SelectRows); //Items);
-    mLayerListView->setSelectionMode(QAbstractItemView::SingleSelection);
-    mLayerListView->setDropIndicatorShown(true);
-
-    // NB: mLayerListView owns model
-    mLayerItemModel = new LayerItemModel(mLayerListView);
-    mLayerItemModel->setColumnCount(2);
-
-
-    mLayerListView->setModel(mLayerItemModel);
-    mLayerListView->setColumnWidth(0, 24);
-    mLayerListView->setColumnWidth(1, 100);
-
-    QModelIndex index = mLayerItemModel->index(0,0);
-    mLayerListView->selectionModel()->select(index, QItemSelectionModel::Rows | QItemSelectionModel::ClearAndSelect);
-
-    connect(mLayerListView, SIGNAL(clicked(QModelIndex)), this, SLOT(layerClicked(QModelIndex)));
-    connect(mLayerItemModel, SIGNAL(itemChanged(QStandardItem*)), this, SLOT(layerItemChanged(QStandardItem*)));
+    // mPaletteView = findChild<PaletteView*>("paletteView");
+    // connect(mPaletteView, SIGNAL(colourSelected(QColor)), this, SLOT(colourSelected(QColor)));
 
     QPixmap px(16, 16);
     px.fill(mPenColour);
@@ -119,13 +92,17 @@ PartToolsWidget::PartToolsWidget(QWidget *parent) :
     mResizeModeDialog = new ResizeModeDialog(this);
     mResizeModeDialog->hide();
     connect(mResizeModeDialog, SIGNAL(accepted()), this, SLOT(resizeModeDialogAccepted()));
+    mAnimatorWidget = findChild<AnimatorWidget*>("animatorWidget");
 
+    /*
+    // Disabled for now
     connect(findChild<QToolButton*>("toolButtonAddPalette"), SIGNAL(clicked()), this, SLOT(addPalette()));
     connect(findChild<QToolButton*>("toolButtonDeletePalette"), SIGNAL(clicked()), this, SLOT(deletePalette()));
     mComboBoxPalettes = findChild<QComboBox*>("comboBoxPalette");
     connect(mComboBoxPalettes, SIGNAL(activated(QString)), this, SLOT(paletteActivated(QString)));
 
-    mAnimatorWidget = findChild<AnimatorWidget*>("animatorWidget");
+
+
 
     // Load palette filenames...
     // (And verify them)
@@ -146,11 +123,11 @@ PartToolsWidget::PartToolsWidget(QWidget *parent) :
     foreach(const QString str, paletteList){
         mComboBoxPalettes->addItem(str);
     }
-
     QString selectedPalette = settings.value("selected_palette", tr(":/palette/24bit.png")).toString();
     // qDebug() << "!" << selectedPalette << mComboBoxPalettes->findText(selectedPalette);
     mComboBoxPalettes->setCurrentIndex(mComboBoxPalettes->findText(selectedPalette));
     paletteActivated(selectedPalette);
+ */
 
     this->setEnabled(false);
 }
@@ -218,10 +195,6 @@ void PartToolsWidget::setTargetPartWidget(PartWidget* p){
         connect(p, SIGNAL(zoomChanged()), this, SLOT(zoomChanged()));        
         connect(p, SIGNAL(selectNextMode()), this, SLOT(selectNextMode()));
         connect(p, SIGNAL(selectPreviousMode()), this, SLOT(selectPreviousMode()));
-
-        // Layers
-        targetPartLayersChanged();
-
 
         this->setEnabled(true);
     }
@@ -353,52 +326,6 @@ void PartToolsWidget::targetPartModesChanged(){
         targetPartNumPivotsChanged();
 
         mAnimatorWidget->targetPartModesChanged();
-    }
-}
-
-void PartToolsWidget::targetPartLayersChanged(){
-    if (mTarget){
-
-        // TODO: This code!
-        /*
-
-        // Update layer list for current mode...
-        Part* part = PM()->getPart(mTarget->partRef());
-        const Part::Mode& m = part->modes.value(mTarget->modeName());
-
-        mLayerItemModel->blockSignals(true);
-        mLayerListView->blockSignals(true);
-
-        mLayerItemModel->clear();
-        int index = 0;
-        for(auto layer: m.layers){
-            auto qs = new QStandardItem(layer->name);
-            // qs->setDropEnabled(false);
-            mLayerItemModel->setItem(index, 1, qs);
-
-            qs = new QStandardItem();
-            qs->setData(QVariant(layer->visible));
-            if (layer->visible){
-                qs->setIcon(QIcon(":/icons/cc_white/png/eye_icon&16.png"));
-            }
-            else {
-                qs->setIcon(QIcon()); // (":/icons/cc_white/png/eye_inv_icon&16.png"));
-            }
-
-            qs->setToolTip("Visible");
-            //qs->setDropEnabled(false);
-            //qs->setDragEnabled(false);
-            qs->setSelectable(false);
-            // qs->setFlags(Qt::ItemIsEnabled); // qs->flags() ^ Qt::ItemIsEditable);
-            mLayerItemModel->setItem(index, 0, qs);
-
-            index++;
-        }
-
-        mLayerItemModel->blockSignals(false);
-        mLayerListView->blockSignals(false);
-        */
-
     }
 }
 
@@ -604,30 +531,5 @@ void PartToolsWidget::selectPreviousMode(){
         i = (i+mComboBoxModes->count()-1)%mComboBoxModes->count();
         mComboBoxModes->setCurrentIndex(i);
         modeActivated(mComboBoxModes->currentText());
-    }
-}
-
-void PartToolsWidget::layerClicked(const QModelIndex& index){
-
-    if (index.column()==0){
-        QStandardItem *item = ((QStandardItemModel*) mLayerListView->model())->itemFromIndex(index);
-        if (item->data().toBool()){
-            item->setData(QVariant(false));
-            item->setIcon(QIcon()); // (":/icons/cc_white/png/eye_inv_icon&16.png"));
-        }
-        else {
-            item->setData(QVariant(true));
-            item->setIcon(QIcon(":/icons/cc_white/png/eye_icon&16.png"));
-        }
-    }
-
-    // Select layer
-    qDebug() << "Selected layer: " << index.row();
-}
-
-void PartToolsWidget::layerItemChanged(QStandardItem* item){
-    if (item->index().column()==1){
-        const QString& layerName = item->text();
-        qDebug() << "Layer " << item->index().row() << " changed name to " << layerName << "";
     }
 }

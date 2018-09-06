@@ -67,23 +67,16 @@ MainWindow::MainWindow(QWidget *parent) :
     QWidget* partToolsHBoxWidget = new QWidget();
     partToolsHBoxWidget->setLayout(partToolsHBox);
     mPToolsIndex = mStackedWidget->addWidget(partToolsHBoxWidget);
-
     mCToolsIndex = mStackedWidget->addWidget(mCompositeToolsWidget);
-
     mStackedWidget->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
     // mStackedWidget->resize(1,1);
 
-    QDockWidget* dockWidgetTools = new QDockWidget("Tools", this);
-    dockWidgetTools->setObjectName("dockWidgetTools");
+    auto* dockWidgetTools = findChild<QDockWidget*>("dockWidgetTools");
     dockWidgetTools->setWidget(mStackedWidget);
-    // dockWidgetTools->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
-    // dockWidgetTools->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     this->addDockWidget(Qt::RightDockWidgetArea, dockWidgetTools);
     dockWidgetTools->show();
     dockWidgetTools->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
     // dockWidgetTools->resize(1,1);
-
-
     // Remaining stuff..
     mUndoStack = new QUndoStack(this);
     createActions();

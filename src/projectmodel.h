@@ -44,11 +44,8 @@ uint qHash(const AssetRef &key);
 class ProjectModel;
 ProjectModel* PM();
 
-/**
- * ProjectModel stores the static data of a project.
- * It is modified by QCommands supporting undo/redo (see http://qt-project.org/doc/qt-5.0/qtdoc/qundo.html )
- * Can access the global instance with PM()
- */
+// ProjectModel stores the static data of a project.
+// Access global instance with PM()
 class ProjectModel
 {
 public:
@@ -97,7 +94,6 @@ protected:
     static void CompositeToJson(const QString& name, const Composite& comp, QJsonObject* obj);
     static void JsonToComposite(const QJsonObject& obj, Composite* comp);
 };
-
 
 struct Asset {
     AssetRef ref;

@@ -9,7 +9,7 @@ class PaletteView : public QWidget
 {
     Q_OBJECT
 public:
-    explicit PaletteView(QWidget *parent = 0);
+    explicit PaletteView(QWidget *parent = nullptr);
     ~PaletteView();
     void loadPalette(const QString& palette);
 

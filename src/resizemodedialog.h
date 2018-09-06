@@ -13,7 +13,7 @@ class ResizeModeDialog : public QDialog
     Q_OBJECT
     
 public:
-    explicit ResizeModeDialog(QWidget *parent = 0);
+    explicit ResizeModeDialog(QWidget *parent = nullptr);
     ~ResizeModeDialog();
     QLineEdit *mLineEditWidth, *mLineEditHeight;
     QLineEdit *mLineEditOffsetX, *mLineEditOffsetY;

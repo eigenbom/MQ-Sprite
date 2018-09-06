@@ -11,7 +11,7 @@ class AssetTreeWidget : public QTreeWidget
 {
     Q_OBJECT
 public:
-    explicit AssetTreeWidget(QWidget *parent = 0);
+    explicit AssetTreeWidget(QWidget *parent = nullptr);
 
     AssetRef assetRef(int id) const;
     const QString& assetName(int id) const;

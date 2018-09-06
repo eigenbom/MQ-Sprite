@@ -19,7 +19,7 @@ class AnimatorWidget : public QFrame
     Q_OBJECT
 
 public:
-    explicit AnimatorWidget(QWidget *parent = 0);
+    explicit AnimatorWidget(QWidget *parent = nullptr);
     ~AnimatorWidget();
 
     PartWidget* targetPartWidget();

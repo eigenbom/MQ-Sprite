@@ -11,7 +11,7 @@ class AssetListWidget : public QListWidget
 {
     Q_OBJECT
 public:
-    explicit AssetListWidget(QWidget *parent = 0);
+    explicit AssetListWidget(QWidget *parent = nullptr);
     bool eventFilter(QObject *object, QEvent *event);
     AssetRef assetRef(int id) const;
     const QString& assetName(int id) const;

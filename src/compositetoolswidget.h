@@ -22,7 +22,7 @@ class CompositeToolsWidget : public QWidget
     Q_OBJECT
     
 public:
-    explicit CompositeToolsWidget(QWidget *parent = 0);
+    explicit CompositeToolsWidget(QWidget *parent = nullptr);
     ~CompositeToolsWidget();
 
     void setTargetCompWidget(CompositeWidget*);

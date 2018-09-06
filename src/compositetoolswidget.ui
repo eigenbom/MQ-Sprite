@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>242</width>
+    <width>173</width>
     <height>451</height>
    </rect>
   </property>
@@ -32,6 +32,21 @@
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
+   <property name="spacing">
+    <number>2</number>
+   </property>
+   <property name="leftMargin">
+    <number>2</number>
+   </property>
+   <property name="topMargin">
+    <number>2</number>
+   </property>
+   <property name="rightMargin">
+    <number>2</number>
+   </property>
+   <property name="bottomMargin">
+    <number>2</number>
+   </property>
    <item>
     <widget class="QFrame" name="frame">
      <property name="sizePolicy">
@@ -50,17 +65,20 @@
       <enum>QFrame::StyledPanel</enum>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="spacing">
+       <number>2</number>
+      </property>
       <property name="leftMargin">
-       <number>9</number>
+       <number>2</number>
       </property>
       <property name="topMargin">
-       <number>9</number>
+       <number>2</number>
       </property>
       <property name="rightMargin">
-       <number>9</number>
+       <number>2</number>
       </property>
       <property name="bottomMargin">
-       <number>9</number>
+       <number>2</number>
       </property>
       <item>
        <widget class="QTableWidget" name="tableWidgetParts">
@@ -185,6 +203,21 @@
       <enum>QFrame::Plain</enum>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_4">
+      <property name="spacing">
+       <number>2</number>
+      </property>
+      <property name="leftMargin">
+       <number>2</number>
+      </property>
+      <property name="topMargin">
+       <number>2</number>
+      </property>
+      <property name="rightMargin">
+       <number>2</number>
+      </property>
+      <property name="bottomMargin">
+       <number>2</number>
+      </property>
       <item>
        <widget class="QScrollArea" name="scrollAreaSet">
         <property name="frameShadow">
@@ -198,7 +231,7 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>202</width>
+           <width>161</width>
            <height>69</height>
           </rect>
          </property>
@@ -207,6 +240,9 @@
       </item>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <property name="spacing">
+         <number>2</number>
+        </property>
         <property name="bottomMargin">
          <number>0</number>
         </property>
