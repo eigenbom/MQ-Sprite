@@ -118,23 +118,24 @@ void PartWidget::updatePartFrames(){
             if (mModeName.isEmpty() || !mPart->modes.contains(mModeName)){
                 mModeName = mPart->modes.begin().key();
             }
-            Part::Mode m = mPart->modes.value(mModeName);
+            const auto& m = mPart->modes.value(mModeName);
             mNumPivots = m.numPivots;            
             mFPS = m.framesPerSecond;
             mSPF = 1./mFPS;
-            int w = mPart->modes.value(mModeName).width;
-            int h = mPart->modes.value(mModeName).height;
-            setWindowTitle(mPartName + tr("/") + mModeName);
 
-            float boundsWidth = 0.1f; // 1.0f;
+            const int w = mPart->modes.value(mModeName).width;
+			const int h = mPart->modes.value(mModeName).height;
+            setWindowTitle(mPartName + tr("[") + mModeName + tr("]"));
+
+            const float boundsWidth = 0.1f; // 1.0f;
             mBoundsItem = mPartView->scene()->addRect(-boundsWidth/2,-boundsWidth/2,w+boundsWidth,h+boundsWidth, QPen(QColor(0,0,0), boundsWidth, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin), QBrush(QColor(0,0,0,0)));
 
             Q_ASSERT(m.numFrames>0);
 
             for(int i=0;i<m.numFrames;i++){
-                auto img = m.layers.at(0)->frames.at(i);
-                if (img){
-                    QGraphicsPixmapItem* pi = mPartView->scene()->addPixmap(QPixmap::fromImage(*img));
+                auto pImg = m.layers.at(0)->frames.at(i);
+                if (pImg){
+                    QGraphicsPixmapItem* pi = mPartView->scene()->addPixmap(QPixmap::fromImage(*pImg));
                     QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect();
                     pi->setGraphicsEffect(effect);
                     mPixmapItems.push_back(pi);

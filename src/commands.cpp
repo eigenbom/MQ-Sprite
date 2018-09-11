@@ -469,27 +469,18 @@ void CNewMode::redo(){
     m.numPivots = copyMode.numPivots;
     m.numLayers = 1;
     m.framesPerSecond = copyMode.framesPerSecond;
+	m.anchor = copyMode.anchor;
+	for (int i = 0; i < MAX_PIVOTS; i++) {
+		m.pivots[i].push_back(QPoint(0, 0));
+	}
 
     auto layer = QSharedPointer<Part::Layer>::create();
     layer->name = "layer";
     layer->visible = true;
-
     auto img = QSharedPointer<QImage>::create(m.width, m.width, QImage::Format_ARGB32);
     img->fill(0x00FFFFFF);
     layer->frames.push_back(img);
     m.layers.push_back(layer);
-
-    /*
-    for(int k=0;k<m.numFrames;k++){
-        for(int p=0;p<MAX_PIVOTS;p++){
-            m.pivots[p].push_back(QPoint(0,0));
-        }
-        m.anchor.push_back(QPoint(0,0));
-        QImage* img = new QImage(m.width, m.height, QImage::Format_ARGB32);
-        m.images.push_back(img);
-        img->fill(QColor(255,255,255,0));
-    }
-    */
     p->modes.insert(mModeName,m);
 
     MainWindow::Instance()->partModesChanged(mPart);
