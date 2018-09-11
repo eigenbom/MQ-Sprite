@@ -57,13 +57,17 @@ MainWindow::MainWindow(QWidget *parent) :
     mCompositeToolsWidget = new CompositeToolsWidget(this);
 
     mStackedWidget = new QStackedWidget(this);
+	// mStackedWidget->setSizePolicy(QSizePolicy::Minimum);
+	mStackedWidget->setMinimumWidth(178);
     QLabel* label = new QLabel("No asset selected.", this);
     label->setAlignment(Qt::AlignCenter);
     mNoToolsIndex = mStackedWidget->addWidget(label);
 
     QHBoxLayout* partToolsHBox = new QHBoxLayout;
-    partToolsHBox->addSpacerItem(new QSpacerItem(0,1,QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding));
-    partToolsHBox->addWidget(mPartToolsWidget);
+    partToolsHBox->addSpacerItem(new QSpacerItem(0, 1, QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding));
+    partToolsHBox->addWidget(mPartToolsWidget);	
+	partToolsHBox->setSpacing(0);
+	partToolsHBox->setMargin(0);
     QWidget* partToolsHBoxWidget = new QWidget();
     partToolsHBoxWidget->setLayout(partToolsHBox);
     mPToolsIndex = mStackedWidget->addWidget(partToolsHBoxWidget);
@@ -76,6 +80,8 @@ MainWindow::MainWindow(QWidget *parent) :
     this->addDockWidget(Qt::RightDockWidgetArea, dockWidgetTools);
     dockWidgetTools->show();
     dockWidgetTools->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
+	// dockWidgetTools->setMinimumWidth(178);
+	// dockWidgetTools->setProperty
     // dockWidgetTools->resize(1,1);
     // Remaining stuff..
     mUndoStack = new QUndoStack(this);
@@ -270,22 +276,22 @@ void MainWindow::createMenus()
 
     mFileMenu = menuBar()->addMenu(tr("&File"));
 
-    QAction* newProjectAction = mFileMenu->addAction("&New Project");
+    QAction* newProjectAction = mFileMenu->addAction("&New");
     newProjectAction->setShortcut(QKeySequence::New);
     connect(newProjectAction, SIGNAL(triggered()), this, SLOT(newProject()));
 
-    QAction* loadProjectAction = mFileMenu->addAction("&Open Project");
+    QAction* loadProjectAction = mFileMenu->addAction("&Open...");
     loadProjectAction->setShortcut(QKeySequence::Open);
     connect(loadProjectAction, SIGNAL(triggered()), this, SLOT(loadProject()));
 
-    QAction* reloadProjectAction = mFileMenu->addAction("&Reopen Project");
+    QAction* reloadProjectAction = mFileMenu->addAction("&Reopen");
     connect(reloadProjectAction, SIGNAL(triggered()), this, SLOT(reloadProject()));
 
-    QAction* saveProjectAction = mFileMenu->addAction("Save Project");
+    QAction* saveProjectAction = mFileMenu->addAction("Save");
     saveProjectAction->setShortcut(QKeySequence::Save);
     connect(saveProjectAction, SIGNAL(triggered()), this, SLOT(saveProject()));
 
-    QAction* saveProjectActionAs = mFileMenu->addAction("&Save Project As..");
+    QAction* saveProjectActionAs = mFileMenu->addAction("&Save...");
     saveProjectActionAs->setShortcut(QKeySequence::SaveAs);
     connect(saveProjectActionAs, SIGNAL(triggered()), this, SLOT(saveProjectAs()));
 
@@ -300,7 +306,7 @@ void MainWindow::createMenus()
     mEditMenu = menuBar()->addMenu(tr("&Edit"));
     mEditMenu->addAction(mUndoAction);
     mEditMenu->addAction(mRedoAction);
-    connect(mEditMenu->addAction("Show View Preferences"), SIGNAL(triggered()), this, SLOT(showViewOptionsDialog()));
+    connect(mEditMenu->addAction("Preferences"), SIGNAL(triggered()), this, SLOT(showViewOptionsDialog()));
 
     ///////////////////////////
     // About

@@ -35,9 +35,11 @@ AnimatorWidget::AnimatorWidget(QWidget *parent) :
     mPushButtonModeFPS = findChild<QPushButton*>("pushButtonModeFPS");
     connect(mPushButtonModeFPS, SIGNAL(clicked()), this, SLOT(setModeFPS()));
 
+	/*
     mHSliderPlaybackSpeedMultiplier = findChild<QSlider*>("hSliderPlaybackSpeedMultiplier");
     mLineEditPlaybackSpeedMultiplier = findChild<QLineEdit*>("lineEditPlaybackSpeedMultiplier");
     connect(mHSliderPlaybackSpeedMultiplier, SIGNAL(valueChanged(int)), this, SLOT(setPlaybackSpeedMultiplier(int)));
+	*/
 
     this->setEnabled(false);
 }
@@ -83,8 +85,8 @@ void AnimatorWidget::setTargetPartWidget(PartWidget* p){
             psmi = 3;
         }
 
-        mHSliderPlaybackSpeedMultiplier->setValue(psmi);
-        mLineEditPlaybackSpeedMultiplier->setText(tr("x") + PLAYBACK_SPEED_MULTIPLIER_LABELS[psmi]);
+        // mHSliderPlaybackSpeedMultiplier->setValue(psmi);
+        // mLineEditPlaybackSpeedMultiplier->setText(tr("x") + PLAYBACK_SPEED_MULTIPLIER_LABELS[psmi]);
 
         // connect
         connect(p, SIGNAL(frameChanged(int)), this, SLOT(frameChanged(int)));
@@ -133,8 +135,8 @@ void AnimatorWidget::targetPartModesChanged(){
             mTarget->setPlaybackSpeedMultiplier(3, 1.0);
             psmi = 3;
         }
-        mHSliderPlaybackSpeedMultiplier->setValue(psmi);
-        mLineEditPlaybackSpeedMultiplier->setText(tr("x") + PLAYBACK_SPEED_MULTIPLIER_LABELS[psmi]);
+        // mHSliderPlaybackSpeedMultiplier->setValue(psmi);
+        // mLineEditPlaybackSpeedMultiplier->setText(tr("x") + PLAYBACK_SPEED_MULTIPLIER_LABELS[psmi]);
     }
 }
 
@@ -253,7 +255,7 @@ void AnimatorWidget::setPlaybackSpeedMultiplier(int i){
     if (mTarget){
         float playbackSpeed = PLAYBACK_SPEED_MULTIPLIERS[i];
         const char* label = PLAYBACK_SPEED_MULTIPLIER_LABELS[i];
-        mLineEditPlaybackSpeedMultiplier->setText(tr("x") + label);
+        // mLineEditPlaybackSpeedMultiplier->setText(tr("x") + label);
         mTarget->setPlaybackSpeedMultiplier(i, playbackSpeed);
     }
 }

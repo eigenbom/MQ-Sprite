@@ -50,8 +50,8 @@ private:
     Ui::AnimatorWidget *ui;
     PartWidget* mTarget;
 
-    QSlider* mHSliderPlaybackSpeedMultiplier;
-    QLineEdit* mLineEditPlaybackSpeedMultiplier;
+    // QSlider* mHSliderPlaybackSpeedMultiplier;
+    // QLineEdit* mLineEditPlaybackSpeedMultiplier;
     QPushButton* mPushButtonModeFPS;
 };
 
