@@ -45,10 +45,7 @@ SOURCES += \
     src/animatorwidget.cpp
 
 RESOURCES += \
-    icons.qrc \
-    qdarkstyle/style.qrc \
-    darkorange/darkorange.qrc
+    icons.qrc
 
 OTHER_FILES += \
-    README.md \
-    darkorange/do.qss
+    README.md

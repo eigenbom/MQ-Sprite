@@ -43,9 +43,8 @@ void AssetTreeWidget::addAssetsWithParent(const QList<AssetRef>& assets, AssetRe
                 QTreeWidgetItem* item = new QTreeWidgetItem(parentItem);
                 item->setText(0, asset->name);
                 item->setData(0, Qt::UserRole, index++);
-                // item->setIcon(0, QIcon(":/icon/icons/folder.png"));
-                item->setIcon(0, QIcon(":/icons/cc_white/png/folder_icon&16.png"));
-
+                item->setIcon(0, QIcon(":/icon/icons/folder.png"));
+                
                 // item->setChildIndicatorPolicy(QTreeWidgetItem::ShowIndicator);
                 mAssetRefs.push_back(asset->ref);
                 mAssetNames.push_back(asset->name);
@@ -58,8 +57,7 @@ void AssetTreeWidget::addAssetsWithParent(const QList<AssetRef>& assets, AssetRe
                 QTreeWidgetItem* item = new QTreeWidgetItem(parentItem);
                 item->setText(0, asset->name);
                 item->setData(0, Qt::UserRole, index++);
-                // item->setIcon(0, QIcon(":/icon/icons/sprite.png"));
-                item->setIcon(0, QIcon(":/icons/cc_white/png/cube_icon&16.png"));
+                item->setIcon(0, QIcon(":/icon/icons/sprite.png"));
                 item->setFlags(item->flags() ^ Qt::ItemIsDropEnabled);
                 mAssetRefs.push_back(asset->ref);
                 mAssetNames.push_back(asset->name);
@@ -68,8 +66,7 @@ void AssetTreeWidget::addAssetsWithParent(const QList<AssetRef>& assets, AssetRe
                 QTreeWidgetItem* item = new QTreeWidgetItem(parentItem);
                 item->setText(0, asset->name);
                 item->setData(0, Qt::UserRole, index++);
-                // item->setIcon(0, QIcon(":/icon/icons/composite.png"));
-                item->setIcon(0, QIcon(":/icons/cc_white/png/layers_1_icon&16.png"));
+                item->setIcon(0, QIcon(":/icon/icons/composite.png"));
                 item->setFlags(item->flags() ^ Qt::ItemIsDropEnabled);
                 mAssetRefs.push_back(asset->ref);
                 mAssetNames.push_back(asset->name);

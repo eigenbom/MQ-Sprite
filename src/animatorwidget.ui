@@ -58,7 +58,7 @@
          </property>
          <property name="icon">
           <iconset resource="../icons.qrc">
-           <normaloff>:/icons/cc_white/png/doc_plus_icon&amp;16.png</normaloff>:/icons/cc_white/png/doc_plus_icon&amp;16.png</iconset>
+           <normaloff>:/icon/icons/browser-new-window-2.png</normaloff>:/icon/icons/browser-new-window-2.png</iconset>
          </property>
         </widget>
        </item>
@@ -72,7 +72,7 @@
          </property>
          <property name="icon">
           <iconset resource="../icons.qrc">
-           <normaloff>:/icons/cc_white/png/clipboard_copy_icon&amp;16.png</normaloff>:/icons/cc_white/png/clipboard_copy_icon&amp;16.png</iconset>
+           <normaloff>:/icon/icons/browser-windows-2.png</normaloff>:/icon/icons/browser-windows-2.png</iconset>
          </property>
         </widget>
        </item>
@@ -86,7 +86,7 @@
          </property>
          <property name="icon">
           <iconset resource="../icons.qrc">
-           <normaloff>:/icons/cc_white/png/trash_icon&amp;16.png</normaloff>:/icons/cc_white/png/trash_icon&amp;16.png</iconset>
+           <normaloff>:/icon/icons/browser-minimise-2.png</normaloff>:/icon/icons/browser-minimise-2.png</iconset>
          </property>
         </widget>
        </item>
@@ -120,7 +120,7 @@
          </property>
          <property name="icon">
           <iconset resource="../icons.qrc">
-           <normaloff>:/icons/cc_white/png/rewind_previous_icon&amp;16.png</normaloff>:/icons/cc_white/png/rewind_previous_icon&amp;16.png</iconset>
+           <normaloff>:/icon/icons/previous.png</normaloff>:/icon/icons/previous.png</iconset>
          </property>
         </widget>
        </item>
@@ -148,7 +148,7 @@
          </property>
          <property name="icon">
           <iconset resource="../icons.qrc">
-           <normaloff>:/icons/cc_white/png/playback_play_icon&amp;16.png</normaloff>:/icons/cc_white/png/playback_play_icon&amp;16.png</iconset>
+           <normaloff>:/icon/icons/play.png</normaloff>:/icon/icons/play.png</iconset>
          </property>
          <property name="checkable">
           <bool>true</bool>
@@ -165,7 +165,7 @@
          </property>
          <property name="icon">
           <iconset resource="../icons.qrc">
-           <normaloff>:/icons/cc_white/png/playback_stop_icon&amp;16.png</normaloff>:/icons/cc_white/png/playback_stop_icon&amp;16.png</iconset>
+           <normaloff>:/icon/icons/stop.png</normaloff>:/icon/icons/stop.png</iconset>
          </property>
         </widget>
        </item>
@@ -193,7 +193,7 @@
          </property>
          <property name="icon">
           <iconset resource="../icons.qrc">
-           <normaloff>:/icons/cc_white/png/playback_next_icon&amp;16.png</normaloff>:/icons/cc_white/png/playback_next_icon&amp;16.png</iconset>
+           <normaloff>:/icon/icons/next.png</normaloff>:/icon/icons/next.png</iconset>
          </property>
         </widget>
        </item>

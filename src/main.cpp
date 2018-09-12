@@ -13,6 +13,7 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext& context, const QS
 
     //in this function, you can write the message to any stream!
     switch (type) {
+    default: break;
     case QtDebugMsg:
         if (!msg.startsWith("nativeResourceForWindow"))
             MainWindow::Instance()->showMessage(QString("Debug: %1 %2").arg(msg,ctx), 2000);
@@ -36,42 +37,15 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext& context, const QS
 
 int main(int argc, char *argv[])
 {
-    qInstallMessageHandler(myMessageOutput); //install : set the callback
+    qInstallMessageHandler(myMessageOutput);
 
-    QApplication::setStyle(QStyleFactory::create("fusion"));
+    // QApplication::setStyle(QStyleFactory::create("fusion"));
 
-    // This is used to store the settings in the registry in a good spot
     QCoreApplication::setOrganizationName("bp.io");
     QCoreApplication::setOrganizationDomain("bp.io");
     QCoreApplication::setApplicationName("mmpixel");
 
     QApplication a(argc, argv);
-
-    // DARK STYLE?!
-
-    // Set style sheet
-    /*
-    QFile f(":qdarkstyle/style.qss");
-    if (f.exists()){
-        f.open(QFile::ReadOnly | QFile::Text);
-        QTextStream ts(&f);
-        a.setStyleSheet(ts.readAll());
-    }
-    else {
-        std::cerr << "Unable to set stylesheet, file not found\n";
-    }
-*/
-
-    // Dark orange style
-    QFile f(":darkorange/do.qss");
-    if (f.exists()){
-        f.open(QFile::ReadOnly | QFile::Text);
-        QTextStream ts(&f);
-        a.setStyleSheet(ts.readAll());
-    }
-    else {
-        std::cerr << "Unable to set stylesheet, file not found\n";
-    }
 
     MainWindow w;
     w.show();
