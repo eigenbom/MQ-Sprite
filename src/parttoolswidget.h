@@ -67,6 +67,7 @@ public slots:
     void selectNextMode();
     void selectPreviousMode();
 
+	void setFramerate(int);
 private:
     Ui::PartToolsWidget *ui;
     PartWidget* mTarget;

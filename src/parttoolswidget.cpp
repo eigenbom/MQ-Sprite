@@ -18,16 +18,17 @@ PartToolsWidget::PartToolsWidget(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    mPenColour = QColor("black");
+    mPenColour = QColor("#000000");
     mToolButtonColour = findChild<QToolButton*>("toolButtonColour");
     connect(mToolButtonColour, SIGNAL(clicked()), this, SLOT(chooseColour()));
+	mToolButtonColour->setToolTip(mPenColour.name());
 
-    mLineEditColour = findChild<QLineEdit*>("lineEditColour");
-    connect(mLineEditColour, SIGNAL(textEdited(QString)), this, SLOT(chooseColourByText(QString)));
+    // mLineEditColour = findChild<QLineEdit*>("lineEditColour");
+    // connect(mLineEditColour, SIGNAL(textEdited(QString)), this, SLOT(chooseColourByText(QString)));
 
     mTextEditProperties = findChild<QPlainTextEdit*>("textEditProperties");
-    Q_ASSERT(mTextEditProperties);
     connect(mTextEditProperties, SIGNAL(textChanged()), this, SLOT(textPropertiesEdited()));
+	mTextEditProperties->setPlaceholderText(tr("\"emit\": true,\n\"wiggle\": 0.5,\n\"display_name\":\"worm\""));
 
     // mPaletteView = findChild<PaletteView*>("paletteView");
     // connect(mPaletteView, SIGNAL(colourSelected(QColor)), this, SLOT(colourSelected(QColor)));
@@ -77,17 +78,22 @@ PartToolsWidget::PartToolsWidget(QWidget *parent) :
     connect(findChild<QToolButton*>("toolButtonCopyMode"), SIGNAL(clicked()), this, SLOT(copyMode()));
     connect(findChild<QToolButton*>("toolButtonDeleteMode"), SIGNAL(clicked()), this, SLOT(deleteMode()));
 
-    connect(findChild<QSlider*>("hSliderNumPivots"), SIGNAL(valueChanged(int)), this, SLOT(setNumPivots(int)));
+	connect(findChild<QSpinBox*>("spinBoxNumPivots"), SIGNAL(valueChanged(int)), this, SLOT(setNumPivots(int)));
 
     mComboBoxModes = findChild<QComboBox*>("comboBoxModes");
     connect(mComboBoxModes, SIGNAL(activated(QString)), this, SLOT(modeActivated(QString)));
     // connect(mComboBoxModes, SIGNAL(editTextChanged(QString)), this, SLOT(currentModeRenamed(QString)));
     // connect(mComboBoxModes->lineEdit(), SIGNAL(editingFinished()), SLOT(editingFinished()));
+	
+	// connect(mComboBoxModes, SIGNAL(editTextChanged(QString)), this, SLOT(currentModeRenamed(QString)));
 
     connect(findChild<QToolButton*>("toolButtonRenameMode"), SIGNAL(clicked()), this, SLOT(renameMode()));
 
-    mPushButtonModeSize = findChild<QPushButton*>("pushButtonModeSize");
-    connect(mPushButtonModeSize, SIGNAL(clicked()), this, SLOT(resizeMode()));
+	connect(findChild<QSpinBox*>("spinBoxFramerate"), SIGNAL(valueChanged(int)), this, SLOT(setFramerate(int)));
+	
+
+    // mPushButtonModeSize = findChild<QPushButton*>("pushButtonModeSize");
+    // connect(mPushButtonModeSize, SIGNAL(clicked()), this, SLOT(resizeMode()));
 
     mResizeModeDialog = new ResizeModeDialog(this);
     mResizeModeDialog->hide();
@@ -167,10 +173,8 @@ void PartToolsWidget::setTargetPartWidget(PartWidget* p){
         if (mActionDraw->isChecked()) p->setDrawToolType(kDrawToolPaint);
         else if (mActionErase->isChecked()) p->setDrawToolType(kDrawToolEraser);
         else if (mActionPickColour->isChecked()) p->setDrawToolType(kDrawToolPickColour);
-
-        QSlider* hSliderNumPivots = findChild<QSlider*>("hSliderNumPivots");
-        hSliderNumPivots->setMaximum(MAX_PIVOTS);
-        hSliderNumPivots->setValue(p->numPivots());
+		
+		findChild<QSpinBox*>("spinBoxNumPivots")->setValue(p->numPivots());
 
         // set properties
         Part* part = PM()->getPart(p->partRef());
@@ -185,7 +189,10 @@ void PartToolsWidget::setTargetPartWidget(PartWidget* p){
         targetPartModesChanged();
 
         const Part::Mode& m = part->modes.value(p->modeName());
-        mPushButtonModeSize->setText(QString("%1x%2").arg(m.width).arg(m.height));
+        // mPushButtonModeSize->setText(QString("%1x%2").arg(m.width).arg(m.height));
+		findChild<QLabel*>("labelModeSize")->setText(QString("%1x%2").arg(m.width).arg(m.height));
+
+		findChild<QSpinBox*>("spinBoxFramerate")->setValue(m.framesPerSecond);
 
         // connect
         connect(findChild<QSlider*>("hSliderZoom"), SIGNAL(valueChanged(int)), p, SLOT(setZoom(int)));
@@ -205,12 +212,12 @@ void PartToolsWidget::setTargetPartWidget(PartWidget* p){
 
 void PartToolsWidget::chooseColour(){
     mPenColour = QColorDialog::getColor(mPenColour);
-    QPixmap px(16, 16);
-    px.fill(mPenColour);
+    QPixmap px(mToolButtonColour->iconSize());
+    px.fill(mPenColour);	
     mToolButtonColour->setIcon(px);
 
-    // Update the line edit
-    mLineEditColour->setText(mPenColour.name());
+    // mLineEditColour->setText(mPenColour.name());
+	mToolButtonColour->setToolTip(mPenColour.name());
 
     if (mTarget){
         mTarget->setPenColour(mPenColour);
@@ -227,9 +234,10 @@ void PartToolsWidget::chooseColourByText(QString str){
     if (QColor::isValidColor(str)){
         mPenColour = QColor(str);
 
-        QPixmap px(16, 16);
+        QPixmap px(mToolButtonColour->iconSize());
         px.fill(mPenColour);
         mToolButtonColour->setIcon(px);
+		mToolButtonColour->setToolTip(mPenColour.name());
 
         // Update the line edit
         // mLineEditColour->setText(mPenColour.name());
@@ -253,7 +261,7 @@ void PartToolsWidget::colourSelected(QColor colour){
         mToolButtonColour->setIcon(px);
 
         // Update the line edit
-        mLineEditColour->setText(mPenColour.name());
+        // mLineEditColour->setText(mPenColour.name());
 
         if (mTarget->drawToolType()!=kDrawToolPaint && mTarget->drawToolType()!=kDrawToolFill){
             mTarget->setDrawToolType(kDrawToolPaint);
@@ -277,7 +285,7 @@ void PartToolsWidget::penChanged(){
         mToolButtonColour->setIcon(px);
 
         // Update the line edit
-        mLineEditColour->setText(mPenColour.name());
+        // mLineEditColour->setText(mPenColour.name());
 
         switch(mTarget->drawToolType()){
         case kDrawToolPaint: mActionDraw->trigger(); break;
@@ -300,11 +308,11 @@ void PartToolsWidget::targetPartNumFramesChanged(){
 
 void PartToolsWidget::targetPartNumPivotsChanged(){
     // update number of pivots
-    if (mTarget){
-        QSlider* hSliderTimeLine = findChild<QSlider*>("hSliderNumPivots");
-         bool wha = hSliderTimeLine->blockSignals(true);
-        hSliderTimeLine->setValue(mTarget->numPivots());
-        hSliderTimeLine->blockSignals(wha);
+    if (mTarget){        
+		auto* numPivotsWidget = findChild<QSpinBox*>("spinBoxNumPivots");
+		bool wha = numPivotsWidget->blockSignals(true);
+		numPivotsWidget->setValue(mTarget->numPivots());
+		numPivotsWidget->blockSignals(wha);
     }
 }
 
@@ -319,8 +327,11 @@ void PartToolsWidget::targetPartModesChanged(){
             mComboBoxModes->setCurrentIndex(mComboBoxModes->findText(mTarget->modeName()));
 
             // Update size
-            Part::Mode m = part->modes.value(mTarget->modeName());
-            mPushButtonModeSize->setText(QString("%1x%2").arg(m.width).arg(m.height));            
+            const auto& m = part->modes.value(mTarget->modeName());
+            // mPushButtonModeSize->setText(QString("%1x%2").arg(m.width).arg(m.height));        
+			findChild<QLabel*>("labelModeSize")->setText(QString("%1x%2").arg(m.width).arg(m.height));
+
+			findChild<QSpinBox*>("spinBoxFramerate")->setValue(m.framesPerSecond);
         }
 
         targetPartNumPivotsChanged();
@@ -396,9 +407,10 @@ void PartToolsWidget::modeActivated(QString mode){
 
         // update num frames etc
         Part* part = PM()->getPart(mTarget->partRef());
-        Part::Mode m = part->modes.value(mode);
-        mPushButtonModeSize->setText(QString("%1x%2").arg(m.width).arg(m.height));
-
+        const auto& m = part->modes.value(mode);
+        // mPushButtonModeSize->setText(QString("%1x%2").arg(m.width).arg(m.height));
+		findChild<QLabel*>("labelModeSize")->setText(QString("%1x%2").arg(m.width).arg(m.height));
+		findChild<QSpinBox*>("spinBoxFramerate")->setValue(m.framesPerSecond);
         targetPartNumPivotsChanged();
     }
 }
@@ -532,4 +544,8 @@ void PartToolsWidget::selectPreviousMode(){
         mComboBoxModes->setCurrentIndex(i);
         modeActivated(mComboBoxModes->currentText());
     }
+}
+
+void PartToolsWidget::setFramerate(int frameRate) {
+	TryCommand(new CChangeModeFPS(mTarget->partRef(), mTarget->modeName(), frameRate));
 }

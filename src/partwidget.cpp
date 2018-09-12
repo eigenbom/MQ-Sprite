@@ -114,7 +114,7 @@ void PartWidget::updatePartFrames(){
         mPartName = mPart->name;
         mProperties = mPart->properties;
 
-        if (mPart->modes.size()>0){
+        if (mPart->modes.size() > 0){
             if (mModeName.isEmpty() || !mPart->modes.contains(mModeName)){
                 mModeName = mPart->modes.begin().key();
             }
@@ -125,7 +125,7 @@ void PartWidget::updatePartFrames(){
 
             const int w = mPart->modes.value(mModeName).width;
 			const int h = mPart->modes.value(mModeName).height;
-            setWindowTitle(mPartName + tr("[") + mModeName + tr("]"));
+            setWindowTitle(mPartName + tr(": ") + mModeName + tr(""));
 
             const float boundsWidth = 0.1f; // 1.0f;
             mBoundsItem = mPartView->scene()->addRect(-boundsWidth/2,-boundsWidth/2,w+boundsWidth,h+boundsWidth, QPen(QColor(0,0,0), boundsWidth, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin), QBrush(QColor(0,0,0,0)));
@@ -293,7 +293,12 @@ void PartWidget::setMode(const QString& mode){
 
 void PartWidget::partNameChanged(const QString& newPartName){
     mPartName = newPartName;
-    setWindowTitle(mPartName);
+	if (mModeName.isEmpty()) {
+		setWindowTitle(mPartName);
+	}
+	else {
+		setWindowTitle(mPartName + tr(": ") + mModeName + tr(""));
+	}
 }
 
 void PartWidget::partFrameUpdated(AssetRef part, const QString& mode, int /*frame*/){

@@ -32,8 +32,8 @@ AnimatorWidget::AnimatorWidget(QWidget *parent) :
     connect(findChild<QToolButton*>("toolButtonLastFrame"), SIGNAL(clicked()), this, SLOT(goToLastFrame()));
     connect(findChild<QSlider*>("hSliderTimeLine"), SIGNAL(valueChanged(int)), this, SLOT(goToFrame(int)));
 
-    mPushButtonModeFPS = findChild<QPushButton*>("pushButtonModeFPS");
-    connect(mPushButtonModeFPS, SIGNAL(clicked()), this, SLOT(setModeFPS()));
+    // mPushButtonModeFPS = findChild<QPushButton*>("pushButtonModeFPS");
+    // connect(mPushButtonModeFPS, SIGNAL(clicked()), this, SLOT(setModeFPS()));
 
 	/*
     mHSliderPlaybackSpeedMultiplier = findChild<QSlider*>("hSliderPlaybackSpeedMultiplier");
@@ -77,7 +77,7 @@ void AnimatorWidget::setTargetPartWidget(PartWidget* p){
         targetPartModesChanged();
 
         Part::Mode m = part->modes.value(p->modeName());
-        mPushButtonModeFPS->setText(QString::number(m.framesPerSecond));
+        // mPushButtonModeFPS->setText(QString::number(m.framesPerSecond));
 
         int psmi = p->playbackSpeedMultiplierIndex();
         if (psmi==-1){
@@ -125,8 +125,8 @@ void AnimatorWidget::targetPartModesChanged(){
         Part* part = PM()->getPart(mTarget->partRef());
         if (part){
             // Update fps
-            Part::Mode m = part->modes.value(mTarget->modeName());
-            mPushButtonModeFPS->setText(QString::number(m.framesPerSecond));
+            // Part::Mode m = part->modes.value(mTarget->modeName());
+            // mPushButtonModeFPS->setText(QString::number(m.framesPerSecond));
         }
 
         targetPartNumFramesChanged();
@@ -233,9 +233,9 @@ void AnimatorWidget::goToFrame(int f){
 void AnimatorWidget::modeActivated(QString mode){
     if (mTarget){
         // update num frames etc
-        Part* part = PM()->getPart(mTarget->partRef());
-        Part::Mode m = part->modes.value(mode);
-        mPushButtonModeFPS->setText(QString::number(m.framesPerSecond));
+        // Part* part = PM()->getPart(mTarget->partRef());
+        // Part::Mode m = part->modes.value(mode);
+        // mPushButtonModeFPS->setText(QString::number(m.framesPerSecond));
         targetPartNumFramesChanged();
     }
 }

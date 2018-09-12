@@ -119,6 +119,8 @@ private:
     QAction* mRedoAction;
     QAction* mAboutAction;
 
+	QAction* mResizePartAction;
+
     bool mProjectModifiedSinceLastSave;
 };
 

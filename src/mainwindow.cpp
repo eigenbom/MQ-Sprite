@@ -256,7 +256,7 @@ void MainWindow::showViewOptionsDialog(){
 	
 	{
 		QPushButton* resetButton = new QPushButton("Reset");
-		connect(resetButton, SIGNAL(triggered()), this, SLOT(resetSettings()));
+		connect(resetButton, SIGNAL(clicked()), this, SLOT(resetSettings()));
 		layout->addWidget(resetButton);
 	}
 
@@ -310,7 +310,14 @@ void MainWindow::createMenus()
     mEditMenu->addAction(mUndoAction);
     mEditMenu->addAction(mRedoAction);
 	mEditMenu->addSeparator();
-    connect(mEditMenu->addAction("Options"), SIGNAL(triggered()), this, SLOT(showViewOptionsDialog()));
+
+	mResizePartAction = mEditMenu->addAction("Resize Sprite...");
+	connect(mResizePartAction, SIGNAL(triggered()), mPartToolsWidget, SLOT(resizeMode()));
+	mResizePartAction->setEnabled(false);
+	// connect(resizeAction, SIGNAL(triggered()), mPartToolsWidget, SLOT(resizeMode()));
+
+	mEditMenu->addSeparator();
+    connect(mEditMenu->addAction("Options..."), SIGNAL(triggered()), this, SLOT(showViewOptionsDialog()));
 
     ///////////////////////////
     // About
@@ -391,10 +398,11 @@ void MainWindow::openCompositeWidget(AssetRef ref){
 }
 
 void MainWindow::subWindowActivated(QMdiSubWindow* win){
+	mResizePartAction->setEnabled(false);
+
     if (win==nullptr){
         mCompositeToolsWidget->setTargetCompWidget(nullptr);
         mPartToolsWidget->setTargetPartWidget(nullptr);
-
         mStackedWidget->setCurrentIndex(mNoToolsIndex);
     }
     else {
@@ -408,6 +416,8 @@ void MainWindow::subWindowActivated(QMdiSubWindow* win){
             mPartList->setSelection(part->ref);
 
             mStackedWidget->setCurrentIndex(mPToolsIndex);
+
+			mResizePartAction->setEnabled(true);
         }
         else if (dynamic_cast<CompositeWidget*>(win)){
             CompositeWidget* cw = (CompositeWidget*)(win);
@@ -425,20 +435,11 @@ void MainWindow::subWindowActivated(QMdiSubWindow* win){
 PartWidget* MainWindow::activePartWidget(){
     QMdiSubWindow* win = mMdiArea->activeSubWindow();
     return dynamic_cast<PartWidget*>(win);
-    //if (win->property("asset_type").toInt()==AssetType::Part)
-    //    return (PartWidget*) win;
-    //else return nullptr;
 }
 
 CompositeWidget* MainWindow::activeCompositeWidget(){
     QMdiSubWindow* win = mMdiArea->activeSubWindow();
     return dynamic_cast<CompositeWidget*>(win);
-
-    /*
-    if (win->property("asset_type").toInt()==AssetType::Composite)
-        return (CompositeWidget*) win;
-    else return nullptr;
-    */
 }
 
 void MainWindow::partListChanged(){

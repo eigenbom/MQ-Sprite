@@ -438,7 +438,7 @@ CNewMode::CNewMode(AssetRef part, const QString& copyModeName):mPart(part), mCop
         auto p = PM()->parts.value(mPart);
         QStringList modeList = p->modes.keys();
         do {
-            mModeName = QString("m") + QString("%1").arg(suffix, 3, 10, QChar('0'));
+            mModeName = QString("anim_") + QString("%1").arg(suffix, 3, 10, QChar('0'));
             suffix++;
 
         } while (modeList.contains(mModeName));
