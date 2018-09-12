@@ -117,9 +117,6 @@ void MainWindow::createActions(){
     mAboutAction = new QAction(tr("About"), this);
     mAboutAction->setShortcut(QKeySequence::HelpContents);
     connect(mAboutAction, SIGNAL(triggered()), this, SLOT(showAbout()));
-
-    mResetSettingsAction = new QAction(tr("Restore to Factory Settings"), this);
-    connect(mResetSettingsAction, SIGNAL(triggered()), this, SLOT(resetSettings()));
 }
 
 void MainWindow::showViewOptionsDialog(){
@@ -131,10 +128,10 @@ void MainWindow::showViewOptionsDialog(){
         return;
     }
 
-    mViewOptionsDockWidget = new QDockWidget(tr("View Preferences"), this);
+    mViewOptionsDockWidget = new QDockWidget(tr("Options"), this);
     // mViewOptionsDockWidget->setAllowedAreas(Qt::LeftDockWidgetArea |
     //                                        Qt::RightDockWidgetArea);
-    mViewOptionsDockWidget->setWindowTitle("View Preferences");
+    mViewOptionsDockWidget->setWindowTitle("Options");
 
     QWidget* centralWidget = new QFrame();
     QVBoxLayout* layout = new QVBoxLayout();
@@ -256,6 +253,12 @@ void MainWindow::showViewOptionsDialog(){
         connect(osCheckBox, SIGNAL(toggled(bool)), this, SLOT(setOnionSkinningEnabledDuringPlayback(bool)));
         layout->addWidget(osCheckBox);
     }
+	
+	{
+		QPushButton* resetButton = new QPushButton("Reset");
+		connect(resetButton, SIGNAL(triggered()), this, SLOT(resetSettings()));
+		layout->addWidget(resetButton);
+	}
 
     layout->addSpacerItem(new QSpacerItem(0,0,QSizePolicy::Expanding,QSizePolicy::Expanding));
 
@@ -284,14 +287,14 @@ void MainWindow::createMenus()
     loadProjectAction->setShortcut(QKeySequence::Open);
     connect(loadProjectAction, SIGNAL(triggered()), this, SLOT(loadProject()));
 
-    QAction* reloadProjectAction = mFileMenu->addAction("&Reopen");
+    QAction* reloadProjectAction = mFileMenu->addAction("Revert");
     connect(reloadProjectAction, SIGNAL(triggered()), this, SLOT(reloadProject()));
 
-    QAction* saveProjectAction = mFileMenu->addAction("Save");
+    QAction* saveProjectAction = mFileMenu->addAction("&Save");
     saveProjectAction->setShortcut(QKeySequence::Save);
     connect(saveProjectAction, SIGNAL(triggered()), this, SLOT(saveProject()));
 
-    QAction* saveProjectActionAs = mFileMenu->addAction("&Save...");
+    QAction* saveProjectActionAs = mFileMenu->addAction("Save...");
     saveProjectActionAs->setShortcut(QKeySequence::SaveAs);
     connect(saveProjectActionAs, SIGNAL(triggered()), this, SLOT(saveProjectAs()));
 
@@ -306,7 +309,8 @@ void MainWindow::createMenus()
     mEditMenu = menuBar()->addMenu(tr("&Edit"));
     mEditMenu->addAction(mUndoAction);
     mEditMenu->addAction(mRedoAction);
-    connect(mEditMenu->addAction("Preferences"), SIGNAL(triggered()), this, SLOT(showViewOptionsDialog()));
+	mEditMenu->addSeparator();
+    connect(mEditMenu->addAction("Options"), SIGNAL(triggered()), this, SLOT(showViewOptionsDialog()));
 
     ///////////////////////////
     // About
@@ -314,7 +318,6 @@ void MainWindow::createMenus()
 
     mHelpMenu = menuBar()->addMenu(tr("Help"));
     mHelpMenu->addAction(mAboutAction);
-    mHelpMenu->addAction(mResetSettingsAction);
 }
 
 void MainWindow::showMessage(const QString& msg, int timeout){
@@ -632,7 +635,6 @@ void MainWindow::folderRenamed(AssetRef ref, const QString& newName){
     qDebug() << "TODO: Update the visual names/refs of parts and comps that are in this folder";
 }
 
-
 void MainWindow::changeBackgroundColour(){
     QSettings settings;
     // QColor backgroundColour = QColor(settings.value("background_colour", QColor(111,198,143).rgba()).toUInt());
@@ -785,8 +787,9 @@ void MainWindow::setOnionSkinningEnabledDuringPlayback(bool enabled){
 }
 
 void MainWindow::showAbout(){
-    QMessageBox::about(this, tr("mmpixel"), tr(
-                           "<p>Help:<ul>"
+    QMessageBox::about(this, tr("About"), tr(
+                           "<p>Created by <a href=\"https://twitter.com/eigenbom\">@eigenbom</a>.</p>"
+                           "<ul>"
                            "<li>Right-click (on colour): Select pen and pick colour</li>"
                            "<li>Right-click (on blank): Select eraser</li>"
                            "<li>Ctrl + Wheel: Zoom</li>"
@@ -798,18 +801,17 @@ void MainWindow::showAbout(){
                            "<li>1-4: Place pivot in a part window</li>"
                            "</ul>"
                            "</p>"
-                           "<p>mmpixel was created by <a href=\"http://twitter.com/eigenbom\">@eigenbom</a>."
-                           "Thanks to <a href=\"http://adamwhitcroft.com/batch/\">@adamwhitcroft</a> for the UI icons and <a href=\"https://twitter.com/BlueSweatshirt\">@bluesweatshirt</a> for early discussions."
-                           "The DB16 palette is by Dawnbringer.</p>"
                            ));
 }
 
 void MainWindow::resetSettings(){
-    QMessageBox::StandardButton res = QMessageBox::question(this, "Restore to Factory Settings", "Restoring to factory settings will reset all your preferences. It will close the program down and you'll have to re-open it manually. Continue?");
-    if (res==QMessageBox::Yes){
+    QMessageBox::StandardButton res = QMessageBox::question(this, "Reset?", "This will reset your preferences. The program will shut down. Continue?");
+    if (res == QMessageBox::Yes){
         MainWindow::Instance()->showMessage("Restoring Factory Settings");
         QSettings settings;
         settings.clear();
+
+		// TODO: Reload
         QApplication::exit();
     }
 }
@@ -853,7 +855,7 @@ void MainWindow::loadProject(const QString& fileName){
     // Try to load project
     bool result = ProjectModel::Instance()->load(fileName);
     if (!result){
-        QMessageBox::warning(this, "Error during load", tr("Couldn't load project ") + fileName);
+        QMessageBox::warning(this, "Error during load", tr("Couldn't load ") + fileName);
 
         ProjectModel::Instance()->clear();
         mPartList->updateList();
@@ -888,9 +890,9 @@ void MainWindow::loadProject(){
     QSettings settings;
     QString dir = settings.value("last_load_dir", QDir::currentPath()).toString();
 
-    QString fileName = QFileDialog::getOpenFileName(this, "Load Project", dir, "MoonPixel tar (*.tar)");
+    QString fileName = QFileDialog::getOpenFileName(this, "Open...", dir, "Project File (*.mpx)");
     if (fileName.isNull() || fileName.isEmpty() || !QFileInfo(fileName).isFile()){
-        QMessageBox::warning(this, "Error during load", tr("Can't load project: ") + fileName);
+        QMessageBox::warning(this, "Error during load", tr("Couldn't load ") + fileName);
     }
     else {
         loadProject(fileName);
@@ -918,7 +920,7 @@ void MainWindow::saveProject(){
         // Save to filename
         bool result = ProjectModel::Instance()->save(fileName);
         if (!result){
-            QMessageBox::warning(this, "Error during save", tr("Couldn't save project as ") + fileName);
+            QMessageBox::warning(this, "Error during save", tr("Couldn't save as ") + fileName);
         }
         else {
             mProjectModifiedSinceLastSave = false;
@@ -932,11 +934,11 @@ void MainWindow::saveProjectAs(){
     QSettings settings;
     QString dir = settings.value("last_save_dir", QDir::currentPath()).toString();
 
-    QString fileName = QFileDialog::getSaveFileName(this, "Save Project As..", dir, "MoonPixel tar (*.tar)");
+    QString fileName = QFileDialog::getSaveFileName(this, "Save As...", dir, "Project File (*.mpx)");
     if (!fileName.isNull()){
         bool result = ProjectModel::Instance()->save(fileName);
         if (!result){
-            QMessageBox::warning(this, "Error during save", tr("Couldn't save project as ") + fileName);
+            QMessageBox::warning(this, "Error during save", tr("Couldn't save as ") + fileName);
         }
         else {
             // Update last saved project location
@@ -957,5 +959,5 @@ void MainWindow::undoStackIndexChanged(int){
 }
 
 void MainWindow::openEigenbom(){
-    QDesktopServices::openUrl(QUrl("http://twitter.com/eigenbom"));
+    QDesktopServices::openUrl(QUrl("https://twitter.com/eigenbom"));
 }

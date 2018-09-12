@@ -118,7 +118,6 @@ private:
     QAction* mUndoAction;
     QAction* mRedoAction;
     QAction* mAboutAction;
-    QAction* mResetSettingsAction;
 
     bool mProjectModifiedSinceLastSave;
 };

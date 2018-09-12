@@ -35,7 +35,7 @@ void CNewPart::redo()
     QString name;
     int number = 0;
     do {
-        name = (number==0)?QString("part"):(QObject::tr("part_") + QString::number(number));
+        name = (number==0)?QString("sprite"):(QObject::tr("sprite_") + QString::number(number));
         number++;
     } while (PM()->findPartByName(name)!=nullptr);
 
@@ -67,18 +67,7 @@ void CNewPart::redo()
         mode.layers.push_back(QSharedPointer<Part::Layer>(layer));
     }
 
-    {
-        Part::Layer* layer = new Part::Layer;
-        layer->name = "layer 2";
-        layer->visible = false;
-        auto img = QSharedPointer<QImage>::create(mode.width, mode.width, QImage::Format_ARGB32);
-        img->fill(0x00FFFFFF);
-        layer->frames.push_back(img);
-        mode.layers.push_back(QSharedPointer<Part::Layer>(layer));
-    }
-
-
-    part->modes.insert("mode", mode);
+    part->modes.insert("anim", mode);
     PM()->parts.insert(part->ref, part);
 
     MainWindow::Instance()->partListChanged();
@@ -90,9 +79,15 @@ CCopyPart::CCopyPart(AssetRef ref){
     ok = PM()->hasPart(ref);
     if (ok){
         Part* part = PM()->getPart(ref);
-        int copyNumber = 0;
+		auto prefix = part->name;
+		int underscoreIndex = part->name.lastIndexOf("_");
+        int suffix = 0;
+		if (underscoreIndex != -1 && underscoreIndex != part->name.size() - 1) {
+			suffix = part->name.right(part->name.size() - 1 - underscoreIndex).toInt();
+			prefix = part->name.left(underscoreIndex);
+		}
         do {
-            mNewPartName = part->name + "_" + QString::number(copyNumber++);
+            mNewPartName = prefix + "_" + QString::number(++suffix);
         } while (PM()->findPartByName(mNewPartName)!=nullptr);
         mCopy = PM()->createAssetRef();
         mCopy.type = AssetType::Part;
@@ -116,9 +111,10 @@ void CCopyPart::redo(){
     QMapIterator<QString, Part::Mode> it(partToCopy->modes);
     while (it.hasNext()) {
         it.next();
-        const QString& key = it.key();
-        const Part::Mode& mode = it.value();
-        Part::Mode newMode = mode;
+        const auto& key = it.key();
+        const auto& mode = it.value();
+        
+		Part::Mode newMode = mode;
         newMode.anchor = mode.anchor;
         for(int p=0;p<MAX_PIVOTS;p++)
             newMode.pivots[p] = mode.pivots[p];
@@ -140,10 +136,8 @@ void CCopyPart::redo(){
         }
         part->modes.insert(key, newMode);
     }
-    PM()->parts.insert(mCopy, part);
-
-    // NB: Called from partlist
-    // MainWindow::Instance()->partListChanged();
+    PM()->parts.insert(mCopy, part);    
+    // MainWindow::Instance()->partListChanged(); // NB: Called from partlist
 }
 
 CDeletePart::CDeletePart(AssetRef ref):mRef(ref),mCopy() {
@@ -159,7 +153,6 @@ void CDeletePart::undo()
 void CDeletePart::redo()
 {
     mCopy = PM()->parts.take(mRef);
-
     // MainWindow::Instance()->partListChanged();
 }
 

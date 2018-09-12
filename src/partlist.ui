@@ -49,7 +49,7 @@
      <item>
       <widget class="QToolButton" name="toolButtonNewPart">
        <property name="toolTip">
-        <string>New Part</string>
+        <string>New Sprite</string>
        </property>
        <property name="text">
         <string>...</string>
@@ -87,7 +87,7 @@
      <item>
       <widget class="QToolButton" name="toolButtonRenameAsset">
        <property name="toolTip">
-        <string>Rename Asset</string>
+        <string>Rename</string>
        </property>
        <property name="text">
         <string>...</string>
@@ -101,7 +101,7 @@
      <item>
       <widget class="QToolButton" name="toolButtonCopyAsset">
        <property name="toolTip">
-        <string>Copy Asset</string>
+        <string>Duplicate</string>
        </property>
        <property name="text">
         <string>...</string>
@@ -115,7 +115,7 @@
      <item>
       <widget class="QToolButton" name="toolButtonDeleteAsset">
        <property name="toolTip">
-        <string>Delete Asset</string>
+        <string>Delete</string>
        </property>
        <property name="text">
         <string>...</string>
