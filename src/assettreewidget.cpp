@@ -12,6 +12,8 @@ AssetTreeWidget::AssetTreeWidget(QWidget *parent):QTreeWidget(parent)
     connect(this, SIGNAL(itemExpanded(QTreeWidgetItem*)), this, SLOT(expandItem(QTreeWidgetItem*)));
     connect(this, SIGNAL(itemCollapsed(QTreeWidgetItem*)), this, SLOT(collapseItem(QTreeWidgetItem*)));
 	// connect(this, SIGNAL(itemChanged(QTreeWidgetItem*, int)), this, SLOT(changeItem(QTreeWidgetItem*, int)));
+	
+	// connect(findChild<QToolButton*>("toolButtonDeleteAsset"), SIGNAL(clicked()), this, SLOT(deleteAsset()));
 
     setDragDropMode(QAbstractItemView::InternalMove);
     setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -142,13 +144,6 @@ void AssetTreeWidget::updateList(){
     qSort(l.begin(), l.end(), [](AssetRef a, AssetRef b){return PM()->getAsset(a)->name < PM()->getAsset(b)->name;});
     assets += l;
 
-    /*
-    QList<AssetRef> assets;
-    assets += PM()->parts.keys();
-    assets += PM()->composites.keys();
-    qSort(assets.begin(), assets.end(), [](AssetRef a, AssetRef b){return PM()->getAsset(a)->name < PM()->getAsset(b)->name;});
-    */
-
     // Add everything recursively
 	disconnect(this, SIGNAL(itemChanged(QTreeWidgetItem*, int)), this, SLOT(changeItem(QTreeWidgetItem*, int)));
     addAssetsWithParent(assets, AssetRef(), this->invisibleRootItem(), index);
@@ -168,8 +163,6 @@ void AssetTreeWidget::addAsset(AssetRef ref){
             break;
         }
     }
-
-
 
     mItems.push_back(item);
 }

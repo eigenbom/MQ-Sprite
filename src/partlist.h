@@ -25,9 +25,7 @@ public slots:
     void newPart();
     void newComp();
     void newFolder();
-    void renameAsset();
     void copyAsset();
-    void deleteAsset();
     void sortAssets();
     
     void updateList();

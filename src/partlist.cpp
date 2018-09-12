@@ -17,9 +17,9 @@ PartList::PartList(QWidget *parent) :
     connect(findChild<QToolButton*>("toolButtonNewPart"), SIGNAL(clicked()), this, SLOT(newPart()));
     // connect(findChild<QToolButton*>("toolButtonNewComp"), SIGNAL(clicked()), this, SLOT(newComp()));
     connect(findChild<QToolButton*>("toolButtonNewFolder"), SIGNAL(clicked()), this, SLOT(newFolder()));
-    connect(findChild<QToolButton*>("toolButtonRenameAsset"), SIGNAL(clicked()), this, SLOT(renameAsset()));
-    connect(findChild<QToolButton*>("toolButtonCopyAsset"), SIGNAL(clicked()), this, SLOT(copyAsset()));
-    connect(findChild<QToolButton*>("toolButtonDeleteAsset"), SIGNAL(clicked()), this, SLOT(deleteAsset()));
+    // connect(findChild<QToolButton*>("toolButtonRenameAsset"), SIGNAL(clicked()), this, SLOT(renameAsset()));
+    // connect(findChild<QToolButton*>("toolButtonCopyAsset"), SIGNAL(clicked()), this, SLOT(copyAsset()));
+    // connect(findChild<QToolButton*>("toolButtonDeleteAsset"), SIGNAL(clicked()), this, SLOT(deleteAsset()));
     updateList();
 }
 
@@ -43,29 +43,6 @@ void PartList::newFolder()
     TryCommand(new CNewFolder());
 }
 
-void PartList::renameAsset()
-{
-    QTreeWidgetItem* item = mAssetTreeWidget->currentItem();
-    if (item){
-        int id = item->data(0, Qt::UserRole).toInt();
-        AssetRef ref = mAssetTreeWidget->assetRef(id);
-        const QString& name = mAssetTreeWidget->assetName(id);
-        bool ok;
-        QString text = QInputDialog::getText(this, tr("Rename Asset"),
-                                             tr("Rename ") + name + ":", QLineEdit::Normal,
-                                             name, &ok);
-        if (ok && !text.isEmpty()){
-            switch(ref.type){
-            case AssetType::Part: TryCommand(new CRenamePart(ref, text)); break;
-            case AssetType::Composite: TryCommand(new CRenameComposite(ref, text)); break;
-            case AssetType::Folder: TryCommand(new CRenameFolder(ref, text)); break;
-            }
-        }
-    }
-
-    MainWindow::Instance()->partListChanged();
-}
-
 void PartList::copyAsset()
 {
     for(QTreeWidgetItem* item: mAssetTreeWidget->selectedItems()){
@@ -77,23 +54,6 @@ void PartList::copyAsset()
             case AssetType::Composite: TryCommand(new CCopyComposite(ref)); break;
             case AssetType::Folder: qDebug() << "TODO: Copy folder"; break;
             // case AssetType::Folder: TryCommand(new CCopyFolder(ref)); break;
-            }
-        }
-    }
-
-    MainWindow::Instance()->partListChanged();
-}
-
-void PartList::deleteAsset()
-{
-    for(QTreeWidgetItem* item: mAssetTreeWidget->selectedItems()){
-        if (item){
-            int id = item->data(0, Qt::UserRole).toInt();
-            AssetRef ref = mAssetTreeWidget->assetRef(id);
-            switch(ref.type){
-            case AssetType::Part: TryCommand(new CDeletePart(ref)); break;
-            case AssetType::Composite: TryCommand(new CDeleteComposite(ref)); break;
-            case AssetType::Folder: TryCommand(new CDeleteFolder(ref)); break;
             }
         }
     }

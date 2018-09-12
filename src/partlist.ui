@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>215</width>
+    <width>145</width>
     <height>396</height>
    </rect>
   </property>
@@ -57,20 +57,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="toolButtonRenameAsset">
-       <property name="toolTip">
-        <string>Rename</string>
-       </property>
-       <property name="text">
-        <string>...</string>
-       </property>
-       <property name="icon">
-        <iconset resource="../icons.qrc">
-         <normaloff>:/icon/icons/paragraph-justify-2.png</normaloff>:/icon/icons/paragraph-justify-2.png</iconset>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QToolButton" name="toolButtonCopyAsset">
        <property name="toolTip">
         <string>Duplicate</string>
@@ -85,18 +71,17 @@
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="toolButtonDeleteAsset">
-       <property name="toolTip">
-        <string>Delete</string>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
        </property>
-       <property name="text">
-        <string>...</string>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
        </property>
-       <property name="icon">
-        <iconset resource="../icons.qrc">
-         <normaloff>:/icon/icons/browser-minimise-2.png</normaloff>:/icon/icons/browser-minimise-2.png</iconset>
-       </property>
-      </widget>
+      </spacer>
      </item>
     </layout>
    </item>

@@ -120,6 +120,7 @@ private:
     QAction* mAboutAction;
 
 	QAction* mResizePartAction;
+	QAction* mDuplicateAssetAction;
 
     bool mProjectModifiedSinceLastSave;
 };

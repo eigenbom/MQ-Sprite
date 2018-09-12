@@ -15,9 +15,14 @@
 #include <QSettings>
 #include <QDesktopServices>
 
-#define APP_NAME (QString("mmpixel"))
-
 static MainWindow* sWindow = nullptr;
+
+
+static QString makeWindowTitle(QString filename = {}, bool saved = true) {
+	static const QString appName { "MoonQuest Sprite Editor" };
+	if (filename.isEmpty()) return appName;
+	else return filename + (saved ? "" : "*") + " - " + appName;
+}
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -89,8 +94,7 @@ MainWindow::MainWindow(QWidget *parent) :
     createMenus();
     connect(mUndoStack, SIGNAL(indexChanged(int)), this, SLOT(undoStackIndexChanged(int)));
 
-    // Final
-    setWindowTitle(APP_NAME);
+	setWindowTitle(makeWindowTitle());
     restoreGeometry(settings.value("main_window_geometry").toByteArray());
     restoreState(settings.value("main_window_state").toByteArray());
 }
@@ -309,8 +313,13 @@ void MainWindow::createMenus()
     mEditMenu = menuBar()->addMenu(tr("&Edit"));
     mEditMenu->addAction(mUndoAction);
     mEditMenu->addAction(mRedoAction);
-	mEditMenu->addSeparator();
 
+	mEditMenu->addSeparator();
+	mDuplicateAssetAction = mEditMenu->addAction("&Duplicate");	
+	mDuplicateAssetAction->setShortcut(QKeySequence(tr("Ctrl+D")));
+	connect(mDuplicateAssetAction, SIGNAL(triggered()), mPartList, SLOT(copyAsset()));
+	
+	mEditMenu->addSeparator();
 	mResizePartAction = mEditMenu->addAction("Resize Sprite...");
 	connect(mResizePartAction, SIGNAL(triggered()), mPartToolsWidget, SLOT(resizeMode()));
 	mResizePartAction->setEnabled(false);
@@ -399,7 +408,7 @@ void MainWindow::openCompositeWidget(AssetRef ref){
 
 void MainWindow::subWindowActivated(QMdiSubWindow* win){
 	mResizePartAction->setEnabled(false);
-
+	
     if (win==nullptr){
         mCompositeToolsWidget->setTargetCompWidget(nullptr);
         mPartToolsWidget->setTargetPartWidget(nullptr);
@@ -832,7 +841,7 @@ void MainWindow::newProject(){
         ProjectModel::Instance()->clear();
         mPartList->updateList();
 
-        setWindowTitle(APP_NAME);
+        setWindowTitle(makeWindowTitle());
 
         MainWindow::Instance()->showMessage("New Project Started");
     }
@@ -881,8 +890,7 @@ void MainWindow::loadProject(const QString& fileName){
         // mMdiArea->setBackground(QBrush(backgroundColour));
 
         mProjectModifiedSinceLastSave = false;
-        setWindowTitle(APP_NAME + " [" + fileName + "]");
-
+        setWindowTitle(makeWindowTitle(fileName, true));
         MainWindow::Instance()->showMessage("Successfully loaded");
     }
 }
@@ -925,7 +933,7 @@ void MainWindow::saveProject(){
         }
         else {
             mProjectModifiedSinceLastSave = false;
-            setWindowTitle(APP_NAME + " [" + fileName + "]");
+			setWindowTitle(makeWindowTitle(fileName, true));
             MainWindow::Instance()->showMessage("Successfully saved");
         }
     }
@@ -947,8 +955,7 @@ void MainWindow::saveProjectAs(){
             settings.setValue("last_save_dir", lastOpenedPath.absolutePath());
 
             mProjectModifiedSinceLastSave = false;
-            setWindowTitle(APP_NAME + " [" + fileName + "]");
-
+			setWindowTitle(makeWindowTitle(fileName, true));
             MainWindow::Instance()->showMessage("Successfully saved");
         }
     }
@@ -956,7 +963,7 @@ void MainWindow::saveProjectAs(){
 
 void MainWindow::undoStackIndexChanged(int){
     mProjectModifiedSinceLastSave = true;
-    setWindowTitle(APP_NAME + " [" + PM()->fileName + "*]");
+	setWindowTitle(makeWindowTitle(PM()->fileName, false));
 }
 
 void MainWindow::openEigenbom(){
