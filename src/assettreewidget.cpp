@@ -11,12 +11,13 @@ AssetTreeWidget::AssetTreeWidget(QWidget *parent):QTreeWidget(parent)
     connect(this, SIGNAL(itemActivated(QTreeWidgetItem*,int)), this, SLOT(activateItem(QTreeWidgetItem*,int)));
     connect(this, SIGNAL(itemExpanded(QTreeWidgetItem*)), this, SLOT(expandItem(QTreeWidgetItem*)));
     connect(this, SIGNAL(itemCollapsed(QTreeWidgetItem*)), this, SLOT(collapseItem(QTreeWidgetItem*)));
+	// connect(this, SIGNAL(itemChanged(QTreeWidgetItem*, int)), this, SLOT(changeItem(QTreeWidgetItem*, int)));
 
-    // setEditTriggers(QAbstractItemView::SelectedClicked | QAbstractItemView::EditKeyPressed);
     setDragDropMode(QAbstractItemView::InternalMove);
     setSelectionMode(QAbstractItemView::ExtendedSelection);
     setDropIndicatorShown(true);
     setAcceptDrops(true);
+	setExpandsOnDoubleClick(false);
 }
 
 Qt::DropActions AssetTreeWidget::supportedDropActions() const
@@ -34,18 +35,18 @@ const QString& AssetTreeWidget::assetName(int id) const {
     return mAssetNames.at(id);
 }
 
-void AssetTreeWidget::addAssetsWithParent(const QList<AssetRef>& assets, AssetRef parentRef, QTreeWidgetItem* parentItem, int& index){
-
+void AssetTreeWidget::addAssetsWithParent(const QList<AssetRef>& assets, AssetRef parentRef, QTreeWidgetItem* parentItem, int& index){	       
     for(const AssetRef& ref: assets){
         Asset* asset = PM()->getAsset(ref);
         if (asset->parent == parentRef){
             if (ref.type==AssetType::Folder){
-                QTreeWidgetItem* item = new QTreeWidgetItem(parentItem);
+                QTreeWidgetItem* item = new QTreeWidgetItem(parentItem);				
+				
                 item->setText(0, asset->name);
                 item->setData(0, Qt::UserRole, index++);
-                item->setIcon(0, QIcon(":/icon/icons/folder.png"));
-                
-                // item->setChildIndicatorPolicy(QTreeWidgetItem::ShowIndicator);
+                // item->setIcon(0, QIcon(":/icon/icons/folder.png"));
+                item->setChildIndicatorPolicy(QTreeWidgetItem::ShowIndicator);
+				item->setFlags(item->flags() | Qt::ItemIsEditable);
                 mAssetRefs.push_back(asset->ref);
                 mAssetNames.push_back(asset->name);
                 addAssetsWithParent(assets, asset->ref, item, index);
@@ -57,8 +58,9 @@ void AssetTreeWidget::addAssetsWithParent(const QList<AssetRef>& assets, AssetRe
                 QTreeWidgetItem* item = new QTreeWidgetItem(parentItem);
                 item->setText(0, asset->name);
                 item->setData(0, Qt::UserRole, index++);
-                item->setIcon(0, QIcon(":/icon/icons/sprite.png"));
-                item->setFlags(item->flags() ^ Qt::ItemIsDropEnabled);
+                // item->setIcon(0, QIcon(":/icon/icons/sprite.png"));
+                item->setFlags(item->flags() ^ Qt::ItemIsDropEnabled | Qt::ItemIsEditable);
+
                 mAssetRefs.push_back(asset->ref);
                 mAssetNames.push_back(asset->name);
             }
@@ -66,15 +68,13 @@ void AssetTreeWidget::addAssetsWithParent(const QList<AssetRef>& assets, AssetRe
                 QTreeWidgetItem* item = new QTreeWidgetItem(parentItem);
                 item->setText(0, asset->name);
                 item->setData(0, Qt::UserRole, index++);
-                item->setIcon(0, QIcon(":/icon/icons/composite.png"));
-                item->setFlags(item->flags() ^ Qt::ItemIsDropEnabled);
+                // item->setIcon(0, QIcon(":/icon/icons/composite.png"));
+                item->setFlags(item->flags() ^ Qt::ItemIsDropEnabled | Qt::ItemIsEditable);
                 mAssetRefs.push_back(asset->ref);
                 mAssetNames.push_back(asset->name);
             }
         }
     }
-
-
 
     /*
     for(Asset* asset: PM()->folders.values()){
@@ -150,7 +150,9 @@ void AssetTreeWidget::updateList(){
     */
 
     // Add everything recursively
+	disconnect(this, SIGNAL(itemChanged(QTreeWidgetItem*, int)), this, SLOT(changeItem(QTreeWidgetItem*, int)));
     addAssetsWithParent(assets, AssetRef(), this->invisibleRootItem(), index);
+	connect(this, SIGNAL(itemChanged(QTreeWidgetItem*, int)), this, SLOT(changeItem(QTreeWidgetItem*, int)));
 }
 
 /*
@@ -184,7 +186,6 @@ void AssetTreeWidget::activateItem(QTreeWidgetItem* item, int){
 }
 
 void AssetTreeWidget::expandItem(QTreeWidgetItem* item){
-
     int index = item->data(0, Qt::UserRole).toInt();
     mOpenFolders.insert(mAssetRefs[index]);
 }
@@ -192,6 +193,29 @@ void AssetTreeWidget::expandItem(QTreeWidgetItem* item){
 void AssetTreeWidget::collapseItem(QTreeWidgetItem* item){
     int index = item->data(0, Qt::UserRole).toInt();
     mOpenFolders.remove(mAssetRefs[index]);
+}
+
+void AssetTreeWidget::changeItem(QTreeWidgetItem* item, int col) {
+	if (col == 0) {
+		int id = item->data(0, Qt::UserRole).toInt();
+		AssetRef ref = assetRef(id);		
+		auto oldName = assetName(id);
+		auto newName = item->text(col);
+		if (newName.isEmpty()) {
+			// Reset to old name
+			blockSignals(true);
+			item->setText(col, oldName);
+			blockSignals(false);
+		}
+		else if (oldName != newName) {
+			switch (ref.type) {
+			case AssetType::Folder: TryCommand(new CRenameFolder(ref, newName)); break;
+			case AssetType::Part: TryCommand(new CRenamePart(ref, newName)); break;
+			case AssetType::Composite: TryCommand(new CRenameComposite(ref, newName)); break;
+			}
+			MainWindow::Instance()->partListChanged();
+		}
+	}
 }
 
 void AssetTreeWidget::dropEvent(QDropEvent *event)

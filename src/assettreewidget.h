@@ -24,6 +24,7 @@ public slots:
     void activateItem(QTreeWidgetItem* item, int col);
     void expandItem(QTreeWidgetItem* item);
     void collapseItem(QTreeWidgetItem* item);
+	void changeItem(QTreeWidgetItem* item, int col);
 
 signals:
     void assetDoubleClicked(AssetRef ref);

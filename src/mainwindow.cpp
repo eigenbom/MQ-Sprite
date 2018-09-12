@@ -808,7 +808,7 @@ void MainWindow::showAbout(){
 void MainWindow::resetSettings(){
     QMessageBox::StandardButton res = QMessageBox::question(this, "Reset?", "This will reset your preferences. The program will shut down. Continue?");
     if (res == QMessageBox::Yes){
-        MainWindow::Instance()->showMessage("Restoring Factory Settings");
+        MainWindow::Instance()->showMessage("Resetting");
         QSettings settings;
         settings.clear();
 

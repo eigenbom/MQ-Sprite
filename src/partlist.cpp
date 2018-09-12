@@ -8,17 +8,14 @@
 
 PartList::PartList(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::PartList)
-{
+    ui(new Ui::PartList){
     ui->setupUi(this);
-    // mAssetListWidget = findChild<AssetListWidget*>("assetList");
-    // connect(mAssetListWidget, SIGNAL(assetDoubleClicked(AssetRef)), this, SIGNAL(assetDoubleClicked(AssetRef)));
 
     mAssetTreeWidget = findChild<AssetTreeWidget*>("assetTree");
     connect(mAssetTreeWidget, SIGNAL(assetDoubleClicked(AssetRef)), this, SIGNAL(assetDoubleClicked(AssetRef)));
 
     connect(findChild<QToolButton*>("toolButtonNewPart"), SIGNAL(clicked()), this, SLOT(newPart()));
-    connect(findChild<QToolButton*>("toolButtonNewComp"), SIGNAL(clicked()), this, SLOT(newComp()));
+    // connect(findChild<QToolButton*>("toolButtonNewComp"), SIGNAL(clicked()), this, SLOT(newComp()));
     connect(findChild<QToolButton*>("toolButtonNewFolder"), SIGNAL(clicked()), this, SLOT(newFolder()));
     connect(findChild<QToolButton*>("toolButtonRenameAsset"), SIGNAL(clicked()), this, SLOT(renameAsset()));
     connect(findChild<QToolButton*>("toolButtonCopyAsset"), SIGNAL(clicked()), this, SLOT(copyAsset()));
@@ -71,7 +68,6 @@ void PartList::renameAsset()
 
 void PartList::copyAsset()
 {
-
     for(QTreeWidgetItem* item: mAssetTreeWidget->selectedItems()){
         if (item){
             int id = item->data(0, Qt::UserRole).toInt();
@@ -80,7 +76,7 @@ void PartList::copyAsset()
             case AssetType::Part: TryCommand(new CCopyPart(ref)); break;
             case AssetType::Composite: TryCommand(new CCopyComposite(ref)); break;
             case AssetType::Folder: qDebug() << "TODO: Copy folder"; break;
-                // case AssetType::Folder: TryCommand(new CCopyFolder(ref)); break;
+            // case AssetType::Folder: TryCommand(new CCopyFolder(ref)); break;
             }
         }
     }
