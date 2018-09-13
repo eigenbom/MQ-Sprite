@@ -43,6 +43,9 @@ MainWindow::MainWindow(QWidget *parent) :
     mPartList = findChild<PartList*>("partList");
     // mPartList->resize(1,1);
     connect(mPartList, SIGNAL(assetDoubleClicked(AssetRef)), this, SLOT(assetDoubleClicked(AssetRef)));
+	
+	connect(findChild<QAction*>("actionNewSprite"), &QAction::triggered, [&]() { TryCommand(new CNewPart()); });
+	connect(findChild<QAction*>("actionNewFolder"), &QAction::triggered, [&]() { TryCommand(new CNewFolder()); });
 
     // Set MDI Area
     mMdiArea = findChild<QMdiArea*>(tr("mdiArea"));    
@@ -119,8 +122,8 @@ void MainWindow::createActions(){
     mRedoAction->setShortcuts(QKeySequence::Redo);
 	mRedoAction->setIcon(QIcon(":/icon/icons/gentleface/redo_icon&16.png"));
 	
-	findChild<QToolBar*>("toolbar")->addAction(mUndoAction);
-	findChild<QToolBar*>("toolbar")->addAction(mRedoAction);
+	findChild<QToolBar*>("toolBar")->addAction(mUndoAction);
+	findChild<QToolBar*>("toolBar")->addAction(mRedoAction);
 	
     mAboutAction = new QAction(tr("About"), this);
     mAboutAction->setShortcut(QKeySequence::HelpContents);

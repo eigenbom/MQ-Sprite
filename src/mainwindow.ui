@@ -82,10 +82,19 @@
        </brush>
       </property>
       <property name="viewMode">
-       <enum>QMdiArea::SubWindowView</enum>
+       <enum>QMdiArea::TabbedView</enum>
       </property>
       <property name="documentMode">
        <bool>false</bool>
+      </property>
+      <property name="tabsClosable">
+       <bool>true</bool>
+      </property>
+      <property name="tabsMovable">
+       <bool>true</bool>
+      </property>
+      <property name="tabPosition">
+       <enum>QTabWidget::North</enum>
       </property>
      </widget>
     </item>
@@ -176,8 +185,6 @@
    <addaction name="actionNewSprite"/>
    <addaction name="actionNewFolder"/>
    <addaction name="separator"/>
-   <addaction name="actionUndo"/>
-   <addaction name="actionRedo"/>
   </widget>
   <action name="actionNewSprite">
    <property name="icon">
@@ -195,30 +202,6 @@
    </property>
    <property name="text">
     <string>New Folder</string>
-   </property>
-  </action>
-  <action name="actionUndo">
-   <property name="icon">
-    <iconset resource="../icons.qrc">
-     <normaloff>:/icon/icons/gentleface/undo_icon&amp;16.png</normaloff>:/icon/icons/gentleface/undo_icon&amp;16.png</iconset>
-   </property>
-   <property name="text">
-    <string>Undo</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Z</string>
-   </property>
-  </action>
-  <action name="actionRedo">
-   <property name="icon">
-    <iconset resource="../icons.qrc">
-     <normaloff>:/icon/icons/gentleface/redo_icon&amp;16.png</normaloff>:/icon/icons/gentleface/redo_icon&amp;16.png</iconset>
-   </property>
-   <property name="text">
-    <string>Redo</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Y</string>
    </property>
   </action>
   <zorder>dockWidgetAssets</zorder>

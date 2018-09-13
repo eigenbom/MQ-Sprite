@@ -49,6 +49,7 @@ void AssetTreeWidget::addAssetsWithParent(const QList<AssetRef>& assets, AssetRe
                 // item->setIcon(0, QIcon(":/icon/icons/folder.png"));
                 item->setChildIndicatorPolicy(QTreeWidgetItem::ShowIndicator);
 				item->setFlags(item->flags() | Qt::ItemIsEditable);
+				item->setIcon(0, QIcon(":/icon/icons/gentleface/folder_icon&16.png"));
                 mAssetRefs.push_back(asset->ref);
                 mAssetNames.push_back(asset->name);
                 addAssetsWithParent(assets, asset->ref, item, index);
@@ -60,7 +61,7 @@ void AssetTreeWidget::addAssetsWithParent(const QList<AssetRef>& assets, AssetRe
                 QTreeWidgetItem* item = new QTreeWidgetItem(parentItem);
                 item->setText(0, asset->name);
                 item->setData(0, Qt::UserRole, index++);
-                // item->setIcon(0, QIcon(":/icon/icons/sprite.png"));
+				item->setIcon(0, QIcon(":/icon/icons/gentleface/user_icon&16.png"));
                 item->setFlags(item->flags() ^ Qt::ItemIsDropEnabled | Qt::ItemIsEditable);
 
                 mAssetRefs.push_back(asset->ref);

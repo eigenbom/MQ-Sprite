@@ -12,8 +12,8 @@ PartList::PartList(QWidget *parent) :
     ui->setupUi(this);
     mAssetTreeWidget = findChild<AssetTreeWidget*>("assetTree");
     connect(mAssetTreeWidget, SIGNAL(assetDoubleClicked(AssetRef)), this, SIGNAL(assetDoubleClicked(AssetRef)));
-    connect(findChild<QToolButton*>("toolButtonNewPart"), SIGNAL(clicked()), this, SLOT(newPart()));
-    connect(findChild<QToolButton*>("toolButtonNewFolder"), SIGNAL(clicked()), this, SLOT(newFolder()));
+    // connect(findChild<QToolButton*>("toolButtonNewPart"), SIGNAL(clicked()), this, SLOT(newPart()));
+    // connect(findChild<QToolButton*>("toolButtonNewFolder"), SIGNAL(clicked()), this, SLOT(newFolder()));
     updateList();
 }
 
