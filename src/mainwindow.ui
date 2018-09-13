@@ -20,8 +20,8 @@
    <string>Moon Pixel</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../icons.qrc">
-    <normaloff>:/icon/icons/appicon.png</normaloff>:/icon/icons/appicon.png</iconset>
+   <iconset>
+    <normaloff>../icon.ico</normaloff>../icon.ico</iconset>
   </property>
   <property name="toolButtonStyle">
    <enum>Qt::ToolButtonIconOnly</enum>
@@ -102,11 +102,26 @@
    </property>
   </widget>
   <widget class="QDockWidget" name="dockWidgetAssets">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>150</width>
+     <height>44</height>
+    </size>
+   </property>
    <property name="features">
-    <set>QDockWidget::AllDockWidgetFeatures</set>
+    <set>QDockWidget::NoDockWidgetFeatures</set>
+   </property>
+   <property name="allowedAreas">
+    <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
    </property>
    <property name="windowTitle">
-    <string>Assets</string>
+    <string>Sprite Explorer</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>1</number>
@@ -142,6 +157,70 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents"/>
   </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="movable">
+    <bool>false</bool>
+   </property>
+   <property name="floatable">
+    <bool>false</bool>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionNewSprite"/>
+   <addaction name="actionNewFolder"/>
+   <addaction name="separator"/>
+   <addaction name="actionUndo"/>
+   <addaction name="actionRedo"/>
+  </widget>
+  <action name="actionNewSprite">
+   <property name="icon">
+    <iconset resource="../icons.qrc">
+     <normaloff>:/icon/icons/gentleface/doc_plus_icon&amp;16.png</normaloff>:/icon/icons/gentleface/doc_plus_icon&amp;16.png</iconset>
+   </property>
+   <property name="text">
+    <string>New Sprite</string>
+   </property>
+  </action>
+  <action name="actionNewFolder">
+   <property name="icon">
+    <iconset resource="../icons.qrc">
+     <normaloff>:/icon/icons/gentleface/folder_plus_icon&amp;16.png</normaloff>:/icon/icons/gentleface/folder_plus_icon&amp;16.png</iconset>
+   </property>
+   <property name="text">
+    <string>New Folder</string>
+   </property>
+  </action>
+  <action name="actionUndo">
+   <property name="icon">
+    <iconset resource="../icons.qrc">
+     <normaloff>:/icon/icons/gentleface/undo_icon&amp;16.png</normaloff>:/icon/icons/gentleface/undo_icon&amp;16.png</iconset>
+   </property>
+   <property name="text">
+    <string>Undo</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Z</string>
+   </property>
+  </action>
+  <action name="actionRedo">
+   <property name="icon">
+    <iconset resource="../icons.qrc">
+     <normaloff>:/icon/icons/gentleface/redo_icon&amp;16.png</normaloff>:/icon/icons/gentleface/redo_icon&amp;16.png</iconset>
+   </property>
+   <property name="text">
+    <string>Redo</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Y</string>
+   </property>
+  </action>
   <zorder>dockWidgetAssets</zorder>
   <zorder>dockWidgetTools</zorder>
  </widget>

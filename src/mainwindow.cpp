@@ -55,8 +55,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // QColor backgroundColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
     // mMdiArea->setBackground(QBrush(backgroundColour));
 
-    QDockWidget* dockWidgetAssets = findChild<QDockWidget*>("dockWidgetAssets");
-    dockWidgetAssets->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    auto* assetsWidget = findChild<QFrame*>("assets");
 
     mPartToolsWidget = new PartToolsWidget(this);
     mCompositeToolsWidget = new CompositeToolsWidget(this);
@@ -111,13 +110,18 @@ MainWindow* MainWindow::Instance(){
     return sWindow;
 }
 
-void MainWindow::createActions(){
+void MainWindow::createActions(){		
     mUndoAction = mUndoStack->createUndoAction(this, tr("&Undo"));
     mUndoAction->setShortcuts(QKeySequence::Undo);
-
+	mUndoAction->setIcon(QIcon(":/icon/icons/gentleface/undo_icon&16.png"));
+	
     mRedoAction = mUndoStack->createRedoAction(this, tr("&Redo"));
     mRedoAction->setShortcuts(QKeySequence::Redo);
-
+	mRedoAction->setIcon(QIcon(":/icon/icons/gentleface/redo_icon&16.png"));
+	
+	findChild<QToolBar*>("toolbar")->addAction(mUndoAction);
+	findChild<QToolBar*>("toolbar")->addAction(mRedoAction);
+	
     mAboutAction = new QAction(tr("About"), this);
     mAboutAction->setShortcut(QKeySequence::HelpContents);
     connect(mAboutAction, SIGNAL(triggered()), this, SLOT(showAbout()));
@@ -326,6 +330,15 @@ void MainWindow::createMenus()
 	// connect(resizeAction, SIGNAL(triggered()), mPartToolsWidget, SLOT(resizeMode()));
 
 	mEditMenu->addSeparator();
+	auto* action = mEditMenu->addAction("New Window");
+	connect(action, &QAction::triggered, [&](){
+		auto* pw = this->activePartWidget();
+		auto* cw = this->activeCompositeWidget();
+		if (pw) this->openPartWidget(pw->partRef());
+		if (cw) this->openCompositeWidget(cw->compRef());
+	});
+
+	mEditMenu->addSeparator();
     connect(mEditMenu->addAction("Options..."), SIGNAL(triggered()), this, SLOT(showViewOptionsDialog()));
 
     ///////////////////////////
@@ -348,8 +361,33 @@ void MainWindow::closeEvent(QCloseEvent*){
 }
 
 void MainWindow::assetDoubleClicked(AssetRef ref){
-    if (ref.type==AssetType::Part) openPartWidget(ref);
-    else if (ref.type==AssetType::Composite) openCompositeWidget(ref);
+	switch (ref.type) {
+	case AssetType::Part: {
+		for (auto* win : mMdiArea->subWindowList()) {
+			auto* pw = dynamic_cast<PartWidget*>(win);
+			if (pw && pw->partRef() == ref) {
+				pw->setFocus();
+				return;
+			}
+		}
+
+		// Else open new widget
+		openPartWidget(ref);
+		break;
+	}
+	case AssetType::Composite: {
+		for (auto* win : mMdiArea->subWindowList()) {
+			auto* cw = dynamic_cast<CompositeWidget*>(win);
+			if (cw && cw->compRef() == ref) {
+				cw->setFocus();
+				return;
+			}
+		}
+
+		openCompositeWidget(ref);
+		break;
+	}
+	}
 }
 
 void MainWindow::partWidgetClosed(PartWidget* pw){
@@ -368,14 +406,6 @@ void MainWindow::openPartWidget(AssetRef ref){
         connect(p, SIGNAL(closed(PartWidget*)), this, SLOT(partWidgetClosed(PartWidget*)));
         mPartWidgets.insertMulti(ref, p);
     }
-
-    /*
-    if (mCompositeWidgets.size()==0 && mPartWidgets.size()==1){
-        mMdiArea->tileSubWindows();
-    }
-    */
-
-    // mMdiArea->tileSubWindows();
 }
 
 void MainWindow::compositeWidgetClosed(CompositeWidget* cw){
@@ -799,16 +829,17 @@ void MainWindow::setOnionSkinningEnabledDuringPlayback(bool enabled){
 void MainWindow::showAbout(){
     QMessageBox::about(this, tr("About"), tr(
                            "<p>Created by <a href=\"https://twitter.com/eigenbom\">@eigenbom</a>.</p>"
-                           "<ul>"
+						   "<p><a href=\"http://www.gentleface.com/free_icon_set.html\">Gentleface Icons</a> (CC BY-NC 3.0)</p>"
+                           "<p>Help:<ul>"
                            "<li>Right-click (on colour): Select pen and pick colour</li>"
                            "<li>Right-click (on blank): Select eraser</li>"
                            "<li>Ctrl + Wheel: Zoom</li>"
                            "<li>Middle-press + drag: Move canvas</li>"
-                           "<li>Space: Toggle playing in a part window</li>"
-                           "<li>S/D: Change frame in part window</li>"
-                           "<li>W/E: Change mode in part window</li>"
-                           "<li>A: Place anchor in a part window</li>"
-                           "<li>1-4: Place pivot in a part window</li>"
+                           "<li>Space: Toggle playback</li>"
+                           "<li>S/D: Change frame</li>"
+                           "<li>W/E: Change mode</li>"
+                           "<li>A: Move anchor</li>"
+                           "<li>1-4: Move pivot</li>"
                            "</ul>"
                            "</p>"
                            ));

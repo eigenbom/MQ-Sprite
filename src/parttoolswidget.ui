@@ -86,6 +86,20 @@
        </widget>
       </item>
       <item>
+       <widget class="QToolButton" name="toolButtonRenameMode">
+        <property name="toolTip">
+         <string>Rename Animation</string>
+        </property>
+        <property name="text">
+         <string>rename</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../icons.qrc">
+          <normaloff>:/icon/icons/gentleface/wrench_icon&amp;16.png</normaloff>:/icon/icons/gentleface/wrench_icon&amp;16.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QToolButton" name="toolButtonAddMode">
         <property name="maximumSize">
          <size>
@@ -101,21 +115,7 @@
         </property>
         <property name="icon">
          <iconset resource="../icons.qrc">
-          <normaloff>:/icon/icons/browser-new-window-2.png</normaloff>:/icon/icons/browser-new-window-2.png</iconset>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QToolButton" name="toolButtonRenameMode">
-        <property name="toolTip">
-         <string>Rename Animation</string>
-        </property>
-        <property name="text">
-         <string>rename</string>
-        </property>
-        <property name="icon">
-         <iconset resource="../icons.qrc">
-          <normaloff>:/icon/icons/paragraph-justify-2.png</normaloff>:/icon/icons/paragraph-justify-2.png</iconset>
+          <normaloff>:/icon/icons/gentleface/sq_plus_icon&amp;16.png</normaloff>:/icon/icons/gentleface/sq_plus_icon&amp;16.png</iconset>
         </property>
        </widget>
       </item>
@@ -135,7 +135,7 @@
         </property>
         <property name="icon">
          <iconset resource="../icons.qrc">
-          <normaloff>:/icon/icons/browser-windows-2.png</normaloff>:/icon/icons/browser-windows-2.png</iconset>
+          <normaloff>:/icon/icons/gentleface/page_layout_icon&amp;16.png</normaloff>:/icon/icons/gentleface/page_layout_icon&amp;16.png</iconset>
         </property>
        </widget>
       </item>
@@ -155,7 +155,7 @@
         </property>
         <property name="icon">
          <iconset resource="../icons.qrc">
-          <normaloff>:/icon/icons/browser-minimise-2.png</normaloff>:/icon/icons/browser-minimise-2.png</iconset>
+          <normaloff>:/icon/icons/gentleface/trash_icon&amp;16.png</normaloff>:/icon/icons/gentleface/trash_icon&amp;16.png</iconset>
         </property>
        </widget>
       </item>
@@ -283,7 +283,7 @@
            <string/>
           </property>
           <property name="pixmap">
-           <pixmap resource="../icons.qrc">:/icon/icons/zoom-in-2.png</pixmap>
+           <pixmap resource="../icons.qrc">:/icon/icons/gentleface/zoom_icon&amp;16.png</pixmap>
           </property>
           <property name="buddy">
            <cstring>groupBoxDraw</cstring>
@@ -337,7 +337,7 @@
           </property>
           <property name="icon">
            <iconset resource="../icons.qrc">
-            <normaloff>:/icon/icons/expand-3.png</normaloff>:/icon/icons/expand-3.png</iconset>
+            <normaloff>:/icon/icons/gentleface/cursor_V_split_icon&amp;16.png</normaloff>:/icon/icons/gentleface/cursor_V_split_icon&amp;16.png</iconset>
           </property>
          </widget>
         </item>
@@ -564,7 +564,7 @@
    </property>
    <property name="icon">
     <iconset resource="../icons.qrc">
-     <normaloff>:/icon/icons/pencil.png</normaloff>:/icon/icons/pencil.png</iconset>
+     <normaloff>:/icon/icons/gentleface/pencil_icon&amp;16.png</normaloff>:/icon/icons/gentleface/pencil_icon&amp;16.png</iconset>
    </property>
    <property name="text">
     <string>draw</string>
@@ -579,7 +579,7 @@
    </property>
    <property name="icon">
     <iconset resource="../icons.qrc">
-     <normaloff>:/icon/icons/eraser.png</normaloff>:/icon/icons/eraser.png</iconset>
+     <normaloff>:/icon/icons/gentleface/checkbox_unchecked_icon&amp;16.png</normaloff>:/icon/icons/gentleface/checkbox_unchecked_icon&amp;16.png</iconset>
    </property>
    <property name="text">
     <string>erase</string>
@@ -594,7 +594,7 @@
    </property>
    <property name="icon">
     <iconset resource="../icons.qrc">
-     <normaloff>:/icon/icons/eye-2.png</normaloff>:/icon/icons/eye-2.png</iconset>
+     <normaloff>:/icon/icons/gentleface/pin_icon&amp;16.png</normaloff>:/icon/icons/gentleface/pin_icon&amp;16.png</iconset>
    </property>
    <property name="text">
     <string>pick colour</string>
@@ -606,7 +606,7 @@
    </property>
    <property name="icon">
     <iconset resource="../icons.qrc">
-     <normaloff>:/icon/icons/stamp-2.png</normaloff>:/icon/icons/stamp-2.png</iconset>
+     <normaloff>:/icon/icons/gentleface/clipboard_past_icon&amp;16.png</normaloff>:/icon/icons/gentleface/clipboard_past_icon&amp;16.png</iconset>
    </property>
    <property name="text">
     <string>stamp</string>
@@ -624,7 +624,7 @@
    </property>
    <property name="icon">
     <iconset resource="../icons.qrc">
-     <normaloff>:/icon/icons/stamp.png</normaloff>:/icon/icons/stamp.png</iconset>
+     <normaloff>:/icon/icons/gentleface/clipboard_cut_icon&amp;16.png</normaloff>:/icon/icons/gentleface/clipboard_cut_icon&amp;16.png</iconset>
    </property>
    <property name="text">
     <string>copy</string>
@@ -642,7 +642,7 @@
    </property>
    <property name="icon">
     <iconset resource="../icons.qrc">
-     <normaloff>:/icon/icons/flask-empty.png</normaloff>:/icon/icons/flask-empty.png</iconset>
+     <normaloff>:/icon/icons/gentleface/brush_icon&amp;16.png</normaloff>:/icon/icons/gentleface/brush_icon&amp;16.png</iconset>
    </property>
    <property name="text">
     <string>fill</string>

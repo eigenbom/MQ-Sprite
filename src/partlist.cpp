@@ -10,16 +10,10 @@ PartList::PartList(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::PartList){
     ui->setupUi(this);
-
     mAssetTreeWidget = findChild<AssetTreeWidget*>("assetTree");
     connect(mAssetTreeWidget, SIGNAL(assetDoubleClicked(AssetRef)), this, SIGNAL(assetDoubleClicked(AssetRef)));
-
     connect(findChild<QToolButton*>("toolButtonNewPart"), SIGNAL(clicked()), this, SLOT(newPart()));
-    // connect(findChild<QToolButton*>("toolButtonNewComp"), SIGNAL(clicked()), this, SLOT(newComp()));
     connect(findChild<QToolButton*>("toolButtonNewFolder"), SIGNAL(clicked()), this, SLOT(newFolder()));
-    // connect(findChild<QToolButton*>("toolButtonRenameAsset"), SIGNAL(clicked()), this, SLOT(renameAsset()));
-    // connect(findChild<QToolButton*>("toolButtonCopyAsset"), SIGNAL(clicked()), this, SLOT(copyAsset()));
-    // connect(findChild<QToolButton*>("toolButtonDeleteAsset"), SIGNAL(clicked()), this, SLOT(deleteAsset()));
     updateList();
 }
 

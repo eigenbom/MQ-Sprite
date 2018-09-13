@@ -953,7 +953,7 @@ void PartWidget::updateBackgroundBrushes(){
 
     QSettings settings;
 
-    bool useGridPattern =  settings.value("background_grid_pattern", false).toBool();
+    bool useGridPattern =  settings.value("background_grid_pattern", true).toBool();
 
     QColor boundsColour;
     if (!useGridPattern){
