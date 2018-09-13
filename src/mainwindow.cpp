@@ -65,7 +65,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     mStackedWidget = new QStackedWidget(this);
 	// mStackedWidget->setSizePolicy(QSizePolicy::Minimum);
-	mStackedWidget->setMinimumWidth(178);
+	// mStackedWidget->setMinimumWidth(178);
     QLabel* label = new QLabel("No asset selected.", this);
     label->setAlignment(Qt::AlignCenter);
     mNoToolsIndex = mStackedWidget->addWidget(label);
@@ -266,7 +266,7 @@ void MainWindow::showViewOptionsDialog(){
     }
 	
 	{
-		QPushButton* resetButton = new QPushButton("Reset");
+		QPushButton* resetButton = new QPushButton("Reset Application");
 		connect(resetButton, SIGNAL(clicked()), this, SLOT(resetSettings()));
 		layout->addWidget(resetButton);
 	}

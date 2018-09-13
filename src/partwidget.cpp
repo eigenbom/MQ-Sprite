@@ -287,8 +287,10 @@ void PartWidget::setDrawToolType(DrawToolType type){
 }
 
 void PartWidget::setMode(const QString& mode){
-    mModeName = mode;
-    updatePartFrames();
+	if (mModeName != mode) {
+		mModeName = mode;
+		updatePartFrames();
+	}
 }
 
 void PartWidget::partNameChanged(const QString& newPartName){

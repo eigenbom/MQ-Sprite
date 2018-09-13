@@ -10,23 +10,24 @@
 void myMessageOutput(QtMsgType type, const QMessageLogContext& context, const QString& msg)
 {
     QString ctx = QString("%1:%2").arg(context.file).arg(context.line);
+	auto* mw = MainWindow::Instance();
 
     //in this function, you can write the message to any stream!
     switch (type) {
     default: break;
     case QtDebugMsg:
-        if (!msg.startsWith("nativeResourceForWindow"))
-            MainWindow::Instance()->showMessage(QString("Debug: %1 %2").arg(msg,ctx), 2000);
+        if (!msg.startsWith("nativeResourceForWindow") && mw)
+            mw->showMessage(QString("Debug: %1 %2").arg(msg,ctx), 2000);
         std::cerr << "Debug: " << msg.toStdString() << "\n";
         break;
     case QtWarningMsg:
-        if (!msg.startsWith("nativeResourceForWindow"))
-            MainWindow::Instance()->showMessage(QString("Warning: %1 %2").arg(msg,ctx), 2000);
+        if (!msg.startsWith("nativeResourceForWindow") && mw)
+            mw->showMessage(QString("Warning: %1 %2").arg(msg,ctx), 2000);
         std::cerr << "Warning: " <<  msg.toStdString() << "\n";
         break;
     case QtCriticalMsg:
-        if (!msg.startsWith("nativeResourceForWindow"))
-            MainWindow::Instance()->showMessage(QString("Critical: %1 %2").arg(msg,ctx), 2000);
+        if (!msg.startsWith("nativeResourceForWindow") && mw)
+            mw->showMessage(QString("Critical: %1 %2").arg(msg,ctx), 2000);
         std::cerr << "Critical: " << msg.toStdString() << "\n";
         break;
     case QtFatalMsg:
@@ -38,15 +39,11 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext& context, const QS
 int main(int argc, char *argv[])
 {
     qInstallMessageHandler(myMessageOutput);
-
     // QApplication::setStyle(QStyleFactory::create("fusion"));
-
-    QCoreApplication::setOrganizationName("bp.io");
-    QCoreApplication::setOrganizationDomain("bp.io");
-    QCoreApplication::setApplicationName("mmpixel");
-
+    QCoreApplication::setOrganizationName("Wizard Mode");
+    QCoreApplication::setOrganizationDomain("playmoonquest.com");
+    QCoreApplication::setApplicationName("MoonQuest Sprite Editor");
     QApplication a(argc, argv);
-
     MainWindow w;
     w.show();
     

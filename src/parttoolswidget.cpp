@@ -9,12 +9,13 @@
 #include <QtWidgets>
 #include <QMessageBox>
 #include <QInputDialog>
-
+#include <QListWidget>
 
 PartToolsWidget::PartToolsWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::PartToolsWidget),
-    mTarget(nullptr)
+    mTarget(nullptr),
+	mCurrentMode {}
 {
     ui->setupUi(this);
 
@@ -81,16 +82,25 @@ PartToolsWidget::PartToolsWidget(QWidget *parent) :
 	connect(findChild<QSpinBox*>("spinBoxNumPivots"), SIGNAL(valueChanged(int)), this, SLOT(setNumPivots(int)));
 
     mComboBoxModes = findChild<QComboBox*>("comboBoxModes");
-    connect(mComboBoxModes, SIGNAL(activated(QString)), this, SLOT(modeActivated(QString)));
-    // connect(mComboBoxModes, SIGNAL(editTextChanged(QString)), this, SLOT(currentModeRenamed(QString)));
-    // connect(mComboBoxModes->lineEdit(), SIGNAL(editingFinished()), SLOT(editingFinished()));
+    connect(mComboBoxModes, SIGNAL(activated(QString)), this, SLOT(modeActivated(QString)));    
+	connect(mComboBoxModes, SIGNAL(editTextChanged(const QString&)), this, SLOT(modeEditTextChanged(const QString&)));
 	
-	// connect(mComboBoxModes, SIGNAL(editTextChanged(QString)), this, SLOT(currentModeRenamed(QString)));
+	mListWidgetModes = findChild<QListWidget*>("listWidgetModes");	
+	mListWidgetModes->clear();
+	// mListWidgetModes->setFixedHeight(4);
 
-    connect(findChild<QToolButton*>("toolButtonRenameMode"), SIGNAL(clicked()), this, SLOT(renameMode()));
+	connect(mListWidgetModes, &QListWidget::itemChanged, [this](QListWidgetItem* item) {
+		this->modeEditTextChanged(item->text());
+	});
+		
+	connect(mListWidgetModes, &QListWidget::itemSelectionChanged, [this]() {
+		auto* list = this->mListWidgetModes;
+		for (auto* item : list->selectedItems()) {
+			this->modeActivated(item->text());
+		}
+	});
 
 	connect(findChild<QSpinBox*>("spinBoxFramerate"), SIGNAL(valueChanged(int)), this, SLOT(setFramerate(int)));
-	
 
     // mPushButtonModeSize = findChild<QPushButton*>("pushButtonModeSize");
     // connect(mPushButtonModeSize, SIGNAL(clicked()), this, SLOT(resizeMode()));
@@ -162,6 +172,7 @@ void PartToolsWidget::setTargetPartWidget(PartWidget* p){
         disconnect(mTarget, SIGNAL(selectPreviousMode()), this, SLOT(selectPreviousMode()));
 
         mTarget = nullptr;
+		mCurrentMode.clear();
     }
     if (p){
         mTarget = p;
@@ -317,25 +328,35 @@ void PartToolsWidget::targetPartNumPivotsChanged(){
 }
 
 void PartToolsWidget::targetPartModesChanged(){
-    if (mTarget){
-        // Update modes combobox
+    if (mTarget){		
         mComboBoxModes->clear();
+		mListWidgetModes->clear();
+
         Part* part = PM()->getPart(mTarget->partRef());
         if (part){
             QStringList list = part->modes.keys();
             mComboBoxModes->addItems(list);
             mComboBoxModes->setCurrentIndex(mComboBoxModes->findText(mTarget->modeName()));
+			mCurrentMode = mComboBoxModes->currentText();
+			
+			mListWidgetModes->addItems(list);
+			for (int i = 0; i < mListWidgetModes->count(); ++i)
+			{
+				auto* item = mListWidgetModes->item(i);
+				item->setFlags(item->flags() | Qt::ItemIsEditable);
+			}
+			mListWidgetModes->blockSignals(true);
+			auto items = mListWidgetModes->findItems(mCurrentMode, Qt::MatchExactly);
+			mListWidgetModes->clearSelection();
+			for (auto* item : items) {
+				mListWidgetModes->setItemSelected(item, true);
+			}
+			mListWidgetModes->blockSignals(false);
 
-            // Update size
-            const auto& m = part->modes.value(mTarget->modeName());
-            // mPushButtonModeSize->setText(QString("%1x%2").arg(m.width).arg(m.height));        
-			findChild<QLabel*>("labelModeSize")->setText(QString("%1x%2").arg(m.width).arg(m.height));
-
-			findChild<QSpinBox*>("spinBoxFramerate")->setValue(m.framesPerSecond);
+			updateProperties(part, mTarget->modeName());
         }
 
         targetPartNumPivotsChanged();
-
         mAnimatorWidget->targetPartModesChanged();
     }
 }
@@ -401,33 +422,49 @@ void PartToolsWidget::setNumPivots(int p){
 
 void PartToolsWidget::modeActivated(QString mode){
     if (mTarget){
+		mCurrentMode = mode;
+
+		mComboBoxModes->blockSignals(true);
+		mComboBoxModes->setCurrentIndex(mComboBoxModes->findText(mode));
+		mComboBoxModes->blockSignals(false);
+
+		mListWidgetModes->blockSignals(true);
+		auto items = mListWidgetModes->findItems(mode, Qt::MatchExactly);
+		mListWidgetModes->clearSelection();
+		for (auto* item: items) {
+			mListWidgetModes->setItemSelected(item, true);
+		}
+		mListWidgetModes->blockSignals(false);
+
         mAnimatorWidget->stop();
         mTarget->setMode(mode);
         mAnimatorWidget->modeActivated(mode);
 
-        // update num frames etc
+        // update properties
         Part* part = PM()->getPart(mTarget->partRef());
-        const auto& m = part->modes.value(mode);
-        // mPushButtonModeSize->setText(QString("%1x%2").arg(m.width).arg(m.height));
-		findChild<QLabel*>("labelModeSize")->setText(QString("%1x%2").arg(m.width).arg(m.height));
-		findChild<QSpinBox*>("spinBoxFramerate")->setValue(m.framesPerSecond);
+		updateProperties(part, mode);
         targetPartNumPivotsChanged();
     }
+}
+
+void PartToolsWidget::modeEditTextChanged(const QString& text) {
+	if (mTarget && !mCurrentMode.isEmpty() && mCurrentMode != text && !text.isEmpty()) {
+		mAnimatorWidget->stop();
+		TryCommand(new CRenameMode(mTarget->partRef(), mCurrentMode, text));
+	}
 }
 
 void PartToolsWidget::addMode(){
     if (mTarget){
         mAnimatorWidget->stop();
-        QString mode = mComboBoxModes->currentText();
-        TryCommand(new CNewMode(mTarget->partRef(), mode));
+        TryCommand(new CNewMode(mTarget->partRef(), mCurrentMode));		
     }
 }
 
 void PartToolsWidget::copyMode(){
     if (mTarget){
         mAnimatorWidget->stop();
-        QString mode = mComboBoxModes->currentText();
-        TryCommand(new CCopyMode(mTarget->partRef(), mode));
+        TryCommand(new CCopyMode(mTarget->partRef(), mCurrentMode));
     }
 }
 
@@ -438,23 +475,9 @@ void PartToolsWidget::deleteMode(){
         if (mComboBoxModes->count()>1){
             TryCommand(new CDeleteMode(mTarget->partRef(), mode));
         }
-        else if (mComboBoxModes->count()==1){
+        else if (mComboBoxModes->count() == 1){
             // Don't delete mode, but instead clear it..
             TryCommand(new CResetMode(mTarget->partRef(), mode));
-        }
-    }
-}
-
-void PartToolsWidget::renameMode(){
-    if (mTarget){
-        mAnimatorWidget->stop();
-        QString currentMode = mComboBoxModes->currentText();
-        bool ok;
-        QString text = QInputDialog::getText(this, tr("Rename Mode"),
-                                             tr("Rename ") + currentMode + ":", QLineEdit::Normal,
-                                             currentMode, &ok);
-        if (ok && !text.isEmpty()){
-            TryCommand(new CRenameMode(mTarget->partRef(), currentMode, text));
         }
     }
 }
@@ -462,10 +485,8 @@ void PartToolsWidget::renameMode(){
 void PartToolsWidget::resizeMode(){
     if (mTarget){
         mAnimatorWidget->stop();
-        // Get current size
-        QString currentMode = mComboBoxModes->currentText();
         Part* part = PM()->getPart(mTarget->partRef());
-        Part::Mode m = part->modes.value(currentMode);
+        Part::Mode m = part->modes.value(mCurrentMode);
         mResizeModeDialog->mLineEditWidth->setText(QString::number(m.width));
         mResizeModeDialog->mLineEditHeight->setText(QString::number(m.height));
         mResizeModeDialog->show();
@@ -480,8 +501,7 @@ void PartToolsWidget::resizeModeDialogAccepted(){
         int height = mResizeModeDialog->mLineEditHeight->text().toInt();
         int offsetx = mResizeModeDialog->mLineEditOffsetX->text().toInt();
         int offsety = mResizeModeDialog->mLineEditOffsetY->text().toInt();
-        QString currentMode = mComboBoxModes->currentText();
-        TryCommand(new CChangeModeSize(mTarget->partRef(), currentMode, width, height, offsetx, offsety));
+        TryCommand(new CChangeModeSize(mTarget->partRef(), mCurrentMode, width, height, offsetx, offsety));
     }
 }
 
@@ -528,13 +548,24 @@ void PartToolsWidget::paletteActivated(QString str){
     settings.setValue(tr("selected_palette"), QVariant(str));
 }
 
-void PartToolsWidget::selectNextMode(){
+void PartToolsWidget::selectNextMode(){	
     int i = mComboBoxModes->currentIndex();
     if (mComboBoxModes->count()>1){
-        i = (i+1)%mComboBoxModes->count();
+        i = (i+1) % mComboBoxModes->count();
         mComboBoxModes->setCurrentIndex(i);
         modeActivated(mComboBoxModes->currentText());
     }
+
+	/*
+	if (mListWidgetModes->count() > 1) {
+		auto index = mListWidgetModes->currentIndex();
+		int row = index.row();
+		row = (row + 1) % mListWidgetModes->count();
+		mListWidgetModes->setCurrentRow(row);
+		// mListWidgetModes->setCurrentIndex(QModelIndex({ row, index.column() });
+		modeActivated(mListWidgetModes->currentItem()->text());
+	}
+	*/
 }
 
 void PartToolsWidget::selectPreviousMode(){
@@ -549,3 +580,10 @@ void PartToolsWidget::selectPreviousMode(){
 void PartToolsWidget::setFramerate(int frameRate) {
 	TryCommand(new CChangeModeFPS(mTarget->partRef(), mTarget->modeName(), frameRate));
 }
+
+void PartToolsWidget::updateProperties(Part* part, const QString& mode){
+	const auto& m = part->modes.value(mode);
+	findChild<QLabel*>("labelModeSize")->setText(QString("%1x%2").arg(m.width).arg(m.height));
+	findChild<QSpinBox*>("spinBoxFramerate")->setValue(m.framesPerSecond);
+}
+

@@ -114,7 +114,8 @@ struct Part: public Asset {
     };
 
     struct Mode {
-        int width, height;
+		int width;
+		int height;
         int numLayers;
         int numFrames;
         int numPivots;

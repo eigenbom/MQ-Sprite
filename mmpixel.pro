@@ -1,5 +1,5 @@
 TEMPLATE = app
-TARGET = mmpixel
+TARGET = SpriteEditor
 INCLUDEPATH += . src
 QT += core gui widgets
 

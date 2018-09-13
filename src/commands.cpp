@@ -118,6 +118,7 @@ void CCopyPart::redo(){
         newMode.anchor = mode.anchor;
         for(int p=0;p<MAX_PIVOTS;p++)
             newMode.pivots[p] = mode.pivots[p];
+		newMode.layers.clear();
 
          // make copy of layers and things
         newMode.numLayers = mode.numLayers;
@@ -127,7 +128,6 @@ void CCopyPart::redo(){
             QSharedPointer<Part::Layer> layer =  QSharedPointer<Part::Layer>::create();
             layer->name = oldLayer->name;
             layer->visible = oldLayer->visible;
-
             for(auto oldImage: oldLayer->frames){
                 QSharedPointer<QImage> img = QSharedPointer<QImage>::create(*oldImage);
                 layer->frames.push_back(img);

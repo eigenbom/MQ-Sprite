@@ -64,6 +64,24 @@
        <string notr="true">1</string>
       </property>
      </column>
+     <item>
+      <property name="text">
+       <string>Item</string>
+      </property>
+      <property name="icon">
+       <iconset resource="../icons.qrc">
+        <normaloff>:/icon/icons/gentleface/document_icon&amp;16.png</normaloff>:/icon/icons/gentleface/document_icon&amp;16.png</iconset>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Folder</string>
+      </property>
+      <property name="icon">
+       <iconset resource="../icons.qrc">
+        <normaloff>:/icon/icons/gentleface/folder_icon&amp;16.png</normaloff>:/icon/icons/gentleface/folder_icon&amp;16.png</iconset>
+      </property>
+     </item>
     </widget>
    </item>
   </layout>
@@ -75,6 +93,8 @@
    <header>assettreewidget.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../icons.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -61,7 +61,7 @@ void AssetTreeWidget::addAssetsWithParent(const QList<AssetRef>& assets, AssetRe
                 QTreeWidgetItem* item = new QTreeWidgetItem(parentItem);
                 item->setText(0, asset->name);
                 item->setData(0, Qt::UserRole, index++);
-				item->setIcon(0, QIcon(":/icon/icons/gentleface/user_icon&16.png"));
+				item->setIcon(0, QIcon(":/icon/icons/gentleface/document_icon&16.png"));
                 item->setFlags(item->flags() ^ Qt::ItemIsDropEnabled | Qt::ItemIsEditable);
 
                 mAssetRefs.push_back(asset->ref);
