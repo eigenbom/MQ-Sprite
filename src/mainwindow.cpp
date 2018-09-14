@@ -78,6 +78,8 @@ MainWindow::MainWindow(QWidget *parent) :
     mPToolsIndex = mStackedWidget->addWidget(partToolsHBoxWidget);
     mCToolsIndex = mStackedWidget->addWidget(mCompositeToolsWidget);
     mStackedWidget->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
+	mStackedWidget->setMinimumWidth(qMax(partToolsHBoxWidget->minimumSize().width(), mCompositeToolsWidget->minimumSize().width()));
+	mStackedWidget->setMinimumHeight(qMax(partToolsHBoxWidget->minimumSize().height(), mCompositeToolsWidget->minimumSize().height()));
     // mStackedWidget->resize(1,1);
 
     auto* dockWidgetTools = findChild<QDockWidget*>("dockWidgetTools");
@@ -85,6 +87,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->addDockWidget(Qt::RightDockWidgetArea, dockWidgetTools);
     dockWidgetTools->show();
     dockWidgetTools->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
+	dockWidgetTools->setMinimumSize(mStackedWidget->minimumSize());
 	
     mUndoStack = new QUndoStack(this);
     createActions();
