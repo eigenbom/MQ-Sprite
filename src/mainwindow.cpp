@@ -62,10 +62,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     mPartToolsWidget = new PartToolsWidget(this);
     mCompositeToolsWidget = new CompositeToolsWidget(this);
+	mStackedWidget = new QStackedWidget(this);
 
-    mStackedWidget = new QStackedWidget(this);
-	// mStackedWidget->setSizePolicy(QSizePolicy::Minimum);
-	// mStackedWidget->setMinimumWidth(178);
     QLabel* label = new QLabel("No asset selected.", this);
     label->setAlignment(Qt::AlignCenter);
     mNoToolsIndex = mStackedWidget->addWidget(label);
@@ -87,10 +85,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->addDockWidget(Qt::RightDockWidgetArea, dockWidgetTools);
     dockWidgetTools->show();
     dockWidgetTools->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
-	// dockWidgetTools->setMinimumWidth(178);
-	// dockWidgetTools->setProperty
-    // dockWidgetTools->resize(1,1);
-    // Remaining stuff..
+	
     mUndoStack = new QUndoStack(this);
     createActions();
     createMenus();

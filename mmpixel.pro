@@ -2,6 +2,7 @@ TEMPLATE = app
 TARGET = SpriteEditor
 INCLUDEPATH += . src
 QT += core gui widgets
+CONFIG += c++11
 
 HEADERS += \
     src/assetlistwidget.h \

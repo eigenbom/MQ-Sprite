@@ -37,7 +37,7 @@ PartToolsWidget::PartToolsWidget(QWidget *parent) :
     connect(mTextEditProperties, SIGNAL(textChanged()), this, SLOT(textPropertiesEdited()));
 	mTextEditProperties->setPlaceholderText(tr("\"emit\": true,\n\"wiggle\": 0.5,\n\"display_name\":\"worm\""));
 
-    QPixmap px(16, 16);
+    QPixmap px(mToolButtonColour->iconSize());
     px.fill(mPenColour);
     mToolButtonColour->setIcon(px);
 
@@ -217,7 +217,7 @@ void PartToolsWidget::colourSelected(QColor colour){
     if (mTarget){
         mPenColour = colour;
         mTarget->setPenColour(mPenColour);
-        QPixmap px(16, 16);
+        QPixmap px(mToolButtonColour->iconSize());
         px.fill(mPenColour);        
         mToolButtonColour->setIcon(px);
 
@@ -238,7 +238,7 @@ void PartToolsWidget::penChanged(){
     if (mTarget){
         findChild<QSlider*>("hSliderPenSize")->setValue(mTarget->penSize());
         mPenColour = mTarget->penColour();
-        QPixmap px(16, 16);
+        QPixmap px(mToolButtonColour->iconSize());
         px.fill(mPenColour);
         mToolButtonColour->setIcon(px);
 

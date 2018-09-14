@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>212</width>
-    <height>652</height>
+    <width>184</width>
+    <height>667</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -18,7 +18,7 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>178</width>
+    <width>50</width>
     <height>0</height>
    </size>
   </property>
@@ -45,14 +45,17 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_9">
       <item>
-       <widget class="QFrame" name="frame_2">
+       <widget class="QFrame" name="frame_4">
         <property name="frameShape">
          <enum>QFrame::StyledPanel</enum>
         </property>
         <property name="frameShadow">
          <enum>QFrame::Raised</enum>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_4">
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <property name="spacing">
+          <number>0</number>
+         </property>
          <property name="leftMargin">
           <number>0</number>
          </property>
@@ -66,179 +69,53 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QFrame" name="frame">
+          <widget class="QToolButton" name="toolButtonColour">
+           <property name="minimumSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string/>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">border-color: rgb(0, 0, 0);
+border-width: 4px;</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="../icons.qrc">
+             <normaloff>:/icon/icons/gentleface/2x2_grid_icon&amp;32.png</normaloff>:/icon/icons/gentleface/2x2_grid_icon&amp;32.png</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="toolButtonStyle">
+            <enum>Qt::ToolButtonIconOnly</enum>
+           </property>
+           <property name="autoRaise">
+            <bool>true</bool>
+           </property>
+           <property name="arrowType">
+            <enum>Qt::NoArrow</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QFrame" name="frame_5">
            <property name="frameShape">
             <enum>QFrame::StyledPanel</enum>
            </property>
            <property name="frameShadow">
             <enum>QFrame::Raised</enum>
            </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_2">
-            <property name="spacing">
-             <number>0</number>
-            </property>
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QToolButton" name="toolButtonColour">
-              <property name="toolTip">
-               <string/>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">border-color: rgb(0, 0, 0);
-border-width: 4px;</string>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="icon">
-               <iconset resource="../icons.qrc">
-                <normaloff>:/icon/icons/gentleface/2x2_grid_icon&amp;16.png</normaloff>:/icon/icons/gentleface/2x2_grid_icon&amp;16.png</iconset>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>32</width>
-                <height>32</height>
-               </size>
-              </property>
-              <property name="toolButtonStyle">
-               <enum>Qt::ToolButtonIconOnly</enum>
-              </property>
-              <property name="autoRaise">
-               <bool>true</bool>
-              </property>
-              <property name="arrowType">
-               <enum>Qt::NoArrow</enum>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QGroupBox" name="groupBox">
-              <layout class="QGridLayout" name="gridLayout_2">
-               <property name="leftMargin">
-                <number>0</number>
-               </property>
-               <property name="topMargin">
-                <number>0</number>
-               </property>
-               <property name="rightMargin">
-                <number>0</number>
-               </property>
-               <property name="bottomMargin">
-                <number>0</number>
-               </property>
-               <item row="0" column="1">
-                <widget class="QToolButton" name="toolButtonDraw">
-                 <property name="toolTip">
-                  <string>Draw</string>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="../icons.qrc">
-                   <normaloff>:/icon/icons/gentleface/pencil_icon&amp;16.png</normaloff>:/icon/icons/gentleface/pencil_icon&amp;16.png</iconset>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
-                 </property>
-                 <property name="autoRepeatInterval">
-                  <number>102</number>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="2">
-                <widget class="QToolButton" name="toolButtonErase">
-                 <property name="toolTip">
-                  <string>Erase</string>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="../icons.qrc">
-                   <normaloff>:/icon/icons/eraser.png</normaloff>:/icon/icons/eraser.png</iconset>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="3">
-                <widget class="QToolButton" name="toolButtonStamp">
-                 <property name="toolTip">
-                  <string>Stamp</string>
-                 </property>
-                 <property name="text">
-                  <string>...</string>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="../icons.qrc">
-                   <normaloff>:/icon/icons/stamp-2.png</normaloff>:/icon/icons/stamp-2.png</iconset>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
-                 </property>
-                 <property name="arrowType">
-                  <enum>Qt::NoArrow</enum>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QToolButton" name="toolButtonPickColour">
-                 <property name="toolTip">
-                  <string>Pick Colour</string>
-                 </property>
-                 <property name="text">
-                  <string>...</string>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="../icons.qrc">
-                   <normaloff>:/icon/icons/eye-2.png</normaloff>:/icon/icons/eye-2.png</iconset>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="2">
-                <widget class="QToolButton" name="toolButtonCopy">
-                 <property name="text">
-                  <string>...</string>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="../icons.qrc">
-                   <normaloff>:/icon/icons/stamp.png</normaloff>:/icon/icons/stamp.png</iconset>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="3">
-                <widget class="QToolButton" name="toolButtonFill">
-                 <property name="enabled">
-                  <bool>false</bool>
-                 </property>
-                 <property name="toolTip">
-                  <string>fill (not available yet)</string>
-                 </property>
-                 <property name="text">
-                  <string>...</string>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="../icons.qrc">
-                   <normaloff>:/icon/icons/flask-empty.png</normaloff>:/icon/icons/flask-empty.png</iconset>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
             <item>
              <widget class="QSlider" name="hSliderPenSize">
               <property name="toolTip">
@@ -252,6 +129,9 @@ border-width: 4px;</string>
               </property>
               <property name="pageStep">
                <number>1</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
               </property>
               <property name="invertedAppearance">
                <bool>false</bool>
@@ -274,6 +154,132 @@ border-width: 4px;</string>
        </widget>
       </item>
       <item>
+       <widget class="QFrame" name="frame_6">
+        <property name="frameShape">
+         <enum>QFrame::StyledPanel</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_7">
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QToolButton" name="toolButtonDraw">
+           <property name="toolTip">
+            <string>Draw</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="../icons.qrc">
+             <normaloff>:/icon/icons/gentleface/pencil_icon&amp;16.png</normaloff>:/icon/icons/gentleface/pencil_icon&amp;16.png</iconset>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="autoRepeatInterval">
+            <number>102</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="toolButtonPickColour">
+           <property name="toolTip">
+            <string>Pick Colour</string>
+           </property>
+           <property name="text">
+            <string>...</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../icons.qrc">
+             <normaloff>:/icon/icons/eye-2.png</normaloff>:/icon/icons/eye-2.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="toolButtonStamp">
+           <property name="toolTip">
+            <string>Stamp</string>
+           </property>
+           <property name="text">
+            <string>...</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../icons.qrc">
+             <normaloff>:/icon/icons/stamp-2.png</normaloff>:/icon/icons/stamp-2.png</iconset>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="arrowType">
+            <enum>Qt::NoArrow</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="toolButtonCopy">
+           <property name="text">
+            <string>...</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../icons.qrc">
+             <normaloff>:/icon/icons/stamp.png</normaloff>:/icon/icons/stamp.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="toolButtonErase">
+           <property name="toolTip">
+            <string>Erase</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="../icons.qrc">
+             <normaloff>:/icon/icons/eraser.png</normaloff>:/icon/icons/eraser.png</iconset>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="toolButtonFill">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="toolTip">
+            <string>fill (not available yet)</string>
+           </property>
+           <property name="text">
+            <string>...</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../icons.qrc">
+             <normaloff>:/icon/icons/flask-empty.png</normaloff>:/icon/icons/flask-empty.png</iconset>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
        <widget class="QGroupBox" name="groupBox">
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <property name="leftMargin">
@@ -289,12 +295,19 @@ border-width: 4px;</string>
           <number>0</number>
          </property>
          <item>
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string/>
+          <widget class="QToolButton" name="toolButtonFitToWindow">
+           <property name="enabled">
+            <bool>true</bool>
            </property>
-           <property name="pixmap">
-            <pixmap resource="../icons.qrc">:/icon/icons/gentleface/zoom_icon&amp;16.png</pixmap>
+           <property name="toolTip">
+            <string>Fit To Window</string>
+           </property>
+           <property name="text">
+            <string>...</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../icons.qrc">
+             <normaloff>:/icon/icons/gentleface/zoom_icon&amp;16.png</normaloff>:/icon/icons/gentleface/zoom_icon&amp;16.png</iconset>
            </property>
           </widget>
          </item>
@@ -305,6 +318,9 @@ border-width: 4px;</string>
              <width>0</width>
              <height>0</height>
             </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
            </property>
            <property name="minimum">
             <number>1</number>
@@ -325,7 +341,7 @@ border-width: 4px;</string>
             <bool>false</bool>
            </property>
            <property name="tickPosition">
-            <enum>QSlider::TicksBelow</enum>
+            <enum>QSlider::NoTicks</enum>
            </property>
            <property name="tickInterval">
             <number>4</number>
@@ -333,19 +349,9 @@ border-width: 4px;</string>
           </widget>
          </item>
          <item>
-          <widget class="QToolButton" name="toolButtonFitToWindow">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="toolTip">
-            <string>Fit To Window</string>
-           </property>
+          <widget class="QLabel" name="label">
            <property name="text">
-            <string>...</string>
-           </property>
-           <property name="icon">
-            <iconset resource="../icons.qrc">
-             <normaloff>:/icon/icons/gentleface/cursor_drag_arrow_2_icon&amp;16.png</normaloff>:/icon/icons/gentleface/cursor_drag_arrow_2_icon&amp;16.png</iconset>
+            <string>100%</string>
            </property>
           </widget>
          </item>
@@ -397,7 +403,7 @@ border-width: 4px;</string>
          <item>
           <widget class="ModeListWidget" name="listWidgetModes">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
@@ -411,7 +417,7 @@ border-width: 4px;</string>
            <property name="maximumSize">
             <size>
              <width>16777215</width>
-             <height>300</height>
+             <height>150</height>
             </size>
            </property>
            <property name="horizontalScrollBarPolicy">
@@ -571,14 +577,17 @@ border-width: 4px;</string>
       <bool>false</bool>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="1">
-       <widget class="QLabel" name="labelModeSize">
+      <item row="1" column="1">
+       <widget class="QLabel" name="label_6">
         <property name="text">
-         <string>16 x 16</string>
+         <string>1</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="3" column="1">
        <widget class="QSpinBox" name="spinBoxNumPivots">
         <property name="toolTip">
          <string>Pivot Count</string>
@@ -591,10 +600,34 @@ border-width: 4px;</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
+      <item row="0" column="1">
+       <widget class="QLabel" name="labelModeSize">
+        <property name="text">
+         <string>16 x 16</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
          <string>Pivots</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Dimensions</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Frames</string>
         </property>
        </widget>
       </item>
@@ -618,13 +651,6 @@ border-width: 4px;</string>
         </property>
         <property name="value">
          <number>1</number>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Dimensions</string>
         </property>
        </widget>
       </item>

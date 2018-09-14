@@ -13,7 +13,7 @@ PaletteView::PaletteView(QWidget *parent) :
     // setBackgroundBrush(QBrush(QColor(200,200,200)));
 
     setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    setMinimumSize(100,100);
+    setMinimumSize(50,50);
 
     setContentsMargins(0,0,0,0);
     setCursor(QCursor(QPixmap::fromImage(QImage(":/icon/icons/tool_pickcolour.png")),8,8));
