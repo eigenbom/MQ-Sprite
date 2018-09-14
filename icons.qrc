@@ -1253,6 +1253,7 @@
         <file>icons/gentleface/zoom_icon&amp;32.png</file>
         <file>icons/gentleface/zoom_icon&amp;48.png</file>
         <file>icons/duplicate_16.png</file>
+        <file>icons/eraser_16.png</file>
     </qresource>
     <qresource prefix="/palette">
         <file>24bit.png</file>

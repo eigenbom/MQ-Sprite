@@ -116,7 +116,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	{
 		auto* dock = new QDockWidget("Drawing Tools", this);
 		dock->setLayout(new QVBoxLayout());
-		dock->setWidget(new DrawingTools(dock));
+		mDrawingTools = new DrawingTools(dock);
+		dock->setWidget(mDrawingTools);
 		dock->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea | Qt::DockWidgetArea::RightDockWidgetArea);
 		this->addDockWidget(Qt::RightDockWidgetArea, dock);
 
@@ -128,7 +129,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	{
 		auto* dock = new QDockWidget("Properties", this);
 		dock->setLayout(new QVBoxLayout());
-		dock->setWidget(new PropertiesWidget(dock));
+		mPropertiesWidget = new PropertiesWidget(dock);
+		dock->setWidget(mPropertiesWidget);
 		dock->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea | Qt::DockWidgetArea::RightDockWidgetArea);
 		this->addDockWidget(Qt::LeftDockWidgetArea, dock);
 		auto* action = dock->toggleViewAction();
@@ -138,7 +140,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	{
 		auto* dock = new QDockWidget("Animation", this);
 		dock->setLayout(new QVBoxLayout());
-		dock->setWidget(new AnimationWidget(dock));
+		mAnimationWidget = new AnimationWidget(dock);
+		dock->setWidget(mAnimationWidget);
 		dock->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea | Qt::DockWidgetArea::RightDockWidgetArea);
 		this->addDockWidget(Qt::RightDockWidgetArea, dock);
 		auto* action = dock->toggleViewAction();
@@ -493,10 +496,12 @@ void MainWindow::openCompositeWidget(AssetRef ref){
 void MainWindow::subWindowActivated(QMdiSubWindow* win){
 	mResizePartAction->setEnabled(false);
 	
-    if (win==nullptr){
+    if (win == nullptr){
         mCompositeToolsWidget->setTargetCompWidget(nullptr);
         mPartToolsWidget->setTargetPartWidget(nullptr);
         mStackedWidget->setCurrentIndex(mNoToolsIndex);
+
+		mDrawingTools->setTargetPartWidget(nullptr);
     }
     else {
 		PartWidget* pw = dynamic_cast<PartWidget*>(win);
@@ -506,6 +511,7 @@ void MainWindow::subWindowActivated(QMdiSubWindow* win){
             mPartToolsWidget->setTargetPartWidget(pw);
             mCompositeToolsWidget->setTargetCompWidget(nullptr);
             mStackedWidget->setCurrentIndex(mPToolsIndex);
+			mDrawingTools->setTargetPartWidget(pw);
 			mResizePartAction->setEnabled(true);
         }
         else if (cw){
@@ -764,7 +770,7 @@ void MainWindow::setBackgroundGridPattern(bool b){
 
 void MainWindow::changePivotColour(){
     QSettings settings;
-    QColor colour = QColor(settings.value("pivot_colour", QColor(255,0,255).rgba()).toUInt());
+    QColor colour = QColor(settings.value("pivot_colour", QColor(255,255,255).rgba()).toUInt());
     QColor col = QColorDialog::getColor(colour, this, tr("Select Pivot Colour"));
     if (col.isValid()){
         settings.setValue("pivot_colour", col.rgba());
@@ -875,6 +881,7 @@ void MainWindow::showAbout(){
     QMessageBox::about(this, tr("About"), tr(
                            "<p>Created by <a href=\"https://twitter.com/eigenbom\">@eigenbom</a>.</p>"
 						   "<p><a href=\"http://www.gentleface.com/free_icon_set.html\">Gentleface Icons</a> (CC BY-NC 3.0)</p>"
+						   "<p>Palette \"Matriax8c\" by <a href=\"https://twitter.com/DavitMasia/\">Davit Masia</a></p>"
                            "<p>Help:<ul>"
                            "<li>Right-click (on colour): Select pen and pick colour</li>"
                            "<li>Right-click (on blank): Select eraser</li>"

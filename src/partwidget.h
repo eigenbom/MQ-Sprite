@@ -156,8 +156,8 @@ protected:
     QVector<QGraphicsPixmapItem*> mPixmapItems;
 
     // Frames
-    QVector<QGraphicsSimpleTextItem*> mAnchorItems;
-    QVector<QGraphicsSimpleTextItem*> mPivotItems[MAX_PIVOTS];        
+    QVector<QAbstractGraphicsShapeItem*> mAnchorItems;
+    QVector<QAbstractGraphicsShapeItem*> mPivotItems[MAX_PIVOTS];
 
     QVector<QGraphicsRectItem*> mRectItems;
     QVector<QPoint> mAnchors;

@@ -6,28 +6,26 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>209</width>
-    <height>231</height>
+    <width>170</width>
+    <height>171</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Additional Properties</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QCheckBox" name="checkBox">
-     <property name="text">
-      <string>Example 1</string>
-     </property>
-    </widget>
-   </item>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
    <item>
     <widget class="QPlainTextEdit" name="textEditProperties">
      <property name="toolTip">

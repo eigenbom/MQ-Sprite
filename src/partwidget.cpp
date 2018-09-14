@@ -1,6 +1,8 @@
 #include "partwidget.h"
+
 #include "commands.h"
 #include "mainwindow.h"
+#include "spritezoomwidget.h"
 
 #include <cmath>
 #include <QUndoStack>
@@ -13,6 +15,7 @@
 #include <QMdiSubWindow>
 #include <QGraphicsDropShadowEffect>
 #include <QSettings>
+#include <QSlider>
 #include <QTimer>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -22,6 +25,7 @@
 #include <QMimeData>
 #include <QBuffer>
 #include <QQueue>
+#include <QToolButton>
 
 PartWidget::PartWidget(AssetRef ref, QWidget *parent) :
     // Qt::FramelessWindowHint
@@ -50,16 +54,30 @@ PartWidget::PartWidget(AssetRef ref, QWidget *parent) :
     mClipboardItem(nullptr),
     mCopyRectItem(nullptr)
 {
-    // Customise window
     setMinimumSize(64,64);
-    //setWindowFlags(Qt::CustomizeWindowHint); //Set window with no title bar
-    //setWindowFlags(Qt::WindowCloseButtonHint);
+    // setWindowFlags(Qt::CustomizeWindowHint); //Set window with no title bar
+    // setWindowFlags(Qt::WindowCloseButtonHint);
     // setWindowFlags(Qt::FramelessWindowHint); //Set a frameless window
 
     // Setup part view
     mPartView = new PartView(this, new QGraphicsScene());
     mPartView->setTransform(QTransform::fromScale(mZoom,mZoom));
-    setWidget(mPartView);
+	// setWidget(mPartView);
+	
+	auto* frame = new QFrame();			
+	auto* vbox = new QVBoxLayout();
+	vbox->setMargin(0);
+	vbox->setSpacing(0);
+	vbox->addWidget(mPartView);
+	auto* spriteZoomWidget = new SpriteZoomWidget(frame);
+	vbox->addWidget(spriteZoomWidget);
+	frame->setLayout(vbox);
+	setWidget(frame);
+	connect(spriteZoomWidget->findChild<QSlider*>("hSliderZoom"), SIGNAL(valueChanged(int)), this, SLOT(setZoom(int)));
+	connect(spriteZoomWidget->findChild<QToolButton*>("toolButtonFitToWindow"), SIGNAL(clicked()), this, SLOT(fitToWindow()));
+	connect(this, &PartWidget::zoomChanged, [this, spriteZoomWidget]() {
+		spriteZoomWidget->findChild<QSlider*>("hSliderZoom")->setValue(this->zoom());
+	});
 
     updateBackgroundBrushes();
     updatePartFrames();
@@ -149,23 +167,34 @@ void PartWidget::updatePartFrames(){
             mOverlayImage = new QImage(w,h,QImage::Format_ARGB32);
             mOverlayImage->fill(0x00FFFFFF);
             mOverlayPixmapItem = mPartView->scene()->addPixmap(QPixmap::fromImage(*mOverlayImage));
+			
+			QSettings settings;
+			QColor pivotColour = QColor(settings.value("pivot_colour", QColor(255, 255, 255).rgba()).toUInt());
+
+			QFont font("monospace");
+			font.setHintingPreference(QFont::PreferFullHinting);
+            QPen pivotPen = QPen(pivotColour, 0.1);
 
             for(int i=0;i<m.numFrames;i++){
-                QPen pivotPen = QPen(QColor(255,0,255), 0.1);
-                QFont font("monospace");
-                font.setHintingPreference(QFont::PreferFullHinting);
-
                 {
                     QPoint ap = m.anchor.at(i);
-                    QGraphicsSimpleTextItem* ti = mPartView->scene()->addSimpleText("a", font);
+                    mAnchors.push_back(ap);
 
+					auto* it = mPartView->scene()->addRect(QRectF(-0.5, 0.0, 1.0, 1.0));
+					it->setPen(Qt::NoPen);					
+					it->setBrush(QBrush(QColor("#ff00ff")));
+					it->setPos(ap.x(), ap.y());
+					mAnchorItems.push_back(it);
+
+					/*
+                    QGraphicsSimpleTextItem* ti = mPartView->scene()->addSimpleText("a", font);
                     ti->setPen(pivotPen);
                     ti->setBrush(QBrush(QColor(255,0,255)));
                     ti->setScale(0.05);
                     ti->setPos(ap.x()+0.3,ap.y()-0.1);
-
-                    mAnchors.push_back(ap);
                     mAnchorItems.push_back(ti);
+					*/
+
                     //  QGraphicsPolygonItem* pi = mPartView->scene()->addPolygon(QPolygonF(QRectF(ap.x()+0.5, ap.y()+0.5, 0.25, 0.25)), pivotPen);
                 }
 
@@ -173,7 +202,7 @@ void PartWidget::updatePartFrames(){
                     QPoint pp = m.pivots[p].at(i);
                     QGraphicsSimpleTextItem* ti = mPartView->scene()->addSimpleText(QString::number(p+1), font);
                     ti->setPen(pivotPen);
-                    ti->setBrush(QBrush(QColor(255,0,255)));
+                    ti->setBrush(QBrush(pivotColour));
                     ti->setScale(0.05);
                     ti->setPos(pp.x()+0.3,pp.y()-0.1);
                     // QGraphicsPolygonItem* pi = mPartView->scene()->addPolygon(QPolygonF(QRectF(pp.x()+0.5, pp.y()+0.5, 0.25, 0.25)), pivotPen);
@@ -407,6 +436,8 @@ void PartWidget::setZoom(int z){
 
 void PartWidget::setPenSize(int size){
     mPenSize = size;
+	// Update
+	emit(penChanged());
 }
 
 void PartWidget::setPenColour(QColor colour){
@@ -466,7 +497,7 @@ void PartWidget::updatePivots(){
     QSettings settings;
     bool pivotsEnabled = settings.value("pivot_enabled", true).toBool();
     bool pivotsEnabledDuringPlayback = settings.value("pivot_enabled_during_playback", true).toBool();
-    QColor pivotColour = QColor(settings.value("pivot_colour", QColor(255,0,255).rgba()).toUInt());
+    QColor pivotColour = QColor(settings.value("pivot_colour", QColor(255,255,255).rgba()).toUInt());
     if (mPartView){
         mPivotsEnabled = pivotsEnabled;
         mPivotsEnabledDuringPlayback = pivotsEnabledDuringPlayback;
@@ -474,14 +505,14 @@ void PartWidget::updatePivots(){
 
         // qDebug() << mPivotsEnabled << mPivotsEnabledDuringPlayback << mPivotColour;
 
-        foreach(QGraphicsSimpleTextItem* it, mAnchorItems){
+        for(auto* it: mAnchorItems){
             // it->setPen(QColor(mPivotColour));
-            it->setBrush(QBrush(QColor(mPivotColour)));
+            it->setBrush(QBrush(mPivotColour));
         }
         for(int i=0;i<MAX_PIVOTS;i++){
-            foreach(QGraphicsSimpleTextItem* it, mPivotItems[i]){
+            for(auto* it: mPivotItems[i]){
                 // it->setPen(QColor(mPivotColour));
-                it->setBrush(QBrush(QColor(mPivotColour)));
+                it->setBrush(QBrush(mPivotColour));
             }
         }
         showFrame(mFrameNumber);

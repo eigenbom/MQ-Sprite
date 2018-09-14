@@ -28,14 +28,14 @@ PartToolsWidget::PartToolsWidget(QWidget *parent) :
 {
     ui->setupUi(this);
 
+	mTextEditProperties = findChild<QPlainTextEdit*>("textEditProperties");
+	connect(mTextEditProperties, SIGNAL(textChanged()), this, SLOT(textPropertiesEdited()));
+	mTextEditProperties->setPlaceholderText(tr("\"emit\": true,\n\"wiggle\": 0.5,\n\"display_name\":\"worm\""));
+	
     mPenColour = QColor("#000000");
     mToolButtonColour = findChild<QToolButton*>("toolButtonColour");
     connect(mToolButtonColour, SIGNAL(clicked()), this, SLOT(chooseColour()));
 	mToolButtonColour->setToolTip(mPenColour.name());
-
-    mTextEditProperties = findChild<QPlainTextEdit*>("textEditProperties");
-    connect(mTextEditProperties, SIGNAL(textChanged()), this, SLOT(textPropertiesEdited()));
-	mTextEditProperties->setPlaceholderText(tr("\"emit\": true,\n\"wiggle\": 0.5,\n\"display_name\":\"worm\""));
 
     QPixmap px(mToolButtonColour->iconSize());
     px.fill(mPenColour);

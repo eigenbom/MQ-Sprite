@@ -15,6 +15,9 @@
 
 class PartToolsWidget;
 class CompositeToolsWidget;
+class DrawingTools;
+class PropertiesWidget;
+class AnimationWidget;
 
 namespace Ui {
 class MainWindow;
@@ -100,8 +103,11 @@ private:
     PartList* mPartList;
     PartToolsWidget* mPartToolsWidget;
     CompositeToolsWidget* mCompositeToolsWidget;
-    QDockWidget *mViewOptionsDockWidget;
+	DrawingTools* mDrawingTools;
+	PropertiesWidget* mPropertiesWidget;
+	AnimationWidget* mAnimationWidget;
 
+    QDockWidget *mViewOptionsDockWidget;
     QStackedWidget *mStackedWidget;
     int mNoToolsIndex, mPToolsIndex, mCToolsIndex;
 
