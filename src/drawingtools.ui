@@ -6,28 +6,37 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>148</width>
-    <height>88</height>
+    <width>166</width>
+    <height>124</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
-    <number>0</number>
+    <number>6</number>
+   </property>
+   <property name="sizeConstraint">
+    <enum>QLayout::SetDefaultConstraint</enum>
    </property>
    <property name="leftMargin">
-    <number>0</number>
+    <number>9</number>
    </property>
    <property name="topMargin">
-    <number>0</number>
+    <number>9</number>
    </property>
    <property name="rightMargin">
-    <number>0</number>
+    <number>9</number>
    </property>
    <property name="bottomMargin">
-    <number>0</number>
+    <number>9</number>
    </property>
    <item>
     <widget class="QFrame" name="frame_6">
@@ -272,6 +281,48 @@ border-width: 4px;</string>
            </property>
           </widget>
          </item>
+         <item row="1" column="1">
+          <widget class="QToolButton" name="colourDefault_6">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="../icons.qrc">
+             <normaloff>:/icon/icons/gentleface/square_shape_icon&amp;16.png</normaloff>:/icon/icons/gentleface/square_shape_icon&amp;16.png</iconset>
+           </property>
+           <property name="autoRaise">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <widget class="QToolButton" name="colourDefault_4">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="../icons.qrc">
+             <normaloff>:/icon/icons/gentleface/square_shape_icon&amp;16.png</normaloff>:/icon/icons/gentleface/square_shape_icon&amp;16.png</iconset>
+           </property>
+           <property name="autoRaise">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QToolButton" name="colourDefault_8">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="../icons.qrc">
+             <normaloff>:/icon/icons/gentleface/square_shape_icon&amp;16.png</normaloff>:/icon/icons/gentleface/square_shape_icon&amp;16.png</iconset>
+           </property>
+           <property name="autoRaise">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
          <item row="1" column="2">
           <widget class="QToolButton" name="colourDefault_7">
            <property name="text">
@@ -314,50 +365,8 @@ border-width: 4px;</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="3">
-          <widget class="QToolButton" name="colourDefault_4">
-           <property name="text">
-            <string/>
-           </property>
-           <property name="icon">
-            <iconset resource="../icons.qrc">
-             <normaloff>:/icon/icons/gentleface/square_shape_icon&amp;16.png</normaloff>:/icon/icons/gentleface/square_shape_icon&amp;16.png</iconset>
-           </property>
-           <property name="autoRaise">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="0">
           <widget class="QToolButton" name="colourDefault_5">
-           <property name="text">
-            <string/>
-           </property>
-           <property name="icon">
-            <iconset resource="../icons.qrc">
-             <normaloff>:/icon/icons/gentleface/square_shape_icon&amp;16.png</normaloff>:/icon/icons/gentleface/square_shape_icon&amp;16.png</iconset>
-           </property>
-           <property name="autoRaise">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QToolButton" name="colourDefault_6">
-           <property name="text">
-            <string/>
-           </property>
-           <property name="icon">
-            <iconset resource="../icons.qrc">
-             <normaloff>:/icon/icons/gentleface/square_shape_icon&amp;16.png</normaloff>:/icon/icons/gentleface/square_shape_icon&amp;16.png</iconset>
-           </property>
-           <property name="autoRaise">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="3">
-          <widget class="QToolButton" name="colourDefault_8">
            <property name="text">
             <string/>
            </property>
@@ -399,6 +408,12 @@ border-width: 4px;</string>
       </property>
       <item>
        <widget class="QSlider" name="hSliderPenSize">
+        <property name="maximumSize">
+         <size>
+          <width>200</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="toolTip">
          <string>Brush Size</string>
         </property>
@@ -474,6 +489,19 @@ border: 1px solid #aaa;
      </layout>
     </widget>
    </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>0</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
   </layout>
   <action name="actionDraw">
    <property name="checkable">
@@ -485,6 +513,9 @@ border: 1px solid #aaa;
    </property>
    <property name="text">
     <string>draw</string>
+   </property>
+   <property name="toolTip">
+    <string>Draw</string>
    </property>
    <property name="shortcut">
     <string>N</string>
@@ -501,6 +532,9 @@ border: 1px solid #aaa;
    <property name="text">
     <string>erase</string>
    </property>
+   <property name="toolTip">
+    <string>Erase</string>
+   </property>
    <property name="shortcut">
     <string>Shift+E</string>
    </property>
@@ -516,6 +550,9 @@ border: 1px solid #aaa;
    <property name="text">
     <string>pick colour</string>
    </property>
+   <property name="toolTip">
+    <string>Colour Picker</string>
+   </property>
   </action>
   <action name="actionStamp">
    <property name="checkable">
@@ -529,7 +566,7 @@ border: 1px solid #aaa;
     <string>stamp</string>
    </property>
    <property name="toolTip">
-    <string>stamp</string>
+    <string>Stamp Clipboard</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+V</string>
@@ -547,7 +584,7 @@ border: 1px solid #aaa;
     <string>copy</string>
    </property>
    <property name="toolTip">
-    <string>copy</string>
+    <string>Copy To Clipboard</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+C</string>
@@ -565,7 +602,7 @@ border: 1px solid #aaa;
     <string>fill</string>
    </property>
    <property name="toolTip">
-    <string>fill</string>
+    <string>Flood Fill</string>
    </property>
    <property name="shortcut">
     <string>F</string>

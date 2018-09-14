@@ -180,9 +180,9 @@ void PartWidget::updatePartFrames(){
                     QPoint ap = m.anchor.at(i);
                     mAnchors.push_back(ap);
 
-					auto* it = mPartView->scene()->addRect(QRectF(-0.5, 0.0, 1.0, 1.0));
-					it->setPen(Qt::NoPen);					
-					it->setBrush(QBrush(QColor("#ff00ff")));
+					auto* it = mPartView->scene()->addRect(QRectF(0.25, 0.25, 0.5, 0.5));
+					it->setPen(QPen(QColor("#000000"), 0.125 / 2, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin));
+					it->setBrush(QBrush(QColor("#ffffff")));
 					it->setPos(ap.x(), ap.y());
 					mAnchorItems.push_back(it);
 
