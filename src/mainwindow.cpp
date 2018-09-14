@@ -116,6 +116,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	{
 		auto* dock = new QDockWidget("Drawing Tools", this);
 		dock->setLayout(new QVBoxLayout());
+		dock->layout()->setMargin(9);
 		mDrawingTools = new DrawingTools(dock);
 		dock->setWidget(mDrawingTools);
 		dock->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea | Qt::DockWidgetArea::RightDockWidgetArea);
@@ -129,6 +130,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	{
 		auto* dock = new QDockWidget("Properties", this);
 		dock->setLayout(new QVBoxLayout());
+		dock->layout()->setMargin(9);
 		mPropertiesWidget = new PropertiesWidget(dock);
 		dock->setWidget(mPropertiesWidget);
 		dock->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea | Qt::DockWidgetArea::RightDockWidgetArea);
@@ -140,6 +142,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	{
 		auto* dock = new QDockWidget("Animation", this);
 		dock->setLayout(new QVBoxLayout());
+		dock->layout()->setMargin(9);
 		mAnimationWidget = new AnimationWidget(dock);
 		dock->setWidget(mAnimationWidget);
 		dock->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea | Qt::DockWidgetArea::RightDockWidgetArea);
