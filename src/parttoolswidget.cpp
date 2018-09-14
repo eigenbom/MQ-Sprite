@@ -1,15 +1,24 @@
 #include "parttoolswidget.h"
 #include "ui_parttoolswidget.h"
-#include "partwidget.h"
-#include "paletteview.h"
-#include "commands.h"
-#include "mainwindow.h"
-#include <cmath>
 
+#include "commands.h"
+#include "paletteview.h"
+#include "partwidget.h"
+#include "mainwindow.h"
+#include "modelistwidget.h"
 #include <QtWidgets>
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QListWidget>
+#include <QToolButton>
+#include <QComboBox>
+#include <QPushButton>
+#include <QPlainTextEdit>
+#include <QStandardItemModel>
+#include <QTreeView>
+#include <QDebug>
+#include <QMimeData>
+#include <cmath>
 
 PartToolsWidget::PartToolsWidget(QWidget *parent) :
     QWidget(parent),
@@ -24,15 +33,9 @@ PartToolsWidget::PartToolsWidget(QWidget *parent) :
     connect(mToolButtonColour, SIGNAL(clicked()), this, SLOT(chooseColour()));
 	mToolButtonColour->setToolTip(mPenColour.name());
 
-    // mLineEditColour = findChild<QLineEdit*>("lineEditColour");
-    // connect(mLineEditColour, SIGNAL(textEdited(QString)), this, SLOT(chooseColourByText(QString)));
-
     mTextEditProperties = findChild<QPlainTextEdit*>("textEditProperties");
     connect(mTextEditProperties, SIGNAL(textChanged()), this, SLOT(textPropertiesEdited()));
 	mTextEditProperties->setPlaceholderText(tr("\"emit\": true,\n\"wiggle\": 0.5,\n\"display_name\":\"worm\""));
-
-    // mPaletteView = findChild<PaletteView*>("paletteView");
-    // connect(mPaletteView, SIGNAL(colourSelected(QColor)), this, SLOT(colourSelected(QColor)));
 
     QPixmap px(16, 16);
     px.fill(mPenColour);
@@ -81,13 +84,8 @@ PartToolsWidget::PartToolsWidget(QWidget *parent) :
 
 	connect(findChild<QSpinBox*>("spinBoxNumPivots"), SIGNAL(valueChanged(int)), this, SLOT(setNumPivots(int)));
 
-    mComboBoxModes = findChild<QComboBox*>("comboBoxModes");
-    connect(mComboBoxModes, SIGNAL(activated(QString)), this, SLOT(modeActivated(QString)));    
-	connect(mComboBoxModes, SIGNAL(editTextChanged(const QString&)), this, SLOT(modeEditTextChanged(const QString&)));
-	
-	mListWidgetModes = findChild<QListWidget*>("listWidgetModes");	
+	mListWidgetModes = findChild<ModeListWidget*>("listWidgetModes");
 	mListWidgetModes->clear();
-	// mListWidgetModes->setFixedHeight(4);
 
 	connect(mListWidgetModes, &QListWidget::itemChanged, [this](QListWidgetItem* item) {
 		this->modeEditTextChanged(item->text());
@@ -102,48 +100,10 @@ PartToolsWidget::PartToolsWidget(QWidget *parent) :
 
 	connect(findChild<QSpinBox*>("spinBoxFramerate"), SIGNAL(valueChanged(int)), this, SLOT(setFramerate(int)));
 
-    // mPushButtonModeSize = findChild<QPushButton*>("pushButtonModeSize");
-    // connect(mPushButtonModeSize, SIGNAL(clicked()), this, SLOT(resizeMode()));
-
     mResizeModeDialog = new ResizeModeDialog(this);
     mResizeModeDialog->hide();
     connect(mResizeModeDialog, SIGNAL(accepted()), this, SLOT(resizeModeDialogAccepted()));
     mAnimatorWidget = findChild<AnimatorWidget*>("animatorWidget");
-
-    /*
-    // Disabled for now
-    connect(findChild<QToolButton*>("toolButtonAddPalette"), SIGNAL(clicked()), this, SLOT(addPalette()));
-    connect(findChild<QToolButton*>("toolButtonDeletePalette"), SIGNAL(clicked()), this, SLOT(deletePalette()));
-    mComboBoxPalettes = findChild<QComboBox*>("comboBoxPalette");
-    connect(mComboBoxPalettes, SIGNAL(activated(QString)), this, SLOT(paletteActivated(QString)));
-
-
-
-
-    // Load palette filenames...
-    // (And verify them)
-
-    mDefaultPalettes << ":/palette/db16.png";
-    mDefaultPalettes << ":/palette/24bit.png";
-    mDefaultPalettes << ":/palette/EGA.png";
-    mDefaultPalettes << ":/palette/NES.png";
-
-    QSettings settings;
-    QStringList paletteList = settings.value("palette_list", mDefaultPalettes).toStringList();
-
-    foreach(QString str, mDefaultPalettes){
-        if (!paletteList.contains(str)){
-            paletteList.prepend(str);
-        }
-    }
-    foreach(const QString str, paletteList){
-        mComboBoxPalettes->addItem(str);
-    }
-    QString selectedPalette = settings.value("selected_palette", tr(":/palette/24bit.png")).toString();
-    // qDebug() << "!" << selectedPalette << mComboBoxPalettes->findText(selectedPalette);
-    mComboBoxPalettes->setCurrentIndex(mComboBoxPalettes->findText(selectedPalette));
-    paletteActivated(selectedPalette);
- */
 
     this->setEnabled(false);
 }
@@ -199,13 +159,8 @@ void PartToolsWidget::setTargetPartWidget(PartWidget* p){
         mTextEditProperties->blockSignals(false);
         targetPartModesChanged();
 
-        const Part::Mode& m = part->modes.value(p->modeName());
-        // mPushButtonModeSize->setText(QString("%1x%2").arg(m.width).arg(m.height));
-		findChild<QLabel*>("labelModeSize")->setText(QString("%1x%2").arg(m.width).arg(m.height));
+		updateProperties(part, p->modeName());
 
-		findChild<QSpinBox*>("spinBoxFramerate")->setValue(m.framesPerSecond);
-
-        // connect
         connect(findChild<QSlider*>("hSliderZoom"), SIGNAL(valueChanged(int)), p, SLOT(setZoom(int)));
         connect(findChild<QToolButton*>("toolButtonFitToWindow"), SIGNAL(clicked()), p, SLOT(fitToWindow()));
         connect(findChild<QSlider*>("hSliderPenSize"), SIGNAL(valueChanged(int)), p, SLOT(setPenSize(int)));
@@ -226,8 +181,6 @@ void PartToolsWidget::chooseColour(){
     QPixmap px(mToolButtonColour->iconSize());
     px.fill(mPenColour);	
     mToolButtonColour->setIcon(px);
-
-    // mLineEditColour->setText(mPenColour.name());
 	mToolButtonColour->setToolTip(mPenColour.name());
 
     if (mTarget){
@@ -250,9 +203,6 @@ void PartToolsWidget::chooseColourByText(QString str){
         mToolButtonColour->setIcon(px);
 		mToolButtonColour->setToolTip(mPenColour.name());
 
-        // Update the line edit
-        // mLineEditColour->setText(mPenColour.name());
-
         if (mTarget){
             mTarget->setPenColour(mPenColour);
             if (mTarget->drawToolType()!=kDrawToolPaint && mTarget->drawToolType()!=kDrawToolFill){
@@ -270,9 +220,6 @@ void PartToolsWidget::colourSelected(QColor colour){
         QPixmap px(16, 16);
         px.fill(mPenColour);        
         mToolButtonColour->setIcon(px);
-
-        // Update the line edit
-        // mLineEditColour->setText(mPenColour.name());
 
         if (mTarget->drawToolType()!=kDrawToolPaint && mTarget->drawToolType()!=kDrawToolFill){
             mTarget->setDrawToolType(kDrawToolPaint);
@@ -294,9 +241,6 @@ void PartToolsWidget::penChanged(){
         QPixmap px(16, 16);
         px.fill(mPenColour);
         mToolButtonColour->setIcon(px);
-
-        // Update the line edit
-        // mLineEditColour->setText(mPenColour.name());
 
         switch(mTarget->drawToolType()){
         case kDrawToolPaint: mActionDraw->trigger(); break;
@@ -329,16 +273,12 @@ void PartToolsWidget::targetPartNumPivotsChanged(){
 
 void PartToolsWidget::targetPartModesChanged(){
     if (mTarget){		
-        mComboBoxModes->clear();
-		mListWidgetModes->clear();
+        mListWidgetModes->clear();
+		mCurrentMode = mTarget->modeName();
 
         Part* part = PM()->getPart(mTarget->partRef());
         if (part){
-            QStringList list = part->modes.keys();
-            mComboBoxModes->addItems(list);
-            mComboBoxModes->setCurrentIndex(mComboBoxModes->findText(mTarget->modeName()));
-			mCurrentMode = mComboBoxModes->currentText();
-			
+            QStringList list = part->modes.keys();			
 			mListWidgetModes->addItems(list);
 			for (int i = 0; i < mListWidgetModes->count(); ++i)
 			{
@@ -350,6 +290,7 @@ void PartToolsWidget::targetPartModesChanged(){
 			mListWidgetModes->clearSelection();
 			for (auto* item : items) {
 				mListWidgetModes->setItemSelected(item, true);
+				mListWidgetModes->setCurrentItem(item);
 			}
 			mListWidgetModes->blockSignals(false);
 
@@ -424,15 +365,12 @@ void PartToolsWidget::modeActivated(QString mode){
     if (mTarget){
 		mCurrentMode = mode;
 
-		mComboBoxModes->blockSignals(true);
-		mComboBoxModes->setCurrentIndex(mComboBoxModes->findText(mode));
-		mComboBoxModes->blockSignals(false);
-
 		mListWidgetModes->blockSignals(true);
 		auto items = mListWidgetModes->findItems(mode, Qt::MatchExactly);
 		mListWidgetModes->clearSelection();
 		for (auto* item: items) {
 			mListWidgetModes->setItemSelected(item, true);
+			mListWidgetModes->setCurrentItem(item);
 		}
 		mListWidgetModes->blockSignals(false);
 
@@ -471,14 +409,16 @@ void PartToolsWidget::copyMode(){
 void PartToolsWidget::deleteMode(){
     if (mTarget){
         mAnimatorWidget->stop();
-        QString mode = mComboBoxModes->currentText();
-        if (mComboBoxModes->count()>1){
-            TryCommand(new CDeleteMode(mTarget->partRef(), mode));
-        }
-        else if (mComboBoxModes->count() == 1){
-            // Don't delete mode, but instead clear it..
-            TryCommand(new CResetMode(mTarget->partRef(), mode));
-        }
+		auto* item = mListWidgetModes->currentItem();
+		if (item) {
+			QString mode = item->text();
+			if (mListWidgetModes->count() == 1) {
+				TryCommand(new CResetMode(mTarget->partRef(), mode));
+			}
+			else {
+				TryCommand(new CDeleteMode(mTarget->partRef(), mode));
+			}
+		}        
     }
 }
 
@@ -495,86 +435,30 @@ void PartToolsWidget::resizeMode(){
 
 void PartToolsWidget::resizeModeDialogAccepted(){
     if (mTarget){
-        // qDebug() << "resizeModeDialogAccepted";
-
-        int width = mResizeModeDialog->mLineEditWidth->text().toInt();
-        int height = mResizeModeDialog->mLineEditHeight->text().toInt();
+        int width   = mResizeModeDialog->mLineEditWidth->text().toInt();
+        int height  = mResizeModeDialog->mLineEditHeight->text().toInt();
         int offsetx = mResizeModeDialog->mLineEditOffsetX->text().toInt();
         int offsety = mResizeModeDialog->mLineEditOffsetY->text().toInt();
         TryCommand(new CChangeModeSize(mTarget->partRef(), mCurrentMode, width, height, offsetx, offsety));
     }
 }
 
-void PartToolsWidget::addPalette(){
-    QString file = QFileDialog::getOpenFileName(this, tr("Select Palette"), QString(), tr("Images (*.png *.jpg *.xpm)"));
-    if (!file.isNull()){
-        // Add palette
-        if (QFile(file).exists()){
-            QSettings settings;
-            QStringList paletteList = settings.value("palette_list", QStringList()).toStringList();
-            if (!(paletteList.contains(file))){
-                paletteList.push_back(file);
-                settings.setValue("palette_list", paletteList);
-                // then add it to the combo box
-                mComboBoxPalettes->addItem(file);
-                mComboBoxPalettes->setCurrentIndex(mComboBoxPalettes->count()-1);
-                paletteActivated(file);
-            }
-        }
-    }
-}
-
-void PartToolsWidget::deletePalette(){
-    QString file = mComboBoxPalettes->currentText();
-    if (mDefaultPalettes.contains(file)) return; // can't delete default palette
-    else {
-        QSettings settings;
-        QStringList paletteList = settings.value("palette_list", QStringList()).toStringList();
-        if (paletteList.contains(file)){
-            paletteList.removeAll(file);
-            settings.setValue("palette_list", paletteList);
-            // then remove it from the combo box
-            mComboBoxPalettes->removeItem(mComboBoxPalettes->currentIndex());
-            mComboBoxPalettes->setCurrentIndex(0);
-            paletteActivated(mComboBoxPalettes->itemText(0));
-        }
-    }
-}
-
-void PartToolsWidget::paletteActivated(QString str){
-    // qDebug() << "paletteActivated: " << str;
-    mPaletteView->loadPalette(str);
-    QSettings settings;
-    settings.setValue(tr("selected_palette"), QVariant(str));
-}
-
-void PartToolsWidget::selectNextMode(){	
-    int i = mComboBoxModes->currentIndex();
-    if (mComboBoxModes->count()>1){
-        i = (i+1) % mComboBoxModes->count();
-        mComboBoxModes->setCurrentIndex(i);
-        modeActivated(mComboBoxModes->currentText());
-    }
-
-	/*
+void PartToolsWidget::selectNextMode(){		
 	if (mListWidgetModes->count() > 1) {
-		auto index = mListWidgetModes->currentIndex();
-		int row = index.row();
+		int row = mListWidgetModes->currentIndex().row();
 		row = (row + 1) % mListWidgetModes->count();
-		mListWidgetModes->setCurrentRow(row);
-		// mListWidgetModes->setCurrentIndex(QModelIndex({ row, index.column() });
-		modeActivated(mListWidgetModes->currentItem()->text());
+		auto nextMode = mListWidgetModes->item(row)->text();
+		modeActivated(nextMode);
 	}
-	*/
 }
 
 void PartToolsWidget::selectPreviousMode(){
-    int i = mComboBoxModes->currentIndex();
-    if (mComboBoxModes->count()>1){
-        i = (i+mComboBoxModes->count()-1)%mComboBoxModes->count();
-        mComboBoxModes->setCurrentIndex(i);
-        modeActivated(mComboBoxModes->currentText());
-    }
+	if (mListWidgetModes->count() > 1) {
+		int row = mListWidgetModes->currentIndex().row();
+		row = (row + mListWidgetModes->count() - 1) % mListWidgetModes->count();
+		auto nextMode = mListWidgetModes->item(row)->text();
+		modeActivated(nextMode);
+	}
 }
 
 void PartToolsWidget::setFramerate(int frameRate) {

@@ -448,27 +448,18 @@ void MainWindow::subWindowActivated(QMdiSubWindow* win){
         mStackedWidget->setCurrentIndex(mNoToolsIndex);
     }
     else {
-        if (dynamic_cast<PartWidget*>(win)){
-            PartWidget* pw = (PartWidget*)(win);
+		PartWidget* pw = dynamic_cast<PartWidget*>(win);
+		CompositeWidget* cw = dynamic_cast<CompositeWidget*>(win);
+
+        if (pw){
             mPartToolsWidget->setTargetPartWidget(pw);
             mCompositeToolsWidget->setTargetCompWidget(nullptr);
-
-            Part* part = PM()->getPart(pw->partRef());
-            Q_ASSERT(part);
-            mPartList->setSelection(part->ref);
-
             mStackedWidget->setCurrentIndex(mPToolsIndex);
-
 			mResizePartAction->setEnabled(true);
         }
-        else if (dynamic_cast<CompositeWidget*>(win)){
-            CompositeWidget* cw = (CompositeWidget*)(win);
+        else if (cw){
             mPartToolsWidget->setTargetPartWidget(nullptr);
             mCompositeToolsWidget->setTargetCompWidget(cw);
-
-            Composite* comp = PM()->getComposite(cw->compRef());
-            mPartList->setSelection(comp->ref);
-
             mStackedWidget->setCurrentIndex(mCToolsIndex);
         }
     }

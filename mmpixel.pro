@@ -17,7 +17,8 @@ HEADERS += \
     src/resizemodedialog.h \
     src/tarball.h \
     src/assettreewidget.h \
-    src/animatorwidget.h
+    src/animatorwidget.h \
+    src/modelistwidget.h
 
 FORMS += \
     src/compositetoolswidget.ui \
@@ -42,7 +43,8 @@ SOURCES += \
     src/resizemodedialog.cpp \
     src/tarball.cpp \
     src/assettreewidget.cpp \
-    src/animatorwidget.cpp
+    src/animatorwidget.cpp \
+    src/modelistwidget.cpp
 
 RESOURCES += \
     icons.qrc

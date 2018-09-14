@@ -270,10 +270,7 @@ void AssetTreeWidget::dropEvent(QDropEvent *event)
 
 void AssetTreeWidget::keyPressEvent(QKeyEvent* event){
     if (event->key()==Qt::Key_Delete || event->key()==Qt::Key_Backspace){
-        // delete selected item
-        for(QTreeWidgetItem* item: selectedItems()){
-            // Delete ...
-
+        for(auto* item: selectedItems()){
             if (item){
                 int id = item->data(0, Qt::UserRole).toInt();
                 AssetRef ref = assetRef(id);
@@ -284,7 +281,6 @@ void AssetTreeWidget::keyPressEvent(QKeyEvent* event){
                 }
             }
         }
-
         MainWindow::Instance()->partListChanged();
     }
     else {

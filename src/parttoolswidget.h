@@ -3,21 +3,20 @@
 
 #include "resizemodedialog.h"
 #include <QWidget>
-#include <QToolButton>
-#include <QComboBox>
-#include <QPushButton>
-#include <QPlainTextEdit>
-#include <QStandardItemModel>
-#include <QTreeView>
-#include <QDebug>
-#include <QMimeData>
+#include <QColor>
 
 struct Part;
 class AnimatorWidget;
 class PartWidget;
-class PaletteView;
+class ModeListWidget;
 
 class QListWidget;
+class QToolButton;
+class QComboBox;
+class QPushButton;
+class QPlainTextEdit;
+class QStandardItemModel;
+class QTreeView;
 
 namespace Ui {
 class PartToolsWidget;
@@ -63,10 +62,6 @@ public slots:
     void resizeMode();
     void resizeModeDialogAccepted();
 
-    void addPalette();
-    void deletePalette();
-    void paletteActivated(QString str);
-
     void selectNextMode();
     void selectPreviousMode();
 
@@ -83,14 +78,10 @@ private:
 
     QColor mPenColour;
     QToolButton* mToolButtonColour;
-    QLineEdit* mLineEditColour;
-    QPlainTextEdit* mTextEditProperties;
-    QComboBox* mComboBoxModes;
-    QPushButton* mPushButtonModeSize;    
-	QListWidget* mListWidgetModes;	
-
+    QPlainTextEdit* mTextEditProperties; 
+	ModeListWidget* mListWidgetModes;	
+	
     QComboBox* mComboBoxPalettes;
-    PaletteView* mPaletteView;
     QStringList mDefaultPalettes;
 
     ResizeModeDialog* mResizeModeDialog;
