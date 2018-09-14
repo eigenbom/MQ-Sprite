@@ -19,7 +19,9 @@ HEADERS += \
     src/tarball.h \
     src/assettreewidget.h \
     src/animatorwidget.h \
-    src/modelistwidget.h
+    src/modelistwidget.h \
+    src/drawingtools.h \
+    src/propertieswidget.h
 
 FORMS += \
     src/compositetoolswidget.ui \
@@ -27,7 +29,10 @@ FORMS += \
     src/partlist.ui \
     src/parttoolswidget.ui \
     src/resizemodedialog.ui \
-    src/animatorwidget.ui
+    src/animatorwidget.ui \
+    src/drawingtools.ui \
+    src/drawingtools.ui \
+    src/propertieswidget.ui
 
 SOURCES += \
     src/assetlistwidget.cpp \
@@ -45,7 +50,9 @@ SOURCES += \
     src/tarball.cpp \
     src/assettreewidget.cpp \
     src/animatorwidget.cpp \
-    src/modelistwidget.cpp
+    src/modelistwidget.cpp \
+    src/drawingtools.cpp \
+    src/propertieswidget.cpp
 
 RESOURCES += \
     icons.qrc
