@@ -116,9 +116,16 @@ MainWindow::MainWindow(QWidget *parent) :
 	{
 		auto* dock = new QDockWidget("Drawing Tools", this);
 		dock->setLayout(new QVBoxLayout());
-		dock->layout()->setMargin(9);
-		mDrawingTools = new DrawingTools(dock);
-		dock->setWidget(mDrawingTools);
+		
+		QFrame* frame = new QFrame(dock);
+		frame->setLayout(new QVBoxLayout());
+		frame->layout()->setMargin(9);
+		mDrawingTools = new DrawingTools(frame);
+
+		frame->layout()->addWidget(mDrawingTools);
+		frame->layout()->addItem(new QSpacerItem(10, 10, QSizePolicy::Minimum, QSizePolicy::Maximum));
+
+		dock->setWidget(frame);
 		dock->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea | Qt::DockWidgetArea::RightDockWidgetArea);
 		this->addDockWidget(Qt::RightDockWidgetArea, dock);
 
@@ -129,6 +136,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	{
 		auto* dock = new QDockWidget("Properties", this);
+
+		
+
 		dock->setLayout(new QVBoxLayout());
 		dock->layout()->setMargin(9);
 		mPropertiesWidget = new PropertiesWidget(dock);
