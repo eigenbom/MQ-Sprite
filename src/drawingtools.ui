@@ -292,7 +292,7 @@ border-width: 4px;</string>
         </property>
         <property name="icon">
          <iconset resource="../icons.qrc">
-          <normaloff>:/icon/icons/gentleface/zoom_icon&amp;16.png</normaloff>:/icon/icons/gentleface/zoom_icon&amp;16.png</iconset>
+          <normaloff>:/icon/icons/gentleface/expand_icon&amp;16.png</normaloff>:/icon/icons/gentleface/expand_icon&amp;16.png</iconset>
         </property>
        </widget>
       </item>

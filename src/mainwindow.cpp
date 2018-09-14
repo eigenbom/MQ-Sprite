@@ -5,6 +5,9 @@
 #include "partwidget.h"
 #include "parttoolswidget.h"
 #include "compositetoolswidget.h"
+#include "drawingtools.h"
+#include "animationwidget.h"
+#include "propertieswidget.h"
 
 #include <QSortFilterProxyModel>
 #include <QDebug>
@@ -82,17 +85,66 @@ MainWindow::MainWindow(QWidget *parent) :
 	mStackedWidget->setMinimumHeight(qMax(partToolsHBoxWidget->minimumSize().height(), mCompositeToolsWidget->minimumSize().height()));
     // mStackedWidget->resize(1,1);
 
+	{
+		auto* dock = new QDockWidget("Tools", this);
+		dock->setLayout(new QVBoxLayout());
+		dock->setWidget(mStackedWidget);
+		dock->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea | Qt::DockWidgetArea::RightDockWidgetArea);
+		dock->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
+		dock->setMinimumSize(mStackedWidget->minimumSize());
+		dock->show();
+
+		// this->addDockWidget(Qt::RightDockWidgetArea, dock);
+		dock->setFloating(true);
+	}
+
+	/*
     auto* dockWidgetTools = findChild<QDockWidget*>("dockWidgetTools");
-    dockWidgetTools->setWidget(mStackedWidget);
-    this->addDockWidget(Qt::RightDockWidgetArea, dockWidgetTools);
-    dockWidgetTools->show();
-    dockWidgetTools->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
-	dockWidgetTools->setMinimumSize(mStackedWidget->minimumSize());
+	dockWidgetTools->setWidget(mStackedWidget);
+	dockWidgetTools->hide();
+	*/
+    // this->addDockWidget(Qt::RightDockWidgetArea, dockWidgetTools);
+    // dockWidgetTools->show();
+    // dockWidgetTools->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
+	// dockWidgetTools->setMinimumSize(mStackedWidget->minimumSize());
 	
     mUndoStack = new QUndoStack(this);
     createActions();
     createMenus();
     connect(mUndoStack, SIGNAL(indexChanged(int)), this, SLOT(undoStackIndexChanged(int)));
+
+	{
+		auto* dock = new QDockWidget("Drawing Tools", this);
+		dock->setLayout(new QVBoxLayout());
+		dock->setWidget(new DrawingTools(dock));
+		dock->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea | Qt::DockWidgetArea::RightDockWidgetArea);
+		this->addDockWidget(Qt::RightDockWidgetArea, dock);
+
+		auto* action = dock->toggleViewAction();
+		action->setText("Drawing Tools Window");
+		mViewMenu->addAction(action);
+	}
+
+	{
+		auto* dock = new QDockWidget("Properties", this);
+		dock->setLayout(new QVBoxLayout());
+		dock->setWidget(new PropertiesWidget(dock));
+		dock->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea | Qt::DockWidgetArea::RightDockWidgetArea);
+		this->addDockWidget(Qt::LeftDockWidgetArea, dock);
+		auto* action = dock->toggleViewAction();
+		action->setText("Properties Window");
+		mViewMenu->addAction(action);
+	}
+	{
+		auto* dock = new QDockWidget("Animation", this);
+		dock->setLayout(new QVBoxLayout());
+		dock->setWidget(new AnimationWidget(dock));
+		dock->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea | Qt::DockWidgetArea::RightDockWidgetArea);
+		this->addDockWidget(Qt::RightDockWidgetArea, dock);
+		auto* action = dock->toggleViewAction();
+		action->setText("Animation Window");
+		mViewMenu->addAction(action);
+	}
 
 	setWindowTitle(makeWindowTitle());
     restoreGeometry(settings.value("main_window_geometry").toByteArray());
@@ -328,10 +380,9 @@ void MainWindow::createMenus()
 	mResizePartAction = mEditMenu->addAction("Resize Sprite...");
 	connect(mResizePartAction, SIGNAL(triggered()), mPartToolsWidget, SLOT(resizeMode()));
 	mResizePartAction->setEnabled(false);
-	// connect(resizeAction, SIGNAL(triggered()), mPartToolsWidget, SLOT(resizeMode()));
 
 	mEditMenu->addSeparator();
-	auto* action = mEditMenu->addAction("New Window");
+	auto* action = mEditMenu->addAction("New View");
 	connect(action, &QAction::triggered, [&](){
 		auto* pw = this->activePartWidget();
 		auto* cw = this->activeCompositeWidget();
@@ -342,9 +393,11 @@ void MainWindow::createMenus()
 	mEditMenu->addSeparator();
     connect(mEditMenu->addAction("Options..."), SIGNAL(triggered()), this, SLOT(showViewOptionsDialog()));
 
-    ///////////////////////////
-    // About
-    ///////////////////////////
+	
+	mViewMenu = menuBar()->addMenu(tr("&View"));
+	
+	// TODO: Sprite Menu
+	menuBar()->addMenu(tr("&Sprite"));
 
     mHelpMenu = menuBar()->addMenu(tr("Help"));
     mHelpMenu->addAction(mAboutAction);

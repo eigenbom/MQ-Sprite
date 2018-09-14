@@ -21,7 +21,8 @@ HEADERS += \
     src/animatorwidget.h \
     src/modelistwidget.h \
     src/drawingtools.h \
-    src/propertieswidget.h
+    src/propertieswidget.h \
+    src/animationwidget.h
 
 FORMS += \
     src/compositetoolswidget.ui \
@@ -32,7 +33,8 @@ FORMS += \
     src/animatorwidget.ui \
     src/drawingtools.ui \
     src/drawingtools.ui \
-    src/propertieswidget.ui
+    src/propertieswidget.ui \
+    src/animationwidget.ui
 
 SOURCES += \
     src/assetlistwidget.cpp \
@@ -52,7 +54,8 @@ SOURCES += \
     src/animatorwidget.cpp \
     src/modelistwidget.cpp \
     src/drawingtools.cpp \
-    src/propertieswidget.cpp
+    src/propertieswidget.cpp \
+    src/animationwidget.cpp
 
 RESOURCES += \
     icons.qrc

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>837</width>
-    <height>561</height>
+    <width>922</width>
+    <height>659</height>
    </rect>
   </property>
   <property name="cursor">
@@ -30,7 +30,7 @@
    <enum>QTabWidget::Rounded</enum>
   </property>
   <property name="dockNestingEnabled">
-   <bool>false</bool>
+   <bool>true</bool>
   </property>
   <property name="unifiedTitleAndToolBarOnMac">
    <bool>false</bool>
@@ -43,21 +43,6 @@
     </sizepolicy>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
-    <property name="spacing">
-     <number>2</number>
-    </property>
-    <property name="leftMargin">
-     <number>0</number>
-    </property>
-    <property name="topMargin">
-     <number>0</number>
-    </property>
-    <property name="rightMargin">
-     <number>0</number>
-    </property>
-    <property name="bottomMargin">
-     <number>0</number>
-    </property>
     <item>
      <widget class="QMdiArea" name="mdiArea">
       <property name="sizePolicy">
@@ -82,16 +67,16 @@
        </brush>
       </property>
       <property name="viewMode">
-       <enum>QMdiArea::TabbedView</enum>
+       <enum>QMdiArea::SubWindowView</enum>
       </property>
       <property name="documentMode">
        <bool>false</bool>
       </property>
       <property name="tabsClosable">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
       <property name="tabsMovable">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
       <property name="tabPosition">
        <enum>QTabWidget::North</enum>
@@ -105,7 +90,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>837</width>
+     <width>922</width>
      <height>21</height>
     </rect>
    </property>
@@ -141,33 +126,6 @@
    <property name="sizeGripEnabled">
     <bool>false</bool>
    </property>
-  </widget>
-  <widget class="QDockWidget" name="dockWidgetTools">
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-   <property name="minimumSize">
-    <size>
-     <width>50</width>
-     <height>44</height>
-    </size>
-   </property>
-   <property name="features">
-    <set>QDockWidget::NoDockWidgetFeatures</set>
-   </property>
-   <property name="allowedAreas">
-    <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
-   </property>
-   <property name="windowTitle">
-    <string>Tools</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>2</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
    <property name="windowTitle">
