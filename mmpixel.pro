@@ -23,7 +23,8 @@ HEADERS += \
     src/drawingtools.h \
     src/propertieswidget.h \
     src/animationwidget.h \
-    src/spritezoomwidget.h
+    src/spritezoomwidget.h \
+    src/optionswidget.h
 
 FORMS += \
     src/compositetoolswidget.ui \
@@ -33,10 +34,10 @@ FORMS += \
     src/resizemodedialog.ui \
     src/animatorwidget.ui \
     src/drawingtools.ui \
-    src/drawingtools.ui \
     src/propertieswidget.ui \
     src/animationwidget.ui \
-    src/spritezoomwidget.ui
+    src/spritezoomwidget.ui \
+    src/optionswidget.ui
 
 SOURCES += \
     src/assetlistwidget.cpp \
@@ -58,7 +59,8 @@ SOURCES += \
     src/drawingtools.cpp \
     src/propertieswidget.cpp \
     src/animationwidget.cpp \
-    src/spritezoomwidget.cpp
+    src/spritezoomwidget.cpp \
+    src/optionswidget.cpp
 
 RESOURCES += \
     icons.qrc
