@@ -956,6 +956,9 @@ void PartWidget::showFrame(int f){
     bool onion = mOnionSkinningEnabled && ((mIsPlaying&&mOnionSkinningEnabledDuringPlayback) || !mIsPlaying);
     bool pivots = mPivotsEnabled && ((mIsPlaying&&mPivotsEnabledDuringPlayback) || !mIsPlaying);
 
+	// Drop shadow kills perf when zoomed in too much
+	const bool disableDropShadow = (mZoom > 10);
+
     for(int i=0;i<mPixmapItems.size();i++){
         QGraphicsPixmapItem* pi = mPixmapItems.at(i);
 		auto* effect = pi->graphicsEffect();		
@@ -965,7 +968,7 @@ void PartWidget::showFrame(int f){
         if (i == f){
 			pi->show();
             pi->setOpacity(1);
-			if (effect && static_cast<QGraphicsDropShadowEffect*>(effect)->color().alpha() > 0) effect->setEnabled(true);
+			if (!disableDropShadow && effect && static_cast<QGraphicsDropShadowEffect*>(effect)->color().alpha() > 0) effect->setEnabled(true);
             if (pivots){
                 mAnchorItems.at(i)->show();
                 for(int p=0;p<mNumPivots;p++) mPivotItems[p].at(i)->show();
