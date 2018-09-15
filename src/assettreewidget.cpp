@@ -20,7 +20,6 @@ AssetTreeWidget::AssetTreeWidget(QWidget *parent):QTreeWidget(parent)
 		emit(assetSelected(ref));
 	});
 
-
     setDragDropMode(QAbstractItemView::InternalMove);
     setSelectionMode(QAbstractItemView::ExtendedSelection);
     setDropIndicatorShown(true);
@@ -90,8 +89,19 @@ void AssetTreeWidget::addAssetsWithParent(const QList<AssetRef>& assets, AssetRe
                 QTreeWidgetItem* item = new QTreeWidgetItem(parentItem);
                 item->setText(0, asset->name);
                 item->setData(0, Qt::UserRole, index++);
-				// item->setIcon(0, QIcon(":/icon/icons/gentleface/document_icon&16.png"));
-				item->setIcon(0, QIcon(":/icon/icons/gentleface/picture_icon&16.png"));				
+				item->setIcon(0, QIcon(":/icon/icons/gentleface/picture_icon&16.png"));
+
+				auto* part = PM()->getPart(asset->ref);
+				if (part && part->modes.contains("icon")) {					
+					auto img = part->modes["icon"].frames[0];
+					item->setIcon(0, QIcon(QPixmap::fromImage(img->scaled(QSize(16, 16)))));
+				}
+				else if (part && part->modes.contains("side")) {
+					auto img = part->modes["side"].frames[0];
+					if (img->width() <= 32 && img->height() <= 32) {
+						item->setIcon(0, QIcon(QPixmap::fromImage(img->scaled(QSize(16, 16)))));
+					}
+				}
                 item->setFlags(item->flags() ^ Qt::ItemIsDropEnabled | Qt::ItemIsEditable);
 
                 mAssetRefs.push_back(asset->ref);
@@ -220,21 +230,34 @@ void AssetTreeWidget::changeItem(QTreeWidgetItem* item, int col) {
 	}
 }
 
-/*
-void AssetTreeWidget::duplicateAsset() {
-	for (QTreeWidgetItem* item : selectedItems()) {
-		if (item) {
-			int id = item->data(0, Qt::UserRole).toInt();
-			AssetRef ref = mAssetTreeWidget->assetRef(id);
-			switch (ref.type) {
-			case AssetType::Part: TryCommand(new CCopyPart(ref)); break;
-			case AssetType::Composite: TryCommand(new CCopyComposite(ref)); break;
-			case AssetType::Folder: qDebug() << "TODO: Copy folder"; break;
-			}
+bool AssetTreeWidget::filterItem(const QString& filterString, QTreeWidgetItem* item) {	
+	if (item == nullptr) {
+		bool visible = false;
+		for (int i = 0; i < topLevelItemCount(); ++i) {
+			visible = filterItem(filterString, topLevelItem(i)) || visible;
 		}
+		return visible;
 	}
-	MainWindow::Instance()->partListChanged();
-}*/
+	else {
+		const auto& itemText = item->text(0);
+		bool visible = true;
+		if (!filterString.isEmpty()) {
+			visible = (itemText.indexOf(filterString, 0, Qt::CaseInsensitive) != -1);
+		}
+		bool childVisible = false;
+		for (int i = 0; i < item->childCount(); ++i) {
+			childVisible = filterItem(filterString, item->child(i)) || childVisible;
+		}
+		visible = visible || childVisible;
+		item->setHidden(!visible);
+		return visible;
+	}
+}
+
+void AssetTreeWidget::setFilter(const QString& filterText) {
+	auto text = filterText.trimmed();
+	filterItem(text, nullptr);
+}
 
 void AssetTreeWidget::dropEvent(QDropEvent *event)
 {

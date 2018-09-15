@@ -27,6 +27,8 @@ public slots:
     void collapseItem(QTreeWidgetItem* item);
 	void changeItem(QTreeWidgetItem* item, int col);
 
+	void setFilter(const QString& filter);
+
 signals:
     void assetDoubleClicked(AssetRef ref);
 	void assetSelected(AssetRef ref);
@@ -36,6 +38,7 @@ protected:
     void dropEvent(QDropEvent *event);
     void addAssetsWithParent(const QList<AssetRef>& assets, AssetRef parentRef, QTreeWidgetItem* parentItem, int& index);
     void keyPressEvent(QKeyEvent* event);
+	bool filterItem(const QString& text, QTreeWidgetItem* item);
 
 protected:
     QVector<AssetRef> mAssetRefs;

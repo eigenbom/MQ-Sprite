@@ -12,6 +12,9 @@ PartList::PartList(QWidget *parent) :
     mAssetTreeWidget = findChild<AssetTreeWidget*>("assetTree");
     connect(mAssetTreeWidget, SIGNAL(assetDoubleClicked(AssetRef)), this, SIGNAL(assetDoubleClicked(AssetRef)));
 	connect(mAssetTreeWidget, SIGNAL(assetSelected(AssetRef)), this, SIGNAL(assetSelected(AssetRef)));
+
+	connect(findChild<QLineEdit*>("lineEditFilter"), &QLineEdit::textEdited, mAssetTreeWidget, &AssetTreeWidget::setFilter);
+
     updateList();
 }
 
