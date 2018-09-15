@@ -12,7 +12,6 @@ HEADERS += \
     src/mainwindow.h \
     src/paletteview.h \
     src/partlist.h \
-    src/parttoolswidget.h \
     src/partwidget.h \
     src/projectmodel.h \
     src/resizemodedialog.h \
@@ -30,7 +29,6 @@ FORMS += \
     src/compositetoolswidget.ui \
     src/mainwindow.ui \
     src/partlist.ui \
-    src/parttoolswidget.ui \
     src/resizemodedialog.ui \
     src/animatorwidget.ui \
     src/drawingtools.ui \
@@ -48,7 +46,6 @@ SOURCES += \
     src/mainwindow.cpp \
     src/paletteview.cpp \
     src/partlist.cpp \
-    src/parttoolswidget.cpp \
     src/partwidget.cpp \
     src/projectmodel.cpp \
     src/resizemodedialog.cpp \

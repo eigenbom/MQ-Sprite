@@ -13,7 +13,6 @@
 #include "compositewidget.h"
 #include "partlist.h"
 
-class PartToolsWidget;
 class CompositeToolsWidget;
 class DrawingTools;
 class PropertiesWidget;
@@ -101,16 +100,11 @@ private:
     QMdiArea* mMdiArea;
     ProjectModel* mProjectModel;
     PartList* mPartList;
-    PartToolsWidget* mPartToolsWidget;
     CompositeToolsWidget* mCompositeToolsWidget;
 	DrawingTools* mDrawingTools;
 	PropertiesWidget* mPropertiesWidget;
 	AnimationWidget* mAnimationWidget;
-
     QDockWidget *mViewOptionsDockWidget;
-    QStackedWidget *mStackedWidget;
-    int mNoToolsIndex, mPToolsIndex, mCToolsIndex;
-
     QMultiMap<AssetRef,PartWidget*> mPartWidgets;
     QMultiMap<AssetRef,CompositeWidget*> mCompositeWidgets;
 
