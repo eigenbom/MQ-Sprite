@@ -35,18 +35,18 @@ private:
 
 private:
 	// Widgets
-    Ui::DrawingTools *ui;
-	QToolButton* mToolButtonColour;
-	QAction* mActionDraw;
-	QAction* mActionErase;
-	QAction* mActionPickColour;
-	QAction* mActionStamp;
-	QAction* mActionCopy;
-	QAction* mActionFill;
+    Ui::DrawingTools *ui = nullptr;
+	QToolButton* mToolButtonColour = nullptr;
+	QAction* mActionDraw = nullptr;
+	QAction* mActionErase = nullptr;
+	QAction* mActionPickColour = nullptr;
+	QAction* mActionStamp = nullptr;
+	QAction* mActionCopy = nullptr;
+	QAction* mActionFill = nullptr;
 
 	// Internal state
 	PartWidget* mTarget = nullptr;
-	QColor mPenColour;
+	QColor mPenColour {};
 };
 
 #endif // DRAWINGTOOLS_H

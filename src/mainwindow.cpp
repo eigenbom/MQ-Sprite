@@ -109,9 +109,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	// dockWidgetTools->setMinimumSize(mStackedWidget->minimumSize());
 	
     mUndoStack = new QUndoStack(this);
-    createActions();
-    createMenus();
-    connect(mUndoStack, SIGNAL(indexChanged(int)), this, SLOT(undoStackIndexChanged(int)));
+	connect(mUndoStack, SIGNAL(indexChanged(int)), this, SLOT(undoStackIndexChanged(int)));
 
 	{
 		auto* dock = new QDockWidget("Drawing Tools", this);
@@ -120,9 +118,6 @@ MainWindow::MainWindow(QWidget *parent) :
 		dock->setWidget(mDrawingTools);
 		dock->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea | Qt::DockWidgetArea::RightDockWidgetArea);
 		this->addDockWidget(Qt::RightDockWidgetArea, dock);
-		auto* action = dock->toggleViewAction();
-		action->setText("Drawing Tools Window");
-		mViewMenu->addAction(action);
 	}
 
 	{
@@ -132,9 +127,6 @@ MainWindow::MainWindow(QWidget *parent) :
 		dock->setWidget(mPropertiesWidget);
 		dock->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea | Qt::DockWidgetArea::RightDockWidgetArea);
 		this->addDockWidget(Qt::LeftDockWidgetArea, dock);
-		auto* action = dock->toggleViewAction();
-		action->setText("Properties Window");
-		mViewMenu->addAction(action);
 	}
 	{
 		auto* dock = new QDockWidget("Animation", this);
@@ -143,10 +135,29 @@ MainWindow::MainWindow(QWidget *parent) :
 		dock->setWidget(mAnimationWidget);
 		dock->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea | Qt::DockWidgetArea::RightDockWidgetArea);
 		this->addDockWidget(Qt::RightDockWidgetArea, dock);
-		auto* action = dock->toggleViewAction();
+	}
+
+    createActions();
+    createMenus();
+   
+	{
+		auto* action = dynamic_cast<QDockWidget*>(mDrawingTools->parentWidget())->toggleViewAction();
+		action->setText("Drawing Tools Window");
+		mViewMenu->addAction(action);
+	}
+
+	{
+		auto* action = dynamic_cast<QDockWidget*>(mAnimationWidget->parentWidget())->toggleViewAction();
 		action->setText("Animation Window");
 		mViewMenu->addAction(action);
 	}
+	
+	{
+		auto* action = dynamic_cast<QDockWidget*>(mPropertiesWidget->parentWidget())->toggleViewAction();
+		action->setText("Properties Window");
+		mViewMenu->addAction(action);
+	}
+
 
 	setWindowTitle(makeWindowTitle());
     restoreGeometry(settings.value("main_window_geometry").toByteArray());
@@ -380,7 +391,7 @@ void MainWindow::createMenus()
 	
 	mEditMenu->addSeparator();
 	mResizePartAction = mEditMenu->addAction("Resize Sprite...");
-	connect(mResizePartAction, SIGNAL(triggered()), mPartToolsWidget, SLOT(resizeMode()));
+	connect(mResizePartAction, SIGNAL(triggered()), mAnimationWidget, SLOT(resizeMode()));
 	mResizePartAction->setEnabled(false);
 
 	mEditMenu->addSeparator();
@@ -501,6 +512,7 @@ void MainWindow::subWindowActivated(QMdiSubWindow* win){
         mStackedWidget->setCurrentIndex(mNoToolsIndex);
 
 		mDrawingTools->setTargetPartWidget(nullptr);
+		mAnimationWidget->setTargetPartWidget(nullptr);
     }
     else {
 		PartWidget* pw = dynamic_cast<PartWidget*>(win);
@@ -511,12 +523,16 @@ void MainWindow::subWindowActivated(QMdiSubWindow* win){
             mCompositeToolsWidget->setTargetCompWidget(nullptr);
             mStackedWidget->setCurrentIndex(mPToolsIndex);
 			mDrawingTools->setTargetPartWidget(pw);
+			mAnimationWidget->setTargetPartWidget(pw);
 			mResizePartAction->setEnabled(true);
         }
         else if (cw){
             mPartToolsWidget->setTargetPartWidget(nullptr);
             mCompositeToolsWidget->setTargetCompWidget(cw);
             mStackedWidget->setCurrentIndex(mCToolsIndex);
+
+			mDrawingTools->setTargetPartWidget(nullptr);
+			mAnimationWidget->setTargetPartWidget(nullptr);
         }
     }
 }
@@ -596,10 +612,18 @@ void MainWindow::partFramesUpdated(AssetRef ref, const QString& mode){
     }
 
     if (mPartToolsWidget->isEnabled() && mPartToolsWidget->targetPartWidget()){
-        if (mPartToolsWidget->targetPartWidget()->partRef()==ref && mPartToolsWidget->targetPartWidget()->modeName()==mode){
+        if (mPartToolsWidget->targetPartWidget()->partRef()==ref && 
+			mPartToolsWidget->targetPartWidget()->modeName()==mode){
             mPartToolsWidget->targetPartNumFramesChanged();
         }
     }
+
+	if (mAnimationWidget->isEnabled() && mAnimationWidget->targetPartWidget()) {
+		if (mAnimationWidget->targetPartWidget()->partRef() == ref &&
+			mAnimationWidget->targetPartWidget()->modeName() == mode) {
+			mAnimationWidget->targetPartNumFramesChanged();
+		}
+	}
 
     foreach(CompositeWidget* cw, mCompositeWidgets.values()){
         cw->partFramesUpdated(ref, mode);
@@ -616,6 +640,12 @@ void MainWindow::partNumPivotsUpdated(AssetRef ref, const QString& mode){
             mPartToolsWidget->targetPartNumPivotsChanged();
         }
     }
+
+	if (mAnimationWidget->targetPartWidget()) {
+		if (mAnimationWidget->targetPartWidget()->partRef() == ref && mPartToolsWidget->targetPartWidget()->modeName() == mode) {
+			mAnimationWidget->targetPartNumPivotsChanged();
+		}
+	}
 
     foreach(CompositeWidget* cw, mCompositeWidgets.values()){
         cw->partNumPivotsUpdated(ref, mode);
@@ -664,6 +694,12 @@ void MainWindow::partModesChanged(AssetRef ref){
         }
     }
 
+	if (mAnimationWidget->targetPartWidget()) {
+		if (mAnimationWidget->targetPartWidget()->partRef() == ref) {
+			mAnimationWidget->targetPartModesChanged();
+		}
+	}
+
     // TODO: Tell composite widgets
     // foreach(CompositeWidget* cw, mCompositeWidgets.values()){
         // cw->partModesChanged(part);
@@ -685,6 +721,12 @@ void MainWindow::partModeRenamed(AssetRef ref, const QString& oldModeName, const
             mPartToolsWidget->targetPartModesChanged();
         }
     }
+
+	if (mAnimationWidget->targetPartWidget()) {
+		if (mAnimationWidget->targetPartWidget()->partRef() == ref) {
+			mAnimationWidget->targetPartModesChanged();
+		}
+	}
 
     // TODO: Tell composite widgets
 }
@@ -914,6 +956,8 @@ void MainWindow::newProject(){
         // Close all windows and deactivate
         mCompositeToolsWidget->setTargetCompWidget(nullptr);
         mPartToolsWidget->setTargetPartWidget(nullptr);
+		mDrawingTools->setTargetPartWidget(nullptr);
+		mAnimationWidget->setTargetPartWidget(nullptr);
         mMdiArea->closeAllSubWindows();
 
         // Clear undo stack
@@ -935,6 +979,9 @@ void MainWindow::loadProject(const QString& fileName){
     // Close all windows and deactivate
     mCompositeToolsWidget->setTargetCompWidget(nullptr);
     mPartToolsWidget->setTargetPartWidget(nullptr);
+	mDrawingTools->setTargetPartWidget(nullptr);
+	mAnimationWidget->setTargetPartWidget(nullptr);
+
     mMdiArea->closeAllSubWindows();
 
     // Clear undo stack

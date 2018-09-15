@@ -26,9 +26,11 @@ public:
     void setTargetPartWidget(PartWidget* p); // if p is null then no target widget
 
 public slots:
-    void frameChanged(int f);
     void targetPartNumFramesChanged();
     void targetPartModesChanged();
+    void modeActivated(QString);
+
+    void frameChanged(int f);
     void addFrame();
     void copyFrame();
     void deleteFrame();
@@ -42,7 +44,6 @@ public slots:
     void goToPrevFrame();
     void goToFrame(int);
 
-    void modeActivated(QString);
     void setModeFPS();
     void setPlaybackSpeedMultiplier(int);
 

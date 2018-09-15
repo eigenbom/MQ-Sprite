@@ -19,6 +19,9 @@
      <property name="title">
       <string>Background</string>
      </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
      <layout class="QGridLayout" name="gridLayout_4">
       <item row="0" column="0">
        <widget class="QLabel" name="label">
@@ -59,6 +62,9 @@
     <widget class="QGroupBox" name="groupBox_5">
      <property name="title">
       <string>Anchors and Pivots</string>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
      </property>
      <property name="checkable">
       <bool>true</bool>

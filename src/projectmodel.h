@@ -107,23 +107,15 @@ struct Folder: public Asset {
 };
 
 struct Part: public Asset {
-    struct Layer {
-        bool visible;
-        QString name;
-        QList<QSharedPointer<QImage>> frames;
-    };
-
     struct Mode {
 		int width;
 		int height;
-        int numLayers;
         int numFrames;
         int numPivots;
         int framesPerSecond;
 
-        QList<QSharedPointer<Layer>> layers; // ordered
-
-        // Extra per-frame information
+		// Each of these are numFrames long
+		QList<QSharedPointer<QImage>> frames;
         QList<QPoint> anchor;
         QList<QPoint> pivots[MAX_PIVOTS];
     };

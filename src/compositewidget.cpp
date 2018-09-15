@@ -149,7 +149,7 @@ void CompositeWidget::updateCompFrames(){
                     }
 
                     for(int i=0;i<m.numFrames;i++){
-                        auto img = m.layers.at(0)->frames.at(i);
+                        auto img = m.frames.at(i);
                         // qDebug() << "img: " << img;
                         if (img){
                             QGraphicsPixmapItem* pi = mCompView->scene()->addPixmap(QPixmap::fromImage(*img));
@@ -292,7 +292,7 @@ void CompositeWidget::updateCompFramesMinorChanges(){
                     }
 
                     for(int i=0;i<m.numFrames;i++){
-                        auto img = m.layers.at(0)->frames.at(i);
+                        auto img = m.frames.at(i);
                         // qDebug() << "img: " << img;
                         if (img){
                             if (hasMode) mCompView->scene()->removeItem(mode.pixmapItems.at(i));

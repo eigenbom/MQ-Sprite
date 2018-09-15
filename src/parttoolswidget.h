@@ -33,24 +33,11 @@ public:
     void setTargetPartWidget(PartWidget* p); // if p is null then no target widget
     
 public slots:
-    void chooseColour();
-    void chooseColourByText(QString);
-    void colourSelected(QColor);
     void textPropertiesEdited();
-    void penChanged();
-    void zoomChanged();
     void targetPartNumFramesChanged();
     void targetPartNumPivotsChanged();
     void targetPartModesChanged();
     void targetPartPropertiesChanged();
-
-    void setToolTypeDraw();
-    void setToolTypeErase();
-    void setToolTypePickColour();
-    void setToolTypeStamp();
-    void setToolTypeCopy();
-    void setToolTypeFill();
-
     void setNumPivots(int);
 
     void modeActivated(QString);
@@ -75,23 +62,9 @@ private:
     PartWidget* mTarget;
 	QString mCurrentMode;
     AnimatorWidget* mAnimatorWidget;
-
-    QColor mPenColour;
-    QToolButton* mToolButtonColour;
     QPlainTextEdit* mTextEditProperties; 
-	ModeListWidget* mListWidgetModes;	
-	
-    QComboBox* mComboBoxPalettes;
-    QStringList mDefaultPalettes;
-
-    ResizeModeDialog* mResizeModeDialog;
-
-	QAction* mActionDraw;
-	QAction* mActionErase; 
-	QAction* mActionPickColour; 
-	QAction* mActionStamp; 
-	QAction* mActionCopy; 
-	QAction* mActionFill;
+	ModeListWidget* mListWidgetModes;    
+	ResizeModeDialog* mResizeModeDialog;
 };
 
 #endif // PARTTOOLSWIDGET_H

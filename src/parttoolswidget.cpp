@@ -31,59 +31,14 @@ PartToolsWidget::PartToolsWidget(QWidget *parent) :
 	mTextEditProperties = findChild<QPlainTextEdit*>("textEditProperties");
 	connect(mTextEditProperties, SIGNAL(textChanged()), this, SLOT(textPropertiesEdited()));
 	mTextEditProperties->setPlaceholderText(tr("\"emit\": true,\n\"wiggle\": 0.5,\n\"display_name\":\"worm\""));
-	
-    mPenColour = QColor("#000000");
-    mToolButtonColour = findChild<QToolButton*>("toolButtonColour");
-    connect(mToolButtonColour, SIGNAL(clicked()), this, SLOT(chooseColour()));
-	mToolButtonColour->setToolTip(mPenColour.name());
 
-    QPixmap px(mToolButtonColour->iconSize());
-    px.fill(mPenColour);
-    mToolButtonColour->setIcon(px);
-
-    QToolButton* toolButtonDraw = findChild<QToolButton*>("toolButtonDraw");
-    QToolButton* toolButtonErase = findChild<QToolButton*>("toolButtonErase");
-    QToolButton* toolButtonPickColour = findChild<QToolButton*>("toolButtonPickColour");
-    QToolButton* toolButtonStamp = findChild<QToolButton*>("toolButtonStamp");
-    QToolButton* toolButtonCopy = findChild<QToolButton*>("toolButtonCopy");
-    QToolButton* toolButtonFill = findChild<QToolButton*>("toolButtonFill");
-
-    mActionDraw = findChild<QAction*>("actionDraw");
-    mActionErase = findChild<QAction*>("actionErase");
-    mActionPickColour = findChild<QAction*>("actionPickColour");
-    mActionStamp = findChild<QAction*>("actionStamp");
-    mActionCopy = findChild<QAction*>("actionCopy");
-    mActionFill = findChild<QAction*>("actionFill");
-
-    connect(mActionDraw, SIGNAL(triggered()), this, SLOT(setToolTypeDraw()));
-    connect(mActionErase, SIGNAL(triggered()), this, SLOT(setToolTypeErase()));
-    connect(mActionPickColour, SIGNAL(triggered()), this, SLOT(setToolTypePickColour()));
-    connect(mActionStamp, SIGNAL(triggered()), this, SLOT(setToolTypeStamp()));
-    connect(mActionCopy, SIGNAL(triggered()), this, SLOT(setToolTypeCopy()));
-    connect(mActionFill, SIGNAL(triggered()), this, SLOT(setToolTypeFill()));
-
-    toolButtonDraw->setDefaultAction(mActionDraw);
-    toolButtonErase->setDefaultAction(mActionErase);
-    toolButtonPickColour->setDefaultAction(mActionPickColour);
-    toolButtonStamp->setDefaultAction(mActionStamp);
-    toolButtonCopy->setDefaultAction(mActionCopy);
-    toolButtonFill->setDefaultAction(mActionFill);
-
-    QActionGroup* aGroup = new QActionGroup(this);
-    aGroup->addAction(mActionDraw);
-    aGroup->addAction(mActionErase);
-    aGroup->addAction(mActionPickColour);
-    aGroup->addAction(mActionStamp);
-    aGroup->addAction(mActionCopy);
-    aGroup->addAction(mActionFill);
-    mActionDraw->setChecked(true);
+	connect(findChild<QSpinBox*>("spinBoxNumPivots"), SIGNAL(valueChanged(int)), this, SLOT(setNumPivots(int)));
+	connect(findChild<QSpinBox*>("spinBoxFramerate"), SIGNAL(valueChanged(int)), this, SLOT(setFramerate(int)));
 
     connect(findChild<QToolButton*>("toolButtonAddMode"), SIGNAL(clicked()), this, SLOT(addMode()));
     connect(findChild<QToolButton*>("toolButtonCopyMode"), SIGNAL(clicked()), this, SLOT(copyMode()));
     connect(findChild<QToolButton*>("toolButtonDeleteMode"), SIGNAL(clicked()), this, SLOT(deleteMode()));
-
-	connect(findChild<QSpinBox*>("spinBoxNumPivots"), SIGNAL(valueChanged(int)), this, SLOT(setNumPivots(int)));
-
+	
 	mListWidgetModes = findChild<ModeListWidget*>("listWidgetModes");
 	mListWidgetModes->clear();
 
@@ -98,13 +53,10 @@ PartToolsWidget::PartToolsWidget(QWidget *parent) :
 		}
 	});
 
-	connect(findChild<QSpinBox*>("spinBoxFramerate"), SIGNAL(valueChanged(int)), this, SLOT(setFramerate(int)));
-
     mResizeModeDialog = new ResizeModeDialog(this);
     mResizeModeDialog->hide();
     connect(mResizeModeDialog, SIGNAL(accepted()), this, SLOT(resizeModeDialogAccepted()));
     mAnimatorWidget = findChild<AnimatorWidget*>("animatorWidget");
-
     this->setEnabled(false);
 }
 
@@ -122,29 +74,13 @@ void PartToolsWidget::setTargetPartWidget(PartWidget* p){
 
     // Disconnect and connect signals
     if (mTarget){
-        // disconnect
-        disconnect(findChild<QSlider*>("hSliderZoom"), SIGNAL(valueChanged(int)), mTarget, SLOT(setZoom(int)));
-        disconnect(findChild<QToolButton*>("toolButtonFitToWindow"), SIGNAL(clicked()), mTarget, SLOT(fitToWindow()));
-        disconnect(findChild<QSlider*>("hSliderPenSize"), SIGNAL(valueChanged(int)), mTarget, SLOT(setPenSize(int)));
-        disconnect(mTarget, SIGNAL(penChanged()), this, SLOT(penChanged()));
-        disconnect(mTarget, SIGNAL(zoomChanged()), this, SLOT(zoomChanged()));                
-        disconnect(mTarget, SIGNAL(selectNextMode()), this, SLOT(selectNextMode()));
-        disconnect(mTarget, SIGNAL(selectPreviousMode()), this, SLOT(selectPreviousMode()));
-
+        // disconnect(mTarget, SIGNAL(selectNextMode()), this, SLOT(selectNextMode()));
+        // disconnect(mTarget, SIGNAL(selectPreviousMode()), this, SLOT(selectPreviousMode()));
         mTarget = nullptr;
 		mCurrentMode.clear();
     }
     if (p){
-        mTarget = p;
-
-        // update all widgets
-        findChild<QSlider*>("hSliderZoom")->setValue(p->zoom());
-        p->setPenSize(findChild<QSlider*>("hSliderPenSize")->value()); // nb: pen size is stored in toolwidget
-        p->setPenColour(mPenColour);
-        if (mActionDraw->isChecked()) p->setDrawToolType(kDrawToolPaint);
-        else if (mActionErase->isChecked()) p->setDrawToolType(kDrawToolEraser);
-        else if (mActionPickColour->isChecked()) p->setDrawToolType(kDrawToolPickColour);
-		
+        mTarget = p;        
 		findChild<QSpinBox*>("spinBoxNumPivots")->setValue(p->numPivots());
 
         // set properties
@@ -158,17 +94,9 @@ void PartToolsWidget::setTargetPartWidget(PartWidget* p){
         mTextEditProperties->setPlainText(part->properties);
         mTextEditProperties->blockSignals(false);
         targetPartModesChanged();
-
 		updateProperties(part, p->modeName());
-
-        connect(findChild<QSlider*>("hSliderZoom"), SIGNAL(valueChanged(int)), p, SLOT(setZoom(int)));
-        connect(findChild<QToolButton*>("toolButtonFitToWindow"), SIGNAL(clicked()), p, SLOT(fitToWindow()));
-        connect(findChild<QSlider*>("hSliderPenSize"), SIGNAL(valueChanged(int)), p, SLOT(setPenSize(int)));
-        connect(p, SIGNAL(penChanged()), this, SLOT(penChanged()));
-        connect(p, SIGNAL(zoomChanged()), this, SLOT(zoomChanged()));        
-        connect(p, SIGNAL(selectNextMode()), this, SLOT(selectNextMode()));
-        connect(p, SIGNAL(selectPreviousMode()), this, SLOT(selectPreviousMode()));
-
+        // connect(p, SIGNAL(selectNextMode()), this, SLOT(selectNextMode()));
+        // connect(p, SIGNAL(selectPreviousMode()), this, SLOT(selectPreviousMode()));
         this->setEnabled(true);
     }
     else {
@@ -176,84 +104,9 @@ void PartToolsWidget::setTargetPartWidget(PartWidget* p){
     }
 }
 
-void PartToolsWidget::chooseColour(){
-    mPenColour = QColorDialog::getColor(mPenColour);
-    QPixmap px(mToolButtonColour->iconSize());
-    px.fill(mPenColour);	
-    mToolButtonColour->setIcon(px);
-	mToolButtonColour->setToolTip(mPenColour.name());
-
-    if (mTarget){
-        mTarget->setPenColour(mPenColour);
-        if (mTarget->drawToolType()!=kDrawToolPaint && mTarget->drawToolType()!=kDrawToolFill){
-            mTarget->setDrawToolType(kDrawToolPaint);
-        }
-        penChanged();
-    }
-}
-
-void PartToolsWidget::chooseColourByText(QString str){
-    // qDebug() << str;
-
-    if (QColor::isValidColor(str)){
-        mPenColour = QColor(str);
-
-        QPixmap px(mToolButtonColour->iconSize());
-        px.fill(mPenColour);
-        mToolButtonColour->setIcon(px);
-		mToolButtonColour->setToolTip(mPenColour.name());
-
-        if (mTarget){
-            mTarget->setPenColour(mPenColour);
-            if (mTarget->drawToolType()!=kDrawToolPaint && mTarget->drawToolType()!=kDrawToolFill){
-                mTarget->setDrawToolType(kDrawToolPaint);
-            }
-            // penChanged();
-        }
-    }
-}
-
-void PartToolsWidget::colourSelected(QColor colour){
-    if (mTarget){
-        mPenColour = colour;
-        mTarget->setPenColour(mPenColour);
-        QPixmap px(mToolButtonColour->iconSize());
-        px.fill(mPenColour);        
-        mToolButtonColour->setIcon(px);
-
-        if (mTarget->drawToolType()!=kDrawToolPaint && mTarget->drawToolType()!=kDrawToolFill){
-            mTarget->setDrawToolType(kDrawToolPaint);
-        }
-        penChanged();
-    }
-}
-
 void PartToolsWidget::textPropertiesEdited(){
     if (mTarget){
         TryCommand(new CChangePartProperties(mTarget->partRef(), mTextEditProperties->toPlainText()));
-    }
-}
-
-void PartToolsWidget::penChanged(){
-    if (mTarget){
-        findChild<QSlider*>("hSliderPenSize")->setValue(mTarget->penSize());
-        mPenColour = mTarget->penColour();
-        QPixmap px(mToolButtonColour->iconSize());
-        px.fill(mPenColour);
-        mToolButtonColour->setIcon(px);
-
-        switch(mTarget->drawToolType()){
-        case kDrawToolPaint: mActionDraw->trigger(); break;
-        case kDrawToolEraser: mActionErase->trigger(); break;
-        case kDrawToolPickColour: mActionPickColour->trigger(); break;
-        default: break;
-        }
-    }
-}
-
-void PartToolsWidget::zoomChanged(){
-    if (mTarget){
-        findChild<QSlider*>("hSliderZoom")->setValue(mTarget->zoom());
     }
 }
 
@@ -315,42 +168,6 @@ void PartToolsWidget::targetPartPropertiesChanged(){
             cursor.setPosition(cursorPos, QTextCursor::MoveAnchor);
             mTextEditProperties->setTextCursor(cursor);
         }
-    }
-}
-
-void PartToolsWidget::setToolTypeDraw(){
-    if (mTarget){
-        mTarget->setDrawToolType(kDrawToolPaint);
-    }
-}
-
-void PartToolsWidget::setToolTypeErase(){
-    if (mTarget){
-        mTarget->setDrawToolType(kDrawToolEraser);
-    }
-}
-
-void PartToolsWidget::setToolTypePickColour(){
-    if (mTarget){
-        mTarget->setDrawToolType(kDrawToolPickColour);
-    }
-}
-
-void PartToolsWidget::setToolTypeStamp(){
-    if (mTarget){
-        mTarget->setDrawToolType(kDrawToolStamp);
-    }
-}
-
-void PartToolsWidget::setToolTypeCopy(){
-    if (mTarget){
-        mTarget->setDrawToolType(kDrawToolCopy);
-    }
-}
-
-void PartToolsWidget::setToolTypeFill(){
-    if (mTarget){
-        mTarget->setDrawToolType(kDrawToolFill);
     }
 }
 
@@ -424,9 +241,10 @@ void PartToolsWidget::deleteMode(){
 
 void PartToolsWidget::resizeMode(){
     if (mTarget){
+        auto* part = PM()->getPart(mTarget->partRef());
+        const auto& m = part->modes.value(mCurrentMode);
+
         mAnimatorWidget->stop();
-        Part* part = PM()->getPart(mTarget->partRef());
-        Part::Mode m = part->modes.value(mCurrentMode);
         mResizeModeDialog->mLineEditWidth->setText(QString::number(m.width));
         mResizeModeDialog->mLineEditHeight->setText(QString::number(m.height));
         mResizeModeDialog->show();

@@ -43,31 +43,20 @@ void CNewPart::redo()
     part->ref = mUuid;
     part->name = name;
     Part::Mode mode;
-    mode.numLayers = 1;
     mode.numFrames = 1;
     mode.numPivots = 0;
-    mode.width = 16;
-    mode.height = 16;
-    mode.framesPerSecond = 12;
-    mode.anchor.push_back(QPoint(mode.width/2,mode.height-1));
+    mode.width = 8;
+    mode.height = 8;
+    mode.framesPerSecond = 1;
+    mode.anchor.push_back(QPoint(0, 0));
     for(int i=0;i<MAX_PIVOTS;i++){
         mode.pivots[i].push_back(QPoint(0,0));
     }
+    auto img = QSharedPointer<QImage>::create(mode.width, mode.width, QImage::Format_ARGB32);
+    img->fill(0x00FFFFFF); // Transparent White
+	mode.frames.push_back(img);
 
-    // Create blank frame
-    // mode.images.push_back(img);
-
-    {
-        Part::Layer* layer = new Part::Layer;
-        layer->name = "layer";
-        layer->visible = true;
-        auto img = QSharedPointer<QImage>::create(mode.width, mode.width, QImage::Format_ARGB32);
-        img->fill(0x00FFFFFF);
-        layer->frames.push_back(img);
-        mode.layers.push_back(QSharedPointer<Part::Layer>(layer));
-    }
-
-    part->modes.insert("anim", mode);
+    part->modes.insert("icon", mode);
     PM()->parts.insert(part->ref, part);
 
     MainWindow::Instance()->partListChanged();
@@ -118,21 +107,11 @@ void CCopyPart::redo(){
         newMode.anchor = mode.anchor;
         for(int p=0;p<MAX_PIVOTS;p++)
             newMode.pivots[p] = mode.pivots[p];
-		newMode.layers.clear();
-
-         // make copy of layers and things
-        newMode.numLayers = mode.numLayers;
+		newMode.frames.clear();
         newMode.numFrames = mode.numFrames;
-
-        for(auto oldLayer: mode.layers){
-            QSharedPointer<Part::Layer> layer =  QSharedPointer<Part::Layer>::create();
-            layer->name = oldLayer->name;
-            layer->visible = oldLayer->visible;
-            for(auto oldImage: oldLayer->frames){
-                QSharedPointer<QImage> img = QSharedPointer<QImage>::create(*oldImage);
-                layer->frames.push_back(img);
-            }
-            newMode.layers.push_back(layer);
+        for(auto oldImage: mode.frames){
+            auto img = QSharedPointer<QImage>::create(*oldImage);
+			newMode.frames.push_back(img);
         }
         part->modes.insert(key, newMode);
     }
@@ -446,7 +425,6 @@ CNewMode::CNewMode(AssetRef part, const QString& copyModeName):mPart(part), mCop
 }
 
 void CNewMode::undo(){
-    // remove the mode..
     auto p = PM()->getPart(mPart);
     p->modes.take(mModeName);
     MainWindow::Instance()->partModesChanged(mPart);
@@ -460,22 +438,15 @@ void CNewMode::redo(){
     m.width = copyMode.width;
     m.height = copyMode.height;
     m.numPivots = copyMode.numPivots;
-    m.numLayers = 1;
     m.framesPerSecond = copyMode.framesPerSecond;
 	m.anchor = copyMode.anchor;
 	for (int i = 0; i < MAX_PIVOTS; i++) {
 		m.pivots[i].push_back(QPoint(0, 0));
 	}
-
-    auto layer = QSharedPointer<Part::Layer>::create();
-    layer->name = "layer";
-    layer->visible = true;
     auto img = QSharedPointer<QImage>::create(m.width, m.width, QImage::Format_ARGB32);
     img->fill(0x00FFFFFF);
-    layer->frames.push_back(img);
-    m.layers.push_back(layer);
+	m.frames.push_back(img);
     p->modes.insert(mModeName,m);
-
     MainWindow::Instance()->partModesChanged(mPart);
 }
 
@@ -515,43 +486,31 @@ void CResetMode::undo(){
 }
 
 void CResetMode::redo(){
-    // reset the mode..
     auto p = PM()->getPart(mPart);
     Part::Mode& mode = p->modes[mModeName];
 
     // Make a copy
     mModeCopy = mode;
     mModeCopy.anchor = mode.anchor;
-    mModeCopy.layers = mode.layers;
-    mModeCopy.numLayers = 1;
+    mModeCopy.frames = mode.frames;
     for(int p=0;p<MAX_PIVOTS;p++){
         mModeCopy.pivots[p] = mode.pivots[p];
     }
-
-    mode.layers.clear();
+    mode.frames.clear();
     mode.anchor.clear();
     for(int p=0;p<MAX_PIVOTS;p++){
         mode.pivots[p].clear();
     }
-
-    // New layer
-    auto layer = QSharedPointer<Part::Layer>::create();
-    layer->name = "layer";
-    layer->visible = true;
-
     auto newImage = QSharedPointer<QImage>::create(mode.width, mode.height, QImage::Format_ARGB32);
     newImage->fill(0x00FFFFFF);
-    layer->frames.push_back(newImage);
-    mode.layers.push_back(layer);
-
+	mode.frames.push_back(newImage);
     mode.anchor.push_back(QPoint(0,0));
     for(int p=0;p<MAX_PIVOTS;p++){
         mode.pivots[p].push_back(QPoint(0,0));
     }
     mode.numPivots = 0;
     mode.numFrames = 1;
-    mode.framesPerSecond = 24;
-
+    mode.framesPerSecond = 1;
     MainWindow::Instance()->partModesChanged(mPart);
 }
 
@@ -591,29 +550,10 @@ void CCopyMode::redo(){
     for(int p=0;p<MAX_PIVOTS;p++)
         m.pivots[p] = copyMode.pivots[p];
     m.anchor = copyMode.anchor;
-
-    // make copy of layers and things
-    m.numLayers = copyMode.numLayers;
-
-    for(auto oldLayer: copyMode.layers){
-        auto layer = QSharedPointer<Part::Layer>::create();
-        layer->name = oldLayer->name;
-        layer->visible = oldLayer->visible;
-
-        for(auto oldImage: oldLayer->frames){
-            auto img = QSharedPointer<QImage>::create(*oldImage);
-            layer->frames.push_back(img);
-        }
-        m.layers.push_back(layer);
+    for(auto oldImage: copyMode.frames){
+        auto img = QSharedPointer<QImage>::create(*oldImage);
+        m.frames.push_back(img);
     }
-
-    /*
-    for(int k=0;k<m.numFrames;k++){
-        QImage* img = new QImage(copyMode.images.at(k)->copy());
-        m.images.push_back(img);
-    }
-    */
-
     p->modes.insert(mNewModeName,m);
     MainWindow::Instance()->partModesChanged(mPart);
 }
@@ -656,14 +596,14 @@ CDrawOnPart::CDrawOnPart(AssetRef part, QString mode, int frame, QImage data, QP
     Part* p = PM()->getPart(mPart);
     ok = p &&
             p->modes.contains(mode) &&
-            p->modes[mode].numFrames>=frame &&
-            p->modes[mode].layers.at(0)->frames.at(frame)!=nullptr;
+            p->modes[mode].numFrames >= frame && // TODO: Check this
+            p->modes[mode].frames.at(frame)!=nullptr;
 }
 
 void CDrawOnPart::undo(){
     //qDebug() << "CDrawOnPart::undo()";
     // Reload the old frame
-    auto img = PM()->getPart(mPart)->modes[mMode].layers.at(0)->frames.at(mFrame);
+    auto img = PM()->getPart(mPart)->modes[mMode].frames.at(mFrame);
     QPainter painter(img.data());
     painter.setCompositionMode(QPainter::CompositionMode_Source);
     painter.drawImage(0, 0, mOldFrame);
@@ -677,7 +617,7 @@ void CDrawOnPart::redo(){
     //qDebug() << "CDrawOnPart::redo()";
     // Record the old frame
     // Draw the image into the part
-    auto img = PM()->getPart(mPart)->modes[mMode].layers.at(0)->frames.at(mFrame);
+    auto img = PM()->getPart(mPart)->modes[mMode].frames.at(mFrame);
     mOldFrame = img->copy();
     QPainter painter(img.data());
     painter.drawImage(mOffset.x(), mOffset.y(), mData);
@@ -692,12 +632,12 @@ CEraseOnPart::CEraseOnPart(AssetRef part, QString mode, int frame, QImage data, 
     ok = p &&
             p->modes.contains(mode) &&
             p->modes[mode].numFrames>=frame &&
-            p->modes[mode].layers.at(0)->frames.at(frame)!=nullptr;
+            p->modes[mode].frames.at(frame)!=nullptr;
 }
 
 void CEraseOnPart::undo(){
     // Reload the old frame
-    auto img = PM()->getPart(mPart)->modes[mMode].layers.at(0)->frames.at(mFrame);
+    auto img = PM()->getPart(mPart)->modes[mMode].frames.at(mFrame);
     QPainter painter(img.data());
     painter.drawImage(0, 0, mOldFrame);
     // *img = mOldFrame;
@@ -709,7 +649,7 @@ void CEraseOnPart::undo(){
 void CEraseOnPart::redo(){
     // Record the old frame
     // Draw the image into the part
-    auto img = PM()->getPart(mPart)->modes[mMode].layers.at(0)->frames.at(mFrame);
+    auto img = PM()->getPart(mPart)->modes[mMode].frames.at(mFrame);
     mOldFrame = *img;
     QPainter painter(img.data());
     painter.setCompositionMode(QPainter::CompositionMode_DestinationOut);
@@ -734,7 +674,7 @@ CNewFrame::CNewFrame(AssetRef part, QString modeName, int index)
 void CNewFrame::undo(){
     auto part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
-    mode.layers.at(0)->frames.takeAt(mIndex);
+    mode.frames.takeAt(mIndex);
     mode.anchor.removeAt(mIndex);
     for(int i=0;i<MAX_PIVOTS;i++){
         mode.pivots[i].removeAt(mIndex);
@@ -750,7 +690,7 @@ void CNewFrame::redo(){
     Part::Mode& mode = part->modes[mModeName];
     auto image = QSharedPointer<QImage>::create(mode.width, mode.height, QImage::Format_ARGB32);
     image->fill(0x00FFFFFF);
-    mode.layers.at(0)->frames.insert(mIndex, image);
+    mode.frames.insert(mIndex, image);
 
     if (mIndex<mode.numFrames)
         mode.anchor.insert(mIndex, mode.anchor.at(mIndex));
@@ -785,7 +725,7 @@ CCopyFrame::CCopyFrame(AssetRef part, QString modeName, int index)
 void CCopyFrame::undo(){
     auto part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
-    mode.layers.at(0)->frames.takeAt(mIndex+1);
+    mode.frames.takeAt(mIndex+1);
     mode.anchor.removeAt(mIndex+1);
     for(int i=0;i<MAX_PIVOTS;i++){
         mode.pivots[i].removeAt(mIndex+1);
@@ -802,18 +742,18 @@ void CCopyFrame::redo(){
     auto image = QSharedPointer<QImage>();
     if (mIndex<mode.numFrames){
         mode.anchor.insert(mIndex+1, mode.anchor.at(mIndex));
-        image.reset(new QImage(mode.layers.at(0)->frames.at(mIndex)->copy()));
+        image.reset(new QImage(mode.frames.at(mIndex)->copy()));
     }
     else if (mode.numFrames>0){
         mode.anchor.insert(mIndex+1, mode.anchor.at(0));
-        image.reset(new QImage(mode.layers.at(0)->frames.at(0)->copy()));
+        image.reset(new QImage(mode.frames.at(0)->copy()));
     }
     else {
         mode.anchor.insert(mIndex+1, QPoint(0,0));
         image.reset(new QImage(mode.width, mode.height, QImage::Format_ARGB32));
         image->fill(0x00FFFFFF);
     }
-    mode.layers.at(0)->frames.insert(mIndex+1, image);
+    mode.frames.insert(mIndex+1, image);
 
     for(int i=0;i<MAX_PIVOTS;i++){
         if (mIndex<mode.numFrames)
@@ -842,7 +782,7 @@ void CDeleteFrame::undo(){
     // Create the new frame
     auto part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
-    mode.layers.at(0)->frames.insert(mIndex, mImage);
+    mode.frames.insert(mIndex, mImage);
     mode.anchor.insert(mIndex, mAnchor);
     for(int i=0;i<MAX_PIVOTS;i++){
         mode.pivots[i].insert(mIndex, mPivots[i]);
@@ -858,7 +798,7 @@ void CDeleteFrame::redo(){
     // NB: Remember old frame info (image, etc..)
     auto part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
-    mImage = mode.layers.at(0)->frames.takeAt(mIndex);
+    mImage = mode.frames.takeAt(mIndex);
     mAnchor = mode.anchor.takeAt(mIndex);
     for(int i=0;i<MAX_PIVOTS;i++){
         mPivots[i] = mode.pivots[i].takeAt(mIndex);
@@ -952,12 +892,13 @@ void CChangeModeSize::redo(){
 
     // make copy of old mode
     mOldMode = mode;
-    mOldMode.layers.at(0)->frames.clear();
-    for(int p=0;p<MAX_PIVOTS;p++)
-        mOldMode.pivots[p] = mOldMode.pivots[p];
+	for (int p = 0; p < MAX_PIVOTS; p++) {
+		mOldMode.pivots[p] = mOldMode.pivots[p];
+	}
+    mOldMode.frames.clear();
     for(int k=0;k<mOldMode.numFrames;k++){
         // QImage* img = new QImage(mode.images.at(k)->copy());
-        mOldMode.layers.at(0)->frames.push_back(mode.layers.at(0)->frames.at(k)); // this ref will be removed below anyway
+        mOldMode.frames.push_back(mode.frames.at(k)); // this ref will be removed below anyway
     }
 
     // Modify mode to new dimensions
@@ -967,18 +908,14 @@ void CChangeModeSize::redo(){
         auto newImage = QSharedPointer<QImage>::create(mWidth, mHeight, QImage::Format_ARGB32);
         newImage->fill(0x00FFFFFF);
         QPainter painter(newImage.data());
-        painter.drawImage(mOffsetX,mOffsetY,*mode.layers.at(0)->frames.at(k));
+        painter.drawImage(mOffsetX,mOffsetY,*mode.frames.at(k));
         painter.end();
-        mode.layers.at(0)->frames.replace(k, newImage);
-
+        mode.frames.replace(k, newImage);
         mode.anchor[k] += QPoint(mOffsetX,mOffsetY);
         for(int p=0;p<mode.numPivots;p++){
             mode.pivots[p][k] += QPoint(mOffsetX,mOffsetY);
         }
     }
-
-    // mOldWidth, mOldHeight
-    // save mOldMode
 
     MainWindow::Instance()->partModesChanged(mPart);
 }
