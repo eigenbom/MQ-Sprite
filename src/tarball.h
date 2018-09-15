@@ -1,14 +1,5 @@
-// Original by Lindenbaum. Modified by Ben Porter. (04/2013)
-
-/*
- * tarball.h
- *
- *  Created on: Jul 28, 2010
- *      Author: Pierre Lindenbaum PhD
- *              plindenbaum@yahoo.fr
- *              http://plindenbaum.blogspot.com
- *
- */
+// Author: Pierre Lindenbaum (2010) (plindenbaum@yahoo.fr) 
+// Modified: Ben Porter (2018)
 
 #ifndef LINDENB_IO_TARBALL_H_
 #define LINDENB_IO_TARBALL_H_
@@ -19,9 +10,6 @@
 
 namespace lindenb { namespace io {
 
-/**
- *  A Tar Archive
- */
 class TarOut
 {
 private:
@@ -73,4 +61,4 @@ public:
 
 }}
 
-#endif /* LINDENB_IO_TARBALL_H_ */
+#endif

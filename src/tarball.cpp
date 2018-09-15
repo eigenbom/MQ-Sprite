@@ -18,40 +18,6 @@
 
 #include <QDebug>
 
-/*
-// snprintf replacement
-// from: http://stackoverflow.com/questions/2915672/snprintf-and-visual-studio-2010
-#ifdef _MSC_VER
-#include <cstdio>
-#include <cstdlib>
-#define snprintf c99_snprintf
-inline int c99_snprintf(char* str, size_t size, const char* format, ...)
-{
-    int count;
-    va_list ap;
-
-    va_start(ap, format);
-    count = c99_vsnprintf(str, size, format, ap);
-    va_end(ap);
-
-    return count;
-}
-
-inline int c99_vsnprintf(char* str, size_t size, const char* format, va_list ap)
-{
-    int count = -1;
-
-    if (size != 0)
-        count = _vsnprintf_s(str, size, _TRUNCATE, format, ap);
-    if (count == -1)
-        count = _vscprintf(format, ap);
-
-    return count;
-}
-
-#endif // _MSC_VER
-*/
-
 #define LOCALNS lindenb::io
 #define TARHEADER static_cast<PosixTarHeader*>(header)
 
@@ -83,9 +49,6 @@ void LOCALNS::TarOut::_init(void* header)
     std::sprintf(TARHEADER->mtime,"%011lo", (unsigned long) time(nullptr));
     std::sprintf(TARHEADER->mode,"%07o",0644);
     std::sprintf(TARHEADER->uname,"ben");
-    // char * s = ::getlogin();
-    // if(s!=NULL)  std::snprintf(TARHEADER,32,"%s",s);
-    // std::snprintf(TARHEADER,32,"%s","ben");
     std::sprintf(TARHEADER->gname,"%s","users");
 }
 
@@ -215,7 +178,7 @@ void LOCALNS::TarOut::putFile(const char* filename,const char* nameInArchive)
     _endRecord(len);
 }
 
-// Ban's additions
+// Ben's additions
 LOCALNS::TarIn::TarIn(std::istream& in):in(in),mOK(true),mEndOfStream(false)
 {
     if(sizeof(PosixTarHeader)!=512)
@@ -317,31 +280,14 @@ void LOCALNS::TarIn::read(){
 
         // End of record
         char c='\0';
-        while((fileSize%sizeof(PosixTarHeader))!=0)
+        while((fileSize % sizeof(PosixTarHeader))!=0)
         {
             in.read(&c,sizeof(char));
             ++fileSize;
         }
-
-        // Read next header..
         readHeader((void*)&header);
     }
-
-    /*
-    while (mOK){
-        // TODO: read segments
-        PosixTarHeader header;
-        readHeader((void*)&header);
-
-        if (mOK){
-            //long long unsigned int fileSize = 0;
-            //std::sscanf(header.size, "%011llo", &fileSize);
-            //qDebug() << "fileSize: " << fileSize;
-        }
-    }
-    */
 }
-
 
 bool LOCALNS::TarIn::ok(){
     return mOK;

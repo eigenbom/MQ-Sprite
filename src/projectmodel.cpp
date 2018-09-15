@@ -141,66 +141,82 @@ void ProjectModel::clear(){
 
 bool ProjectModel::load(const QString& fileName, QString& reason){	
     std::fstream in(fileName.toStdString().c_str(), std::ios::in | std::ios::binary);
-    if(!in.is_open()) qFatal("Cannot open in");
+	if (!in.is_open()) {
+		reason = "Cannot open file";
+		return false;
+	}
 
     lindenb::io::TarIn tarball(in);
     tarball.read();
     if (!tarball.ok()){
-		reason = "Tar not ok";
+		reason = "Cannot read project file";
         return false;
     }
 
-    typedef lindenb::io::TarIn::Record Record;
-    typedef std::map<std::string, Record> FileMap;
-    FileMap& fileMap = tarball.fileMap();
+    auto& fileMap = tarball.fileMap();
 
-    // First check data.json version
-    if (fileMap.count("data.json")==0){
-		reason = "No data.json in tar";
+    if (fileMap.count("data.json") == 0){
+		reason = "Internal data.json is missing";
         return false;
     }
-    // else ..
 
-    const Record& dataRec = fileMap["data.json"];
+    auto& dataRec = fileMap["data.json"];
+
+	int dataLength = 0;
+	for (int i = 0; i < dataRec.length; ++i) {
+		if (dataRec.buffer[i] == '\0') {
+			dataLength = i;
+			break;
+		}
+	}
+
+	if (dataLength == 0) {
+		reason = "Internal data.json is empty";
+		return false;
+	}
+
     QJsonParseError error;
-    QJsonDocument dataDoc = QJsonDocument::fromJson(QByteArray(dataRec.buffer, dataRec.length),&error);
-    if (error.error!=QJsonParseError::NoError){		
-		reason = error.errorString();
+    QJsonDocument dataDoc = QJsonDocument::fromJson(QByteArray(dataRec.buffer, dataLength), &error);
+	
+    if (error.error != QJsonParseError::NoError){		
+		reason = "Internal data.json parse error: " + error.errorString();		
         return false;
     }
     else if (dataDoc.isNull() || dataDoc.isEmpty() || !dataDoc.isObject()){
-		reason = "data.json is empty or null or not a json object";
+		reason = "Internal data.json is not a valid json object";
         return false;
     }
-    // else ..
 
     QJsonObject dataObj = dataDoc.object();
     if (!dataObj.contains("version")){
-		reason = "data.json has no version";
+		reason = "Internal data.json has no version field";
         return false;
     }
-    // else ..
 
     if (dataObj.value("version").toInt(0) != PROJECT_SAVE_FILE_VERSION){
-		reason = "invalid version";
+		reason = "Internal data.json has an invalid version";
         return false;
     }
 
-    // All good!
-
-    // TGet prefs.json (and load the settings)
     if (fileMap.count("prefs.json")>0){
-        const Record& prefsRec = fileMap["prefs.json"];
-        // qDebug() << "*" << QString::fromUtf8(prefsRec.buffer, prefsRec.length) << "*";
+        auto& prefsRec = fileMap["prefs.json"];
+		int presLength = 0;
+
+		for (int i = 0; i < prefsRec.length; ++i) {
+			if (prefsRec.buffer[i] == '\0') {
+				presLength = i;
+				break;
+			}
+		}
 
         QJsonParseError error;
-        QJsonDocument prefsDoc = QJsonDocument::fromJson(QByteArray(prefsRec.buffer, prefsRec.length), &error);
+        QJsonDocument prefsDoc = QJsonDocument::fromJson(QByteArray(prefsRec.buffer, presLength), &error);
 
         if (error.error!=QJsonParseError::NoError){
-            qDebug() << error.errorString();
+            qWarning() << "Internal prefs.json parse error: " << error.errorString();
         }
         else if (prefsDoc.isNull() || prefsDoc.isEmpty() || !prefsDoc.isObject()){
-            qDebug() << "prefs.json is empty or null or not a json object";
+			qWarning() << "Internal prefs.json is not a vaid json object";
         }
         else {
             QSettings settings;
@@ -220,14 +236,15 @@ bool ProjectModel::load(const QString& fileName, QString& reason){
     }
 
     // Load all the images (and store them in an image map)
-    QMap<QString, QImage*> imageMap;
-    FileMap::iterator it = tarball.fileMap().begin();
-    for(;it!=tarball.fileMap().end();it++){
+	// The ownership of these are taken by the sprites when they're loaded
+    QMap<QString, QSharedPointer<QImage>> imageMap;   
+    for(auto it = tarball.fileMap().begin(); it!=tarball.fileMap().end(); it++){
         QString assetName = QString::fromStdString(it->first);
         if (assetName.endsWith(".png")){
-            const Record& record = it->second;
-            QImage* img = new QImage;
+            const auto& record = it->second;
+            auto img = QSharedPointer<QImage>::create();
             bool res = img->loadFromData(QByteArray(record.buffer, record.length), "PNG");
+			// qDebug() << "Loaded: " << assetName << " " << img->width() << " x " << img->height();
             Q_ASSERT(res);
             imageMap.insert(assetName, img);
         }
@@ -243,8 +260,6 @@ bool ProjectModel::load(const QString& fileName, QString& reason){
             for(auto it = folders.begin(); it!=folders.end(); it++){
                 const QString& uuid = it.key();
                 const QJsonObject& folderObj = it.value().toObject();
-
-                // Load the part..
                 auto folder = QSharedPointer<Folder>::create();
                 folder->ref.uuid = QUuid(uuid);
                 folder->ref.type = AssetType::Folder;
@@ -443,12 +458,7 @@ void ProjectModel::FolderToJson(const QString& name, const Folder& folder, QJson
     }
 }
 
-void ProjectModel::JsonToPart(const QJsonObject& obj, const QMap<QString,QImage*>& imageMap, Part* part){
-    qDebug() << "TODO: support layers";
-    return;
-
-    /*
-    // Load name
+void ProjectModel::JsonToPart(const QJsonObject& obj, const QMap<QString,QSharedPointer<QImage>>& imageMap, Part* part){
     part->name = obj["name"].toString();
 
     if (obj.contains("parent")){
@@ -456,26 +466,24 @@ void ProjectModel::JsonToPart(const QJsonObject& obj, const QMap<QString,QImage*
         part->parent.type = AssetType::Folder;
     }
 
-    // foreach mode
-    for(QJsonObject::const_iterator it=obj.begin();it!=obj.end();it++){        
+    for(auto it = obj.begin(); it != obj.end(); it++){        
         const QString& modeName = it.key();
-
-        if (modeName=="properties"){
+        
+		if (modeName == "properties"){
             part->properties = it.value().toString();
             continue;
         }
 
-        // else its a proper mode
         const QJsonObject& modeObject = it.value().toObject();
         if (!modeObject.isEmpty()){
             Part::Mode m;
 
-            m.width = modeObject.value("width").toVariant().toInt();
-            m.height = modeObject.value("height").toVariant().toInt();
-            m.numFrames = modeObject.value("numFrames").toVariant().toInt();
-            m.numPivots = modeObject.value("numPivots").toVariant().toInt();
-            m.framesPerSecond = modeObject.value("framesPerSecond").toVariant().toInt();
-
+            m.width = modeObject.value("width").toInt();
+            m.height = modeObject.value("height").toInt();
+            m.numFrames = modeObject.value("numFrames").toInt();
+            m.numPivots = modeObject.value("numPivots").toInt();
+            m.framesPerSecond = modeObject.value("framesPerSecond").toInt();
+			
             const QJsonArray& frameArray = modeObject.value("frames").toArray();
             Q_ASSERT(frameArray.count()==m.numFrames);
             for(int frame=0;frame<frameArray.count();frame++){
@@ -486,12 +494,13 @@ void ProjectModel::JsonToPart(const QJsonObject& obj, const QMap<QString,QImage*
                 m.anchor.push_back(QPoint(ax,ay));
 
                 QString imageName = frameObject.value("image").toString();
-                QImage* image = imageMap.value(imageName);
-                Q_ASSERT(image);
-                Q_ASSERT(image->width()==m.width && image->height()==m.height);
-                m.images.push_back(image);
+                auto image = imageMap.value(imageName);
+				int imageHeight = image->height();
+				int imageWidth = image->width();
 
-                // pivots etc..
+                Q_ASSERT(image);
+                Q_ASSERT(imageWidth == m.width && imageHeight == m.height);
+				m.frames.push_back(image);
                 for(int p=0;p<m.numPivots;p++){
                     int px = frameObject.value(QString("p%1x").arg(p)).toVariant().toInt();
                     int py = frameObject.value(QString("p%1y").arg(p)).toVariant().toInt();
@@ -505,10 +514,9 @@ void ProjectModel::JsonToPart(const QJsonObject& obj, const QMap<QString,QImage*
             part->modes.insert(modeName, m);
         }
     }
-    */
 }
 
-void ProjectModel::PartToJson(const QString& name, const Part& part, QJsonObject* obj, QMap<QString,QImage*>* imageMap){
+void ProjectModel::PartToJson(const QString& name, const Part& part, QJsonObject* obj, QMap<QString, QSharedPointer<QImage>>* imageMap){
     qDebug() << "Support layers";
 
     /*

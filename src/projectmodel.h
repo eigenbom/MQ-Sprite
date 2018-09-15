@@ -85,8 +85,8 @@ public:
 protected:
     static void JsonToFolder(const QJsonObject& obj, Folder* folder);
     static void FolderToJson(const QString& name, const Folder& folder, QJsonObject* obj);
-    static void JsonToPart(const QJsonObject& obj, const QMap<QString,QImage*>& imageMap, Part* part);
-    static void PartToJson(const QString& name, const Part& part, QJsonObject* obj, QMap<QString,QImage*>* imageMap);
+    static void JsonToPart(const QJsonObject& obj, const QMap<QString, QSharedPointer<QImage>>& imageMap, Part* part);
+    static void PartToJson(const QString& name, const Part& part, QJsonObject* obj, QMap<QString,QSharedPointer<QImage>>* imageMap);
     static void CompositeToJson(const QString& name, const Composite& comp, QJsonObject* obj);
     static void JsonToComposite(const QJsonObject& obj, Composite* comp);
 };
