@@ -34,6 +34,9 @@
      <property name="plainText">
       <string/>
      </property>
+     <property name="tabStopWidth">
+      <number>20</number>
+     </property>
      <property name="placeholderText">
       <string/>
      </property>

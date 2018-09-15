@@ -51,9 +51,6 @@ public:
 
     AssetRef createAssetRef();
 
-    // globally accessible assets of the model
-    QString fileName;
-
     // Access assets
     Asset* getAsset(const AssetRef& ref);
     bool hasAsset(const AssetRef& ref);
@@ -82,20 +79,23 @@ public:
     bool load(const QString& fileName, QString& reason);
     bool save(const QString& fileName);
 
+public:
+	QString fileName {};
+	QList<QString> importLog;
+
 protected:
-    static void JsonToFolder(const QJsonObject& obj, Folder* folder);
-    static void FolderToJson(const QString& name, const Folder& folder, QJsonObject* obj);
-    static void JsonToPart(const QJsonObject& obj, const QMap<QString, QSharedPointer<QImage>>& imageMap, Part* part);
-    static void PartToJson(const QString& name, const Part& part, QJsonObject* obj, QMap<QString,QSharedPointer<QImage>>* imageMap);
-    static void CompositeToJson(const QString& name, const Composite& comp, QJsonObject* obj);
-    static void JsonToComposite(const QJsonObject& obj, Composite* comp);
+    void JsonToFolder(const QJsonObject& obj, Folder* folder);
+    void FolderToJson(const QString& name, const Folder& folder, QJsonObject* obj);
+    void JsonToPart(const QJsonObject& obj, const QMap<QString, QSharedPointer<QImage>>& imageMap, Part* part);
+    void PartToJson(const QString& name, const Part& part, QJsonObject* obj, QMap<QString,QSharedPointer<QImage>>* imageMap);
+    void CompositeToJson(const QString& name, const Composite& comp, QJsonObject* obj);
+    void JsonToComposite(const QJsonObject& obj, Composite* comp);
 };
 
 struct Asset {
-    AssetRef ref;
-    QString name;
-
-    AssetRef parent; // isNull if none
+	AssetRef ref    {};
+	QString name    {};
+	AssetRef parent {}; // isNull if none
 };
 
 struct Folder: public Asset {

@@ -140,6 +140,8 @@ void ProjectModel::clear(){
 }
 
 bool ProjectModel::load(const QString& fileName, QString& reason){	
+	importLog.clear();
+
     std::fstream in(fileName.toStdString().c_str(), std::ios::in | std::ios::binary);
 	if (!in.is_open()) {
 		reason = "Cannot open file";
@@ -256,6 +258,7 @@ bool ProjectModel::load(const QString& fileName, QString& reason){
         QJsonObject parts = dataObj.value("parts").toObject();
         QJsonObject comps = dataObj.value("comps").toObject();
 
+		/*
         if (!folders.isEmpty()){
             for(auto it = folders.begin(); it!=folders.end(); it++){
                 const QString& uuid = it.key();
@@ -266,33 +269,52 @@ bool ProjectModel::load(const QString& fileName, QString& reason){
                 JsonToFolder(folderObj, folder.get());
                 this->folders.insert(folder->ref, folder);
             }
-        }
+        }*/
 
+		// TODO: For version 1 files we need to generate uuids
+		// For version 2 these uuids should already exist
+		QMap<QString, QUuid> uuidMap;
+		if (!parts.isEmpty()) {
+			for (QJsonObject::iterator it = parts.begin(); it != parts.end(); it++) {
+				uuidMap.insert(it.key(), QUuid::createUuid());
+			}
+		}
+		
         if (!parts.isEmpty()){
             for(QJsonObject::iterator it = parts.begin(); it!=parts.end(); it++){
-                const QString& uuid = it.key();
-                const QJsonObject& partObj = it.value().toObject();
 				auto part = QSharedPointer<Part>::create();
-                part->ref.uuid = QUuid(uuid);
                 part->ref.type = AssetType::Part;
-                part->properties = QString();
+
+                const QJsonObject& partObj = it.value().toObject();
+
+				// For version 1:
+                const QString& name = it.key();
+				part->name = name;
+				part->ref.uuid = uuidMap[name];
+
+				// E.g., version 2
+                // part->ref.uuid = QUuid(it.key());
+				// part->name = partObj["name"]
+
                 JsonToPart(partObj, imageMap, part.get());
                 this->parts.insert(part->ref, part);
             }
         }
 
+		/*
         if (!comps.isEmpty()){
-            for(QJsonObject::iterator it = comps.begin(); it!=comps.end(); it++){
+            for(auto it = comps.begin(); it!=comps.end(); it++){
                 const QString& uuid = it.key();
                 const QJsonObject& compObj = it.value().toObject();
 				auto composite = QSharedPointer<Composite>::create();
                 composite->ref.uuid = QUuid(uuid);
                 composite->ref.type = AssetType::Composite;
                 composite->properties = QString();
+				composite->name = it.key();
                 JsonToComposite(compObj, composite.get());
                 this->composites.insert(composite->ref, composite);
             }
-        }
+        }*/
     }
 
     this->fileName = fileName;
@@ -300,7 +322,7 @@ bool ProjectModel::load(const QString& fileName, QString& reason){
 }
 
 bool ProjectModel::save(const QString& fileName){
-    qDebug() << "TODO: Implement saving of layers ";
+	qDebug() << "TODO: Implement saving";
     return false;
 
     /*
@@ -459,12 +481,12 @@ void ProjectModel::FolderToJson(const QString& name, const Folder& folder, QJson
 }
 
 void ProjectModel::JsonToPart(const QJsonObject& obj, const QMap<QString,QSharedPointer<QImage>>& imageMap, Part* part){
-    part->name = obj["name"].toString();
-
+    /*
     if (obj.contains("parent")){
         part->parent.uuid = QUuid(obj["parent"].toString());
         part->parent.type = AssetType::Folder;
     }
+	*/
 
     for(auto it = obj.begin(); it != obj.end(); it++){        
         const QString& modeName = it.key();
@@ -485,25 +507,34 @@ void ProjectModel::JsonToPart(const QJsonObject& obj, const QMap<QString,QShared
             m.framesPerSecond = modeObject.value("framesPerSecond").toInt();
 			
             const QJsonArray& frameArray = modeObject.value("frames").toArray();
-            Q_ASSERT(frameArray.count()==m.numFrames);
+            Q_ASSERT(frameArray.count() == m.numFrames);
             for(int frame=0;frame<frameArray.count();frame++){
                 const QJsonObject& frameObject = frameArray.at(frame).toObject();
 
-                int ax = frameObject.value("ax").toVariant().toInt();
-                int ay = frameObject.value("ay").toVariant().toInt();
-                m.anchor.push_back(QPoint(ax,ay));
+                int ax = frameObject.value("ax").toInt();
+                int ay = frameObject.value("ay").toInt();
+                m.anchor.push_back(QPoint(ax, ay));
 
                 QString imageName = frameObject.value("image").toString();
                 auto image = imageMap.value(imageName);
+                Q_ASSERT(image);
+
 				int imageHeight = image->height();
 				int imageWidth = image->width();
 
-                Q_ASSERT(image);
-                Q_ASSERT(imageWidth == m.width && imageHeight == m.height);
+				if (imageWidth != m.width || imageHeight != m.height) {
+					// TODO: Log this to an "import results" window!
+					qWarning() << "Warning! Sprite " << part->name << " had invalid width and height! Anchors may be incorrect!";
+					importLog.append("Sprite " + part->name + " had invalid width and height! Anchors may be incorrect!");
+
+					m.width = imageWidth;
+					m.height = imageHeight;
+				}
+
 				m.frames.push_back(image);
                 for(int p=0;p<m.numPivots;p++){
-                    int px = frameObject.value(QString("p%1x").arg(p)).toVariant().toInt();
-                    int py = frameObject.value(QString("p%1y").arg(p)).toVariant().toInt();
+                    int px = frameObject.value(QString("p%1x").arg(p)).toInt();
+                    int py = frameObject.value(QString("p%1y").arg(p)).toInt();
                     m.pivots[p].push_back(QPoint(px,py));
                 }
                 for(int p=m.numPivots;p<MAX_PIVOTS;p++){
@@ -612,7 +643,7 @@ void ProjectModel::CompositeToJson(const QString& name, const Composite& comp, Q
 
 void ProjectModel::JsonToComposite(const QJsonObject& obj, Composite* comp){
     comp->root = obj.value("root").toVariant().toInt();    
-    comp->name = obj["name"].toString();
+    // comp->name = obj["name"].toString();
     comp->properties = obj.value("properties").toString();
 
     if (obj.contains("parent")){

@@ -1010,6 +1010,10 @@ void MainWindow::loadProject(const QString& fileName){
         mProjectModifiedSinceLastSave = false;
         setWindowTitle(makeWindowTitle(fileName, true));
         qInfo() << "Loaded " << fileName;
+
+		if (!mProjectModel->importLog.isEmpty()) {
+			QMessageBox::warning(this, "Import issues", mProjectModel->importLog.join("\n"));
+		}
     }
 }
 
