@@ -19,15 +19,16 @@ struct Composite;
 struct Folder;
 
 enum class AssetType {
-    Part = 0,
-    Composite = 1,
-    Folder = 2
+	None = 0,
+    Part = 1,
+    Composite = 2,
+    Folder = 3,
 };
 
 struct AssetRef {
 	QUuid uuid {};
-    AssetType type = AssetType::Folder;
-    bool isNull() const {return uuid.isNull();}
+    AssetType type = AssetType::None;
+	bool isNull() const { return type == AssetType::None; }
 };
 
 bool operator==(const AssetRef& a, const AssetRef& b);

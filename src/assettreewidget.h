@@ -19,6 +19,7 @@ public:
 
 public slots:
     void updateList();
+	void updateIcon(AssetRef ref);
     // void addAsset(AssetRef ref);
     // void removeAsset(AssetRef ref);
 
@@ -39,13 +40,15 @@ protected:
     void addAssetsWithParent(const QList<AssetRef>& assets, AssetRef parentRef, QTreeWidgetItem* parentItem, int& index);
     void keyPressEvent(QKeyEvent* event);
 	bool filterItem(const QString& text, QTreeWidgetItem* item);
-
+	
+	QTreeWidgetItem* findItem(std::function<bool(QTreeWidgetItem*)> searchQuery, QTreeWidgetItem* root = nullptr);
 protected:
     QVector<AssetRef> mAssetRefs;
     // QVector<QTreeWidgetItem*> mItems;
     QVector<QString> mAssetNames;
     QSet<AssetRef> mOpenFolders;
     QPointF mStartPos;
+	QMap<AssetRef, QIcon> mAssetIcons;
 };
 
 #endif // ASSETTREEWIDGET_H

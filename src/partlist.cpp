@@ -27,6 +27,10 @@ void PartList::updateList(){
     mAssetTreeWidget->updateList();
 }
 
+void PartList::updateIcon(AssetRef ref) {
+	mAssetTreeWidget->updateIcon(ref);
+}
+
 void PartList::deselectAsset() {
 	for (auto* item : mAssetTreeWidget->selectedItems()) {
 		mAssetTreeWidget->setItemSelected(item, false);

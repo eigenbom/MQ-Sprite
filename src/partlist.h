@@ -19,6 +19,7 @@ public:
 	void updateList();
 	void deselectAsset();
 	void selectAsset(AssetRef ref);
+	void updateIcon(AssetRef ref);
 
 signals:
     void assetDoubleClicked(AssetRef ref);

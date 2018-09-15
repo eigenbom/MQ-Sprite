@@ -613,14 +613,16 @@ void MainWindow::partRenamed(AssetRef ref, const QString& newName){
 
 void MainWindow::partFrameUpdated(AssetRef ref, const QString& mode, int frame){
     if (mPartWidgets.contains(ref)){
-        foreach(PartWidget* p, mPartWidgets.values(ref)){
+        for(PartWidget* p: mPartWidgets.values(ref)){
             p->partFrameUpdated(ref, mode, frame);
         }
     }
 
-    foreach(CompositeWidget* cw, mCompositeWidgets.values()){
+    for(CompositeWidget* cw: mCompositeWidgets.values()){
         cw->partFrameUpdated(ref, mode, frame);
     }
+
+	mPartList->updateIcon(ref);
 }
 
 void MainWindow::partFramesUpdated(AssetRef ref, const QString& mode){
@@ -638,6 +640,8 @@ void MainWindow::partFramesUpdated(AssetRef ref, const QString& mode){
     foreach(CompositeWidget* cw, mCompositeWidgets.values()){
         cw->partFramesUpdated(ref, mode);
     }
+
+	mPartList->updateIcon(ref);
 }
 
 void MainWindow::partNumPivotsUpdated(AssetRef ref, const QString& mode){

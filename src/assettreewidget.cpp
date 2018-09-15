@@ -6,6 +6,82 @@
 #include <QEvent>
 #include <QtWidgets>
 
+static QIcon createIcon(Part* part) {
+	Q_ASSERT(part);
+
+	QStringList modeList{ "icon", "side", "wrld" };
+	modeList.append(part->modes.keys());
+	for (const auto& mode : modeList) {
+		if (part->modes.contains(mode)) {
+			auto img = part->modes[mode].frames[0];
+			// Extract a subregion from it
+			// Auto-crop?								
+			int cropLeft = img->width();
+			int cropTop = img->height();
+			int cropRight = 0;
+			int cropBottom = 0;
+			for (int x = 0; x < img->width(); ++x) {
+				for (int y = 0; y < img->height(); ++y) {
+					const bool opaque = (img->pixelColor(x, y).alpha() > 0);
+					if (opaque) {
+						if (cropLeft > x) cropLeft = x;
+						if (cropRight < x) cropRight = x;
+						if (cropTop > y) cropTop = y;
+						if (cropBottom < y) cropBottom = y;
+					}
+				}
+			}
+
+			/*
+			// TODO: Use the anchor to refine the crop selection
+			QPoint anchor = part->modes[mode].anchor[0];
+
+			int left = img->width() / 2 - 16;
+			int top = img->height() / 2 - 16;
+			int width = 32;
+			int height = 32;
+			if (mode == "side" || mode == "wrld") {
+				left = anchor.x() - width / 2;
+				top = anchor.y() - height;
+			}*/
+
+			int left = cropLeft;
+			int top = cropTop;
+			int width = 1 + cropRight - cropLeft;
+			int height = 1 + cropBottom - cropTop;
+
+			if (width < 8) {
+				int expand = 8 - width;
+				left -= expand / 2;
+				width += expand;
+			}
+
+			if (height < 8) {
+				int expand = 8 - height;
+				top -= expand / 2;
+				height += expand;
+			}
+
+			if (width > 2 && height > 2) {
+				QImage copy = img->copy(left, top, width, height);
+				int opaquePixelCount = 0;
+				for (int x = 0; x < copy.width(); ++x) {
+					for (int y = 0; y < copy.height(); ++y) {
+						opaquePixelCount += (int)(copy.pixelColor(x, y).alpha() > 0);
+					}
+				}
+				if (opaquePixelCount > 0.1 * copy.width() * copy.height()) {
+					QIcon icon{ QPixmap::fromImage(copy.scaled(QSize(16, 16))) };
+					return icon;
+				}
+			}
+		}
+	}
+
+	return {};
+}
+
+
 AssetTreeWidget::AssetTreeWidget(QWidget *parent):QTreeWidget(parent)
 {
     connect(this, SIGNAL(itemActivated(QTreeWidgetItem*,int)), this, SLOT(activateItem(QTreeWidgetItem*,int)));
@@ -89,20 +165,23 @@ void AssetTreeWidget::addAssetsWithParent(const QList<AssetRef>& assets, AssetRe
                 QTreeWidgetItem* item = new QTreeWidgetItem(parentItem);
                 item->setText(0, asset->name);
                 item->setData(0, Qt::UserRole, index++);
-				item->setIcon(0, QIcon(":/icon/icons/gentleface/picture_icon&16.png"));
+				item->setFlags(item->flags() ^ Qt::ItemIsDropEnabled | Qt::ItemIsEditable);
 
-				auto* part = PM()->getPart(asset->ref);
-				if (part && part->modes.contains("icon")) {					
-					auto img = part->modes["icon"].frames[0];
-					item->setIcon(0, QIcon(QPixmap::fromImage(img->scaled(QSize(16, 16)))));
+				if (mAssetIcons.contains(asset->ref)) {
+					item->setIcon(0, mAssetIcons[asset->ref]);
 				}
-				else if (part && part->modes.contains("side")) {
-					auto img = part->modes["side"].frames[0];
-					if (img->width() <= 32 && img->height() <= 32) {
-						item->setIcon(0, QIcon(QPixmap::fromImage(img->scaled(QSize(16, 16)))));
+				else {
+					item->setIcon(0, QIcon{ ":/icon/icons/gentleface/picture_icon&16.png" });
+
+					auto* part = PM()->getPart(asset->ref);
+					if (part) {
+						QIcon icon = createIcon(part);
+						if (!icon.isNull()) {
+							mAssetIcons.insert(asset->ref, icon);
+							item->setIcon(0, icon);
+						}
 					}
 				}
-                item->setFlags(item->flags() ^ Qt::ItemIsDropEnabled | Qt::ItemIsEditable);
 
                 mAssetRefs.push_back(asset->ref);
                 mAssetNames.push_back(asset->name);
@@ -190,6 +269,28 @@ void AssetTreeWidget::updateList(){
 	disconnect(this, SIGNAL(itemChanged(QTreeWidgetItem*, int)), this, SLOT(changeItem(QTreeWidgetItem*, int)));
     addAssetsWithParent(assets, AssetRef(), this->invisibleRootItem(), index);
 	connect(this, SIGNAL(itemChanged(QTreeWidgetItem*, int)), this, SLOT(changeItem(QTreeWidgetItem*, int)));
+}
+
+
+void AssetTreeWidget::updateIcon(AssetRef ref) {
+	if (ref.type == AssetType::Part) {
+		auto* item = findItem([&, ref](QTreeWidgetItem* item) -> bool {
+			int index = item->data(0, Qt::UserRole).toInt();
+			if (mAssetRefs.at(index) == ref) return true;
+			else return false;
+		});
+		if (item) {
+			Part* asset = PM()->getPart(ref);
+			Q_ASSERT(asset->ref == ref);
+
+			mAssetIcons.remove(ref);
+			QIcon icon = createIcon(asset);
+			if (!icon.isNull()) {
+				mAssetIcons.insert(asset->ref, icon);
+				item->setIcon(0, icon);
+			}
+		}
+	}
 }
 
 void AssetTreeWidget::activateItem(QTreeWidgetItem* item, int){
@@ -333,6 +434,26 @@ void AssetTreeWidget::keyPressEvent(QKeyEvent* event){
     else {
         QTreeWidget::keyPressEvent(event);
     }
+}
+
+QTreeWidgetItem* AssetTreeWidget::findItem(std::function<bool(QTreeWidgetItem*)> searchQuery, QTreeWidgetItem* parent) {
+	if (parent == nullptr) {
+		for (int i = 0; i < topLevelItemCount(); ++i) {
+			auto* item = topLevelItem(i);
+			if (searchQuery(item)) return item;
+		}
+
+		return nullptr;
+	}
+	else {
+		if (searchQuery(parent)) return parent;
+		for (int i = 0; i < parent->childCount(); ++i) {
+			auto* item = parent->child(i);
+			if (searchQuery(item)) return item;
+		}
+
+		return nullptr;
+	}
 }
 
 /*
