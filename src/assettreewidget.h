@@ -15,6 +15,7 @@ public:
 
     AssetRef assetRef(int id) const;
     const QString& assetName(int id) const;
+	bool selectAsset(AssetRef, QTreeWidgetItem* fromNode = nullptr);
 
 public slots:
     void updateList();
@@ -28,6 +29,7 @@ public slots:
 
 signals:
     void assetDoubleClicked(AssetRef ref);
+	void assetSelected(AssetRef ref);
 
 protected:
     Qt::DropActions supportedDropActions() const;

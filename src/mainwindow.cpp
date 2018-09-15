@@ -28,9 +28,7 @@ static QString makeWindowTitle(QString filename = {}, bool saved = true) {
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    mViewOptionsDockWidget(nullptr),
-    mProjectModifiedSinceLastSave(false)
+    ui(new Ui::MainWindow)
 {
     sWindow = this;
     mProjectModel = new ProjectModel();
@@ -44,14 +42,12 @@ MainWindow::MainWindow(QWidget *parent) :
     // SETUP actions etc
     mPartList = findChild<PartList*>("partList");
     connect(mPartList, SIGNAL(assetDoubleClicked(AssetRef)), this, SLOT(assetDoubleClicked(AssetRef)));
+	connect(mPartList, SIGNAL(assetSelected(AssetRef)), this, SLOT(assetSelected(AssetRef)));
 	
 	connect(findChild<QAction*>("actionNewSprite"), &QAction::triggered, [&]() { TryCommand(new CNewPart()); });
 	connect(findChild<QAction*>("actionNewFolder"), &QAction::triggered, [&]() { TryCommand(new CNewFolder()); });
 
-    // Set MDI Area
-    mMdiArea = findChild<QMdiArea*>(tr("mdiArea"));    
-    // mMdiArea->setSizePolicy(QSizePolicy::Maximum,QSizePolicy::Maximum);
-    // mMdiArea->resize(100000,mMdiArea->height());
+    mMdiArea = findChild<QMdiArea*>(tr("mdiArea"));
     connect(mMdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(subWindowActivated(QMdiSubWindow*)));
 
     // mMdiArea
@@ -60,29 +56,6 @@ MainWindow::MainWindow(QWidget *parent) :
     // mMdiArea->setBackground(QBrush(backgroundColour));
 
     auto* assetsWidget = findChild<QFrame*>("assets");
-
-	/*
-	{
-		auto* dock = new QDockWidget("Tools", this);
-		dock->setLayout(new QVBoxLayout());
-		dock->setWidget(mStackedWidget);
-		dock->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea | Qt::DockWidgetArea::RightDockWidgetArea);
-		dock->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-		dock->setMinimumSize(mStackedWidget->minimumSize());
-		dock->show();
-		dock->setFloating(true);
-	}
-	*/
-	
-	/*
-    auto* dockWidgetTools = findChild<QDockWidget*>("dockWidgetTools");
-	dockWidgetTools->setWidget(mStackedWidget);
-	dockWidgetTools->hide();
-	*/
-    // this->addDockWidget(Qt::RightDockWidgetArea, dockWidgetTools);
-    // dockWidgetTools->show();
-    // dockWidgetTools->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
-	// dockWidgetTools->setMinimumSize(mStackedWidget->minimumSize());
 	
     mUndoStack = new QUndoStack(this);
 	connect(mUndoStack, SIGNAL(indexChanged(int)), this, SLOT(undoStackIndexChanged(int)));
@@ -379,8 +352,11 @@ void MainWindow::createMenus()
 	mEditMenu->addSeparator();
 	mDuplicateAssetAction = mEditMenu->addAction("&Duplicate");	
 	mDuplicateAssetAction->setShortcut(QKeySequence(tr("Ctrl+D")));
-	connect(mDuplicateAssetAction, SIGNAL(triggered()), mPartList, SLOT(copyAsset()));
-	
+	// connect(mDuplicateAssetAction, SIGNAL(triggered()), mPartList, SLOT(copyAsset()));
+	mDuplicateAssetAction->setEnabled(false);
+
+	// CCopyPart
+
 	mEditMenu->addSeparator();
 	mResizePartAction = mEditMenu->addAction("Resize Sprite...");
 	connect(mResizePartAction, SIGNAL(triggered()), mAnimationWidget, SLOT(resizeMode()));
@@ -420,6 +396,8 @@ void MainWindow::closeEvent(QCloseEvent*){
 }
 
 void MainWindow::assetDoubleClicked(AssetRef ref){
+	assetSelected(ref);
+
 	switch (ref.type) {
 	case AssetType::Part: {
 		for (auto* win : mMdiArea->subWindowList()) {
@@ -447,6 +425,33 @@ void MainWindow::assetDoubleClicked(AssetRef ref){
 		break;
 	}
 	}
+}
+
+void MainWindow::assetSelected(AssetRef ref) {
+	if (ref.isNull()) {
+		qDebug() << "Deselected asset";
+
+		mDuplicateAssetAction->setEnabled(false);
+	}
+	else {
+		qDebug() << "Selected asset " << ref.uuid;
+
+		switch (ref.type) {
+		case AssetType::Folder: {
+			break;
+		}
+		case AssetType::Part: {
+			mDuplicateAssetAction->setEnabled(true);
+			break;
+		}
+		case AssetType::Composite: {
+			mDuplicateAssetAction->setEnabled(true);
+			break;
+		}
+		}
+	}
+
+	mSelectedAsset = ref;
 }
 
 void MainWindow::partWidgetClosed(PartWidget* pw){
@@ -503,6 +508,8 @@ void MainWindow::subWindowActivated(QMdiSubWindow* win){
 		mDrawingTools->setTargetPartWidget(nullptr);
 		mAnimationWidget->setTargetPartWidget(nullptr);
 		mPropertiesWidget->setTargetPartWidget(nullptr);
+
+		mPartList->deselectAsset();
     }
     else {
 		PartWidget* pw = dynamic_cast<PartWidget*>(win);
@@ -514,12 +521,16 @@ void MainWindow::subWindowActivated(QMdiSubWindow* win){
 			mAnimationWidget->setTargetPartWidget(pw);
 			mPropertiesWidget->setTargetPartWidget(pw);
 			mResizePartAction->setEnabled(true);
+
+			mPartList->selectAsset(pw->partRef());
         }
         else if (cw){
             mCompositeToolsWidget->setTargetCompWidget(cw);
 			mDrawingTools->setTargetPartWidget(nullptr);
 			mAnimationWidget->setTargetPartWidget(nullptr);
 			mPropertiesWidget->setTargetPartWidget(nullptr);
+
+			mPartList->selectAsset(cw->compRef());
         }
     }
 }
@@ -542,7 +553,6 @@ void MainWindow::partListChanged(){
     while (i.hasNext()) {
         i.next();
         if (!PM()->hasPart(i.key())){
-            // Close the widget
             i.value()->close();
         }
     }
@@ -552,10 +562,26 @@ void MainWindow::partListChanged(){
     while (i2.hasNext()) {
         i2.next();
         if (!PM()->hasComposite(i2.key())){
-            // Close the widget
             i2.value()->close();
         }
     }
+}
+
+void MainWindow::newAssetCreated(AssetRef ref) {
+	mPartList->updateList();
+
+	if (ref.type == AssetType::Part) {
+		openPartWidget(ref);
+		mPartList->selectAsset(ref);
+	}
+	else if (ref.type == AssetType::Composite) {
+		openCompositeWidget(ref);
+		mPartList->selectAsset(ref);
+	}
+	else {
+		mPartList->selectAsset(ref);
+		mMdiArea->clearFocus();
+	}
 }
 
 void MainWindow::partRenamed(AssetRef ref, const QString& newName){
@@ -954,10 +980,11 @@ void MainWindow::loadProject(const QString& fileName){
     mPartList->updateList();
 
     // Try to load project
-    bool result = ProjectModel::Instance()->load(fileName);
+	QString reason;
+    bool result = ProjectModel::Instance()->load(fileName, reason);
     if (!result){
-        QMessageBox::warning(this, "Error during load", tr("Couldn't load ") + fileName);
-
+		qDebug() << "Error while loading " << fileName << "! Reason: " << reason;
+        QMessageBox::warning(this, "Error during load", tr("Couldn't load ") + fileName + tr("\nReason: ") + reason);
         ProjectModel::Instance()->clear();
         mPartList->updateList();
     }
@@ -990,7 +1017,7 @@ void MainWindow::loadProject(){
     QSettings settings;
     QString dir = settings.value("last_load_dir", QDir::currentPath()).toString();
 
-    QString fileName = QFileDialog::getOpenFileName(this, "Open...", dir, "Project File (*.mpx)");
+    QString fileName = QFileDialog::getOpenFileName(this, "Open...", dir, "MoonQuest Sprite File (*.mqs)");
     if (fileName.isNull() || fileName.isEmpty() || !QFileInfo(fileName).isFile()){
         QMessageBox::warning(this, "Error during load", tr("Couldn't load ") + fileName);
     }
@@ -1034,7 +1061,7 @@ void MainWindow::saveProjectAs(){
     QSettings settings;
     QString dir = settings.value("last_save_dir", QDir::currentPath()).toString();
 
-    QString fileName = QFileDialog::getSaveFileName(this, "Save As...", dir, "Project File (*.mpx)");
+    QString fileName = QFileDialog::getSaveFileName(this, "Save As...", dir, "MoonQuest Sprite File (*.mqs)");
     if (!fileName.isNull()){
         bool result = ProjectModel::Instance()->save(fileName);
         if (!result){

@@ -11,9 +11,15 @@ AssetTreeWidget::AssetTreeWidget(QWidget *parent):QTreeWidget(parent)
     connect(this, SIGNAL(itemActivated(QTreeWidgetItem*,int)), this, SLOT(activateItem(QTreeWidgetItem*,int)));
     connect(this, SIGNAL(itemExpanded(QTreeWidgetItem*)), this, SLOT(expandItem(QTreeWidgetItem*)));
     connect(this, SIGNAL(itemCollapsed(QTreeWidgetItem*)), this, SLOT(collapseItem(QTreeWidgetItem*)));
-	// connect(this, SIGNAL(itemChanged(QTreeWidgetItem*, int)), this, SLOT(changeItem(QTreeWidgetItem*, int)));
-	
-	// connect(findChild<QToolButton*>("toolButtonDeleteAsset"), SIGNAL(clicked()), this, SLOT(deleteAsset()));
+	connect(this, &QTreeWidget::itemSelectionChanged, [this]() {
+		AssetRef ref;
+		for (auto* item : selectedItems()) {
+			int id = item->data(0, Qt::UserRole).toInt();
+			ref = assetRef(id);
+		}
+		emit(assetSelected(ref));
+	});
+
 
     setDragDropMode(QAbstractItemView::InternalMove);
     setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -35,6 +41,29 @@ AssetRef AssetTreeWidget::assetRef(int id) const {
 const QString& AssetTreeWidget::assetName(int id) const {
     Q_ASSERT(id>=0 && id<mAssetNames.size());
     return mAssetNames.at(id);
+}
+
+bool AssetTreeWidget::selectAsset(AssetRef ref, QTreeWidgetItem* fromNode) {
+	if (fromNode == nullptr) {
+		bool selected = false;
+		for (int i = 0; i < topLevelItemCount(); ++i) {
+			selected = selectAsset(ref, topLevelItem(i)) || selected;
+		}
+		return selected;
+	}
+	else {
+		const int index = fromNode->data(0, Qt::UserRole).toInt();
+		const bool parentSelected = (ref == assetRef(index));
+		setItemSelected(fromNode, parentSelected);		
+		bool childSelected = false;
+		for (int i = 0; i < fromNode->childCount(); ++i) {
+			childSelected = selectAsset(ref, fromNode->child(i)) || childSelected;
+		}
+		if (childSelected) {
+			fromNode->setExpanded(true);
+		}
+		return childSelected || parentSelected;
+	}
 }
 
 void AssetTreeWidget::addAssetsWithParent(const QList<AssetRef>& assets, AssetRef parentRef, QTreeWidgetItem* parentItem, int& index){	       
@@ -123,10 +152,9 @@ void AssetTreeWidget::addAssetsWithParent(const QList<AssetRef>& assets, AssetRe
     */
 }
 
-
 void AssetTreeWidget::updateList(){
     mAssetRefs.clear();
-    mAssetNames.clear();        
+    mAssetNames.clear();
     this->clear();
 
     int index = 0;
@@ -151,29 +179,6 @@ void AssetTreeWidget::updateList(){
     addAssetsWithParent(assets, AssetRef(), this->invisibleRootItem(), index);
 	connect(this, SIGNAL(itemChanged(QTreeWidgetItem*, int)), this, SLOT(changeItem(QTreeWidgetItem*, int)));
 }
-
-/*
-void AssetTreeWidget::addAsset(AssetRef ref){
-    // Find the parent to add to
-    bool foundParent = false;
-    Asset* asset = PM()->getAsset(ref);
-    for(int i=0;i<mAssetRefs.size();i++){
-        if (mAssetRefs[i]==asset->parent){
-
-
-            foundParent = true;
-            break;
-        }
-    }
-
-    mItems.push_back(item);
-}
-
-void AssetTreeWidget::removeAsset(AssetRef ref){
-    // Find the parent to remove from
-
-}
-*/
 
 void AssetTreeWidget::activateItem(QTreeWidgetItem* item, int){
     int index = item->data(0, Qt::UserRole).toInt();
@@ -213,6 +218,22 @@ void AssetTreeWidget::changeItem(QTreeWidgetItem* item, int col) {
 	}
 }
 
+/*
+void AssetTreeWidget::duplicateAsset() {
+	for (QTreeWidgetItem* item : selectedItems()) {
+		if (item) {
+			int id = item->data(0, Qt::UserRole).toInt();
+			AssetRef ref = mAssetTreeWidget->assetRef(id);
+			switch (ref.type) {
+			case AssetType::Part: TryCommand(new CCopyPart(ref)); break;
+			case AssetType::Composite: TryCommand(new CCopyComposite(ref)); break;
+			case AssetType::Folder: qDebug() << "TODO: Copy folder"; break;
+			}
+		}
+	}
+	MainWindow::Instance()->partListChanged();
+}
+*/
 void AssetTreeWidget::dropEvent(QDropEvent *event)
 {
     AssetTreeWidget *source = qobject_cast<AssetTreeWidget *> (event->source());

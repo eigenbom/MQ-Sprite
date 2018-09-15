@@ -17,9 +17,12 @@ public:
     ~PartList();
 
 	void updateList();
+	void deselectAsset();
+	void selectAsset(AssetRef ref);
 
 signals:
     void assetDoubleClicked(AssetRef ref);
+	void assetSelected(AssetRef ref);
 
 private:
     Ui::PartList *ui;

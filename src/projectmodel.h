@@ -24,13 +24,9 @@ enum class AssetType {
     Folder = 2
 };
 
-// TODO: Convert my v1 save files
-#define PROJECT_SAVE_FILE_VERSION 2
-
 struct AssetRef {
-    QUuid uuid;
-    AssetType type;
-    AssetRef();
+	QUuid uuid {};
+    AssetType type = AssetType::Folder;
     bool isNull() const {return uuid.isNull();}
 };
 
@@ -82,8 +78,8 @@ public:
     QMap<AssetRef, QSharedPointer<Folder>> folders;
 
     // Change the project model
-    void clear();
-    bool load(const QString& fileName);
+    void clear();	
+    bool load(const QString& fileName, QString& reason);
     bool save(const QString& fileName);
 
 protected:

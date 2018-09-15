@@ -38,6 +38,8 @@ public:
 
     // Notifications from commands that something has changed in the project
     void partListChanged();
+	void newAssetCreated(AssetRef ref);
+
     void partRenamed(AssetRef ref, const QString& newName);
     void partFrameUpdated(AssetRef ref, const QString& mode, int frame);
     void partFramesUpdated(AssetRef ref, const QString& mode);
@@ -61,6 +63,8 @@ protected:
 
 public slots:
     void assetDoubleClicked(AssetRef ref);
+	void assetSelected(AssetRef ref);
+
     void partWidgetClosed(PartWidget*);
     void openPartWidget(AssetRef ref);
     void compositeWidgetClosed(CompositeWidget*);
@@ -96,33 +100,36 @@ public slots:
     void openEigenbom();
 
 private:
-    Ui::MainWindow *ui;
-    QMdiArea* mMdiArea;
-    ProjectModel* mProjectModel;
-    PartList* mPartList;
-    CompositeToolsWidget* mCompositeToolsWidget;
-	DrawingTools* mDrawingTools;
-	PropertiesWidget* mPropertiesWidget;
-	AnimationWidget* mAnimationWidget;
-    QDockWidget *mViewOptionsDockWidget;
+    Ui::MainWindow *ui = nullptr;
+    QMdiArea* mMdiArea = nullptr;
+    ProjectModel* mProjectModel = nullptr;
+    PartList* mPartList = nullptr;
+    CompositeToolsWidget* mCompositeToolsWidget = nullptr;
+	DrawingTools* mDrawingTools = nullptr;
+	PropertiesWidget* mPropertiesWidget = nullptr;
+	AnimationWidget* mAnimationWidget = nullptr;
+    QDockWidget *mViewOptionsDockWidget = nullptr;
     QMultiMap<AssetRef,PartWidget*> mPartWidgets;
     QMultiMap<AssetRef,CompositeWidget*> mCompositeWidgets;
 
-    QUndoStack* mUndoStack;
+	AssetRef mSelectedAsset {};
 
-    QMenu *mFileMenu;
-    QMenu *mEditMenu;
-    QMenu *mViewMenu;
-    QMenu *mHelpMenu;
+    QUndoStack* mUndoStack = nullptr;
+    QMenu *mFileMenu = nullptr;
+    QMenu *mEditMenu = nullptr;
+    QMenu *mViewMenu = nullptr;
+    QMenu *mHelpMenu = nullptr;
 
-    QAction* mUndoAction;
-    QAction* mRedoAction;
-    QAction* mAboutAction;
+    QAction* mUndoAction = nullptr;
+    QAction* mRedoAction = nullptr;
+    QAction* mAboutAction = nullptr;
 
-	QAction* mResizePartAction;
-	QAction* mDuplicateAssetAction;
+	QAction* mResizePartAction = nullptr;
+	QAction* mDuplicateAssetAction = nullptr;
 
-    bool mProjectModifiedSinceLastSave;
+    bool mProjectModifiedSinceLastSave = false;
+
+	// QSettings mSettings; // TODO: Initialise and maintain this?
 };
 
 #endif // MAINWINDOW_H

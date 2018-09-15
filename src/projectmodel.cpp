@@ -23,9 +23,9 @@
 #include <ios>
 #include "tarball.h"
 
-AssetRef::AssetRef():uuid(),type(AssetType::Folder){
+// TODO: Convert old files
+static const int PROJECT_SAVE_FILE_VERSION = 1;
 
-}
 
 bool operator==(const AssetRef& a, const AssetRef& b){
     return (a.uuid.isNull() && b.uuid.isNull()) ||  (a.uuid == b.uuid && a.type == b.type);
@@ -139,18 +139,14 @@ void ProjectModel::clear(){
     fileName = QString();
 }
 
-bool ProjectModel::load(const QString& fileName){
-    qDebug() << "TODO: Implement loading of layers ";
-    return true;
-
-    /*
+bool ProjectModel::load(const QString& fileName, QString& reason){	
     std::fstream in(fileName.toStdString().c_str(), std::ios::in | std::ios::binary);
     if(!in.is_open()) qFatal("Cannot open in");
 
     lindenb::io::TarIn tarball(in);
     tarball.read();
     if (!tarball.ok()){
-        qDebug() << "Tar not ok";
+		reason = "Tar not ok";
         return false;
     }
 
@@ -160,7 +156,7 @@ bool ProjectModel::load(const QString& fileName){
 
     // First check data.json version
     if (fileMap.count("data.json")==0){
-        qDebug() << "No data.json in tar";
+		reason = "No data.json in tar";
         return false;
     }
     // else ..
@@ -168,25 +164,25 @@ bool ProjectModel::load(const QString& fileName){
     const Record& dataRec = fileMap["data.json"];
     QJsonParseError error;
     QJsonDocument dataDoc = QJsonDocument::fromJson(QByteArray(dataRec.buffer, dataRec.length),&error);
-    if (error.error!=QJsonParseError::NoError){
-        qDebug() << error.errorString();
+    if (error.error!=QJsonParseError::NoError){		
+		reason = error.errorString();
         return false;
     }
     else if (dataDoc.isNull() || dataDoc.isEmpty() || !dataDoc.isObject()){
-        qDebug() << "data.json is empty or null or not a json object";
+		reason = "data.json is empty or null or not a json object";
         return false;
     }
     // else ..
 
     QJsonObject dataObj = dataDoc.object();
     if (!dataObj.contains("version")){
-        qDebug() << "data.json has no version";
+		reason = "data.json has no version";
         return false;
     }
     // else ..
 
-    if (dataObj.value("version").toDouble(0)!=PROJECT_SAVE_FILE_VERSION){
-        qDebug() << "invalid version";
+    if (dataObj.value("version").toInt(0) != PROJECT_SAVE_FILE_VERSION){
+		reason = "invalid version";
         return false;
     }
 
@@ -244,15 +240,15 @@ bool ProjectModel::load(const QString& fileName){
         QJsonObject comps = dataObj.value("comps").toObject();
 
         if (!folders.isEmpty()){
-            for(QJsonObject::iterator it = folders.begin(); it!=folders.end(); it++){
+            for(auto it = folders.begin(); it!=folders.end(); it++){
                 const QString& uuid = it.key();
                 const QJsonObject& folderObj = it.value().toObject();
 
                 // Load the part..
-                Folder* folder = new Folder;
+                auto folder = QSharedPointer<Folder>::create();
                 folder->ref.uuid = QUuid(uuid);
                 folder->ref.type = AssetType::Folder;
-                JsonToFolder(folderObj, folder);
+                JsonToFolder(folderObj, folder.get());
                 this->folders.insert(folder->ref, folder);
             }
         }
@@ -261,13 +257,11 @@ bool ProjectModel::load(const QString& fileName){
             for(QJsonObject::iterator it = parts.begin(); it!=parts.end(); it++){
                 const QString& uuid = it.key();
                 const QJsonObject& partObj = it.value().toObject();
-                // Load the part..
-                Part* part = new Part;
+				auto part = QSharedPointer<Part>::create();
                 part->ref.uuid = QUuid(uuid);
                 part->ref.type = AssetType::Part;
                 part->properties = QString();
-                JsonToPart(partObj, imageMap, part);
-                // Add <partName, part> to mParts
+                JsonToPart(partObj, imageMap, part.get());
                 this->parts.insert(part->ref, part);
             }
         }
@@ -276,13 +270,11 @@ bool ProjectModel::load(const QString& fileName){
             for(QJsonObject::iterator it = comps.begin(); it!=comps.end(); it++){
                 const QString& uuid = it.key();
                 const QJsonObject& compObj = it.value().toObject();
-                // Load the part..
-                Composite* composite = new Composite;
+				auto composite = QSharedPointer<Composite>::create();
                 composite->ref.uuid = QUuid(uuid);
                 composite->ref.type = AssetType::Composite;
                 composite->properties = QString();
-                JsonToComposite(compObj, composite);
-                // Add <partName, part> to mParts
+                JsonToComposite(compObj, composite.get());
                 this->composites.insert(composite->ref, composite);
             }
         }
@@ -290,7 +282,6 @@ bool ProjectModel::load(const QString& fileName){
 
     this->fileName = fileName;
     return true;
-    */
 }
 
 bool ProjectModel::save(const QString& fileName){

@@ -59,8 +59,7 @@ void CNewPart::redo()
     part->modes.insert("icon", mode);
     PM()->parts.insert(part->ref, part);
 
-    MainWindow::Instance()->partListChanged();
-    MainWindow::Instance()->openPartWidget(part->ref);
+	MainWindow::Instance()->newAssetCreated(part->ref);
 }
 
 CCopyPart::CCopyPart(AssetRef ref){
@@ -116,7 +115,8 @@ void CCopyPart::redo(){
         part->modes.insert(key, newMode);
     }
     PM()->parts.insert(mCopy, part);    
-    // MainWindow::Instance()->partListChanged(); // NB: Called from partlist
+
+	MainWindow::Instance()->newAssetCreated(part->ref);
 }
 
 CDeletePart::CDeletePart(AssetRef ref):mRef(ref),mCopy() {
@@ -187,8 +187,7 @@ void CNewComposite::redo()
     comp->name = mName;
     comp->ref = mRef;
     PM()->composites.insert(comp->ref, comp);
-    MainWindow::Instance()->partListChanged();
-    MainWindow::Instance()->openCompositeWidget(mRef);
+    MainWindow::Instance()->newAssetCreated(comp->ref);
 }
 
 CCopyComposite::CCopyComposite(AssetRef ref){
@@ -299,7 +298,7 @@ void CNewFolder::redo()
     folder->name = name;
     PM()->folders.insert(folder->ref, folder);
 
-    MainWindow::Instance()->partListChanged();
+    MainWindow::Instance()->newAssetCreated(mRef);
 }
 
 CDeleteFolder::CDeleteFolder(AssetRef ref):mRef(ref),mCopy() {
