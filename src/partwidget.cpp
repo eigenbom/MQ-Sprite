@@ -14,6 +14,7 @@
 #include <QRgb>
 #include <QMdiSubWindow>
 #include <QGraphicsDropShadowEffect>
+// #include <QOpenGLWidget> 
 #include <QSettings>
 #include <QSlider>
 #include <QTimer>
@@ -63,8 +64,6 @@ PartWidget::PartWidget(AssetRef ref, QWidget *parent) :
     // Setup part view
     mPartView = new PartView(this, new QGraphicsScene());
     mPartView->setTransform(QTransform::fromScale(mZoom,mZoom));
-	// setWidget(mPartView);
-
 		
 	auto* frame = new QFrame();			
 	auto* vbox = new QVBoxLayout();
@@ -478,10 +477,12 @@ void PartWidget::updateDropShadow(){
 
     if (mPartView){
         foreach(QGraphicsPixmapItem* it, mPixmapItems){
-            QGraphicsDropShadowEffect* effect = (QGraphicsDropShadowEffect*) it->graphicsEffect();
-            effect->setOffset(dx*2*mZoom/4.,dy*2*mZoom/2.);
-            effect->setColor(QColor(dropShadowColour.red(),dropShadowColour.green(),dropShadowColour.blue(),opacity*255));
-            effect->setBlurRadius(blur*2*mZoom*2.);
+            auto* effect = (QGraphicsDropShadowEffect*) it->graphicsEffect();
+			if (effect) {
+				effect->setOffset(dx * 2 * mZoom / 4., dy * 2 * mZoom / 2.);
+				effect->setColor(QColor(dropShadowColour.red(), dropShadowColour.green(), dropShadowColour.blue(), opacity * 255));
+				effect->setBlurRadius(blur * 2 * mZoom * 2.0);
+			}
         }
     }
 }
@@ -957,22 +958,25 @@ void PartWidget::showFrame(int f){
 
     for(int i=0;i<mPixmapItems.size();i++){
         QGraphicsPixmapItem* pi = mPixmapItems.at(i);
-        pi->graphicsEffect()->setEnabled(false);
-        pi->show();
+		auto* effect = pi->graphicsEffect();		
+        if (effect) effect->setEnabled(false);        
         mAnchorItems.at(i)->hide();
         for(int p=0;p<MAX_PIVOTS;p++) mPivotItems[p].at(i)->hide();
-        if (i==f){
+        if (i == f){
+			pi->show();
             pi->setOpacity(1);
-            pi->graphicsEffect()->setEnabled(true);
+			if (effect && static_cast<QGraphicsDropShadowEffect*>(effect)->color().alpha() > 0) effect->setEnabled(true);
             if (pivots){
                 mAnchorItems.at(i)->show();
                 for(int p=0;p<mNumPivots;p++) mPivotItems[p].at(i)->show();
             }
         }
         else if (onion && ((i-f)==1 || (i-f)==-1)){
+			pi->show();
             pi->setOpacity(mOnionSkinningTransparency);
         }
         else if (onion && ((i-f)==2 || (i-f)==-2)){
+			pi->show();
             pi->setOpacity(mOnionSkinningTransparency/4);
         }
         else {
@@ -1070,7 +1074,10 @@ PartView::PartView(PartWidget *parent, QGraphicsScene *scene)
       pw(parent)
 {
     setMouseTracking(true);
+	// setOptimizationFlags(QGraphicsView::OptimizationFlag::DontAdjustForAntialiasing);
     // setOptimizationFlags(QGraphicsView::DontSavePainterState | QGraphicsView::DontAdjustForAntialiasing);
+	// setRenderHints(0); 
+	// setViewport(new QOpenGLWidget(this));
 
     setCursor(QCursor(QPixmap::fromImage(QImage(":/icon/icons/tool_none.png")),8,8));
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
