@@ -64,7 +64,8 @@ PartWidget::PartWidget(AssetRef ref, QWidget *parent) :
     mPartView = new PartView(this, new QGraphicsScene());
     mPartView->setTransform(QTransform::fromScale(mZoom,mZoom));
 	// setWidget(mPartView);
-	
+
+		
 	auto* frame = new QFrame();			
 	auto* vbox = new QVBoxLayout();
 	vbox->setMargin(0);
@@ -418,6 +419,10 @@ void PartWidget::closeEvent(QCloseEvent *event)
 {
     emit(closed(this));
     event->accept();
+}
+
+void PartWidget::focusInEvent(QFocusEvent *focusInEvent) {
+	mPartView->setFocus();
 }
 
 void PartWidget::updateOverlay(){
@@ -915,12 +920,6 @@ void PartWidget::eraseLineTo(const QPoint &endPoint)
     // modified
     updateOverlay();
     mLastPoint = endPoint;
-}
-
-void PartWidget::enterEvent(QEvent* ev){
-    QMdiSubWindow::enterEvent(ev);
-    // NB: don't do this, it's annoying
-    // setFocus();
 }
 
 void PartWidget::selectColourUnderPoint(QPointF pt){

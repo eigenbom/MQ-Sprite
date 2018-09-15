@@ -324,6 +324,9 @@ void MainWindow::createMenus()
 
     QAction* loadProjectAction = mFileMenu->addAction("&Open...");
     loadProjectAction->setShortcut(QKeySequence::Open);
+	connect(loadProjectAction, &QAction::triggered, this, [this]() {
+		mMdiArea->closeAllSubWindows();
+	});
     connect(loadProjectAction, SIGNAL(triggered()), this, SLOT(loadProject()));
 
     QAction* reloadProjectAction = mFileMenu->addAction("Revert");
@@ -352,10 +355,19 @@ void MainWindow::createMenus()
 	mEditMenu->addSeparator();
 	mDuplicateAssetAction = mEditMenu->addAction("&Duplicate");	
 	mDuplicateAssetAction->setShortcut(QKeySequence(tr("Ctrl+D")));
-	// connect(mDuplicateAssetAction, SIGNAL(triggered()), mPartList, SLOT(copyAsset()));
+	connect(mDuplicateAssetAction, &QAction::triggered, [&]() {
+		if (mSelectedAsset.isNull()) {
+			qWarning() << "Tried to duplicate asset, but no asset is selected!";
+		}
+		else {
+			switch (mSelectedAsset.type) {
+			case AssetType::Part: TryCommand(new CCopyPart(mSelectedAsset)); break;
+			case AssetType::Composite: TryCommand(new CCopyComposite(mSelectedAsset)); break;
+			case AssetType::Folder: qDebug() << "TODO: Copy folder"; break;
+			}
+		}
+	});
 	mDuplicateAssetAction->setEnabled(false);
-
-	// CCopyPart
 
 	mEditMenu->addSeparator();
 	mResizePartAction = mEditMenu->addAction("Resize Sprite...");
@@ -407,8 +419,6 @@ void MainWindow::assetDoubleClicked(AssetRef ref){
 				return;
 			}
 		}
-
-		// Else open new widget
 		openPartWidget(ref);
 		break;
 	}
@@ -420,7 +430,6 @@ void MainWindow::assetDoubleClicked(AssetRef ref){
 				return;
 			}
 		}
-
 		openCompositeWidget(ref);
 		break;
 	}
@@ -429,13 +438,9 @@ void MainWindow::assetDoubleClicked(AssetRef ref){
 
 void MainWindow::assetSelected(AssetRef ref) {
 	if (ref.isNull()) {
-		qDebug() << "Deselected asset";
-
 		mDuplicateAssetAction->setEnabled(false);
 	}
 	else {
-		qDebug() << "Selected asset " << ref.uuid;
-
 		switch (ref.type) {
 		case AssetType::Folder: {
 			break;
@@ -580,7 +585,6 @@ void MainWindow::newAssetCreated(AssetRef ref) {
 	}
 	else {
 		mPartList->selectAsset(ref);
-		mMdiArea->clearFocus();
 	}
 }
 
@@ -929,11 +933,11 @@ void MainWindow::showAbout(){
 void MainWindow::resetSettings(){
     QMessageBox::StandardButton res = QMessageBox::question(this, "Reset?", "This will reset your preferences. The program will shut down. Continue?");
     if (res == QMessageBox::Yes){
-        MainWindow::Instance()->showMessage("Resetting");
+        qInfo() << "Resetting preferences";
         QSettings settings;
         settings.clear();
 
-		// TODO: Reload
+		// TODO: Reload this window?
         QApplication::exit();
     }
 }
@@ -956,26 +960,22 @@ void MainWindow::newProject(){
         mPartList->updateList();
 
         setWindowTitle(makeWindowTitle());
-
-        MainWindow::Instance()->showMessage("New Project Started");
+        qInfo() << "New Project";
     }
 }
 
 void MainWindow::loadProject(const QString& fileName){
-    QSettings settings;
+    QSettings settings; // TODO: What's this for?
 
-    // Close all windows and deactivate
     mCompositeToolsWidget->setTargetCompWidget(nullptr);
 	mDrawingTools->setTargetPartWidget(nullptr);
 	mAnimationWidget->setTargetPartWidget(nullptr);
 	mPropertiesWidget->setTargetPartWidget(nullptr);
 
-    mMdiArea->closeAllSubWindows();
+	// NB: This is done in a signal
+    // mMdiArea->closeAllSubWindows();
 
-    // Clear undo stack
     mUndoStack->clear();
-
-    // Clear current project model
     ProjectModel::Instance()->clear();
     mPartList->updateList();
 
@@ -983,10 +983,10 @@ void MainWindow::loadProject(const QString& fileName){
 	QString reason;
     bool result = ProjectModel::Instance()->load(fileName, reason);
     if (!result){
-		qDebug() << "Error while loading " << fileName << "! Reason: " << reason;
-        QMessageBox::warning(this, "Error during load", tr("Couldn't load ") + fileName + tr("\nReason: ") + reason);
+		qWarning() << "Error while loading " << fileName << "! Reason: " << reason;
         ProjectModel::Instance()->clear();
         mPartList->updateList();
+		QMessageBox::warning(this, "Error during load", tr("Couldn't load ") + fileName + tr("\nReason: ") + reason);
     }
     else {
         mPartList->updateList();
@@ -1009,7 +1009,7 @@ void MainWindow::loadProject(const QString& fileName){
 
         mProjectModifiedSinceLastSave = false;
         setWindowTitle(makeWindowTitle(fileName, true));
-        MainWindow::Instance()->showMessage("Successfully loaded");
+        qInfo() << "Loaded " << fileName;
     }
 }
 

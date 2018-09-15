@@ -88,6 +88,7 @@ public:
 
 protected:
     void closeEvent(QCloseEvent *event);
+	void focusInEvent(QFocusEvent *focusInEvent) override final;
 
     void partViewMousePressEvent(QMouseEvent *mouseEvent);
     void partViewMouseMoveEvent(QMouseEvent *mouseEvent);
@@ -97,9 +98,7 @@ protected:
 
     void drawLineTo(const QPoint &endPoint);
     void eraseLineTo(const QPoint &endPoint);
-
-    void enterEvent(QEvent *);
-
+	
 signals:
     void penChanged();
     void zoomChanged();

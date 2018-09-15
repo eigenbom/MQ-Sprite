@@ -47,7 +47,7 @@ void CNewPart::redo()
     mode.numPivots = 0;
     mode.width = 8;
     mode.height = 8;
-    mode.framesPerSecond = 1;
+    mode.framesPerSecond = 8;
     mode.anchor.push_back(QPoint(0, 0));
     for(int i=0;i<MAX_PIVOTS;i++){
         mode.pivots[i].push_back(QPoint(0,0));
@@ -509,7 +509,7 @@ void CResetMode::redo(){
     }
     mode.numPivots = 0;
     mode.numFrames = 1;
-    mode.framesPerSecond = 1;
+    mode.framesPerSecond = 8;
     MainWindow::Instance()->partModesChanged(mPart);
 }
 
@@ -930,7 +930,6 @@ void CChangeModeFPS::undo(){
     Part* part = PM()->getPart(mPart);
     Part::Mode& mode = part->modes[mModeName];
     mode.framesPerSecond = mOldFPS;
-
     MainWindow::Instance()->partModesChanged(mPart);
 }
 
@@ -939,15 +938,8 @@ void CChangeModeFPS::redo(){
     Part::Mode& mode = part->modes[mModeName];
     mOldFPS = mode.framesPerSecond;
     mode.framesPerSecond = mFPS;
-
     MainWindow::Instance()->partModesChanged(mPart);
 }
-
-
-
-
-
-
 
 
 CEditCompositeChild::CEditCompositeChild(AssetRef comp, const QString& childName, AssetRef newPart, int newZ, int newParent, int newParentPivot)

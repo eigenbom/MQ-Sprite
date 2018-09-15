@@ -162,16 +162,18 @@ void AssetTreeWidget::updateList(){
     // Order the assets by type then by name
     QList<AssetRef> assets;
 
+	auto sortByName = [](AssetRef a, AssetRef b) {return PM()->getAsset(a)->name < PM()->getAsset(b)->name; };
+
     auto l = PM()->folders.keys();
-    qSort(l.begin(), l.end(), [](AssetRef a, AssetRef b){return PM()->getAsset(a)->name < PM()->getAsset(b)->name;});
-    assets += l;
+    qSort(l.begin(), l.end(), sortByName);
+	assets += l;
 
-    l = PM()->composites.keys();
-    qSort(l.begin(), l.end(), [](AssetRef a, AssetRef b){return PM()->getAsset(a)->name < PM()->getAsset(b)->name;});
-    assets += l;
+	l = PM()->composites.keys();
+	qSort(l.begin(), l.end(), sortByName);
+	assets += l;
 
-    l = PM()->parts.keys();
-    qSort(l.begin(), l.end(), [](AssetRef a, AssetRef b){return PM()->getAsset(a)->name < PM()->getAsset(b)->name;});
+	l = PM()->parts.keys();
+	qSort(l.begin(), l.end(), sortByName);
     assets += l;
 
     // Add everything recursively
@@ -232,8 +234,8 @@ void AssetTreeWidget::duplicateAsset() {
 		}
 	}
 	MainWindow::Instance()->partListChanged();
-}
-*/
+}*/
+
 void AssetTreeWidget::dropEvent(QDropEvent *event)
 {
     AssetTreeWidget *source = qobject_cast<AssetTreeWidget *> (event->source());
