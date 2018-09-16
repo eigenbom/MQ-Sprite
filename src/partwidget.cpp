@@ -131,7 +131,7 @@ void PartWidget::updatePartFrames(){
     if (PM()->hasPart(mPartRef)){
         mPart = PM()->getPart(mPartRef);
         mPartName = mPart->name;
-        mProperties = mPart->properties;
+        mProperties = "{" + mPart->properties + "}";
 
         if (mPart->modes.size() > 0){
             if (mModeName.isEmpty() || !mPart->modes.contains(mModeName)){
@@ -408,7 +408,7 @@ void PartWidget::partPropertiesChanged(AssetRef part){
     if (part==mPartRef){
         // update ..
         Part* part = PM()->getPart(mPartRef);
-        mProperties = part->properties;
+        mProperties = "{" + part->properties + "}";
         updatePropertiesOverlays();
         showFrame(mFrameNumber);
     }

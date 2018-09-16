@@ -14,6 +14,7 @@ PartList::PartList(QWidget *parent) :
 	connect(mAssetTreeWidget, SIGNAL(assetSelected(AssetRef)), this, SIGNAL(assetSelected(AssetRef)));
 
 	connect(findChild<QLineEdit*>("lineEditFilter"), &QLineEdit::textEdited, mAssetTreeWidget, &AssetTreeWidget::setFilter);
+	connect(findChild<QToolButton*>("toolButtonExpandFolders"), &QToolButton::clicked, mAssetTreeWidget, &AssetTreeWidget::toggleFolders);
 
     updateList();
 }

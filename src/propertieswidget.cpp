@@ -36,11 +36,9 @@ void PropertiesWidget::setTargetPartWidget(PartWidget* p) {
 		mTarget = p;
 		Part* part = PM()->getPart(p->partRef());
 		Q_ASSERT(part);
-		mTextEditProperties->blockSignals(true);
+		setProperties(part->properties);
 		QTextCursor cursor = mTextEditProperties->textCursor();
 		cursor.movePosition(QTextCursor::Start);
-		mTextEditProperties->setPlainText(part->properties);
-		mTextEditProperties->blockSignals(false);		
 		this->setEnabled(true);
 	}
 	else {
@@ -58,14 +56,24 @@ void PropertiesWidget::targetPartPropertiesChanged() {
 	if (mTarget) {
 		Part* part = PM()->getPart(mTarget->partRef());
 		if (part) {
-			int cursorPos = mTextEditProperties->textCursor().position();
-			mTextEditProperties->blockSignals(true);
-			mTextEditProperties->setPlainText(part->properties);
-			mTextEditProperties->blockSignals(false);
-
-			QTextCursor cursor = mTextEditProperties->textCursor();
-			cursor.setPosition(cursorPos, QTextCursor::MoveAnchor);
-			mTextEditProperties->setTextCursor(cursor);
+			setProperties(part->properties);
 		}
 	}
+}
+
+void PropertiesWidget::setProperties(const QString& properties) {
+	// TODO: Format it ?
+
+	// Remove start and end
+	int cursorPos = mTextEditProperties->textCursor().position();
+
+	QString text = properties;
+
+	mTextEditProperties->blockSignals(true);
+	mTextEditProperties->setPlainText(text);
+	mTextEditProperties->blockSignals(false);
+
+	QTextCursor cursor = mTextEditProperties->textCursor();
+	cursor.setPosition(cursorPos, QTextCursor::MoveAnchor);
+	mTextEditProperties->setTextCursor(cursor);
 }

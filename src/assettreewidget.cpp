@@ -295,7 +295,11 @@ void AssetTreeWidget::updateIcon(AssetRef ref) {
 
 void AssetTreeWidget::activateItem(QTreeWidgetItem* item, int){
     int index = item->data(0, Qt::UserRole).toInt();
-    emit assetDoubleClicked(mAssetRefs.at(index));
+	auto ref = mAssetRefs.at(index);
+	if (ref.type == AssetType::Folder) {
+		item->setExpanded(!item->isExpanded());
+	}
+    emit assetDoubleClicked(ref);
 }
 
 void AssetTreeWidget::expandItem(QTreeWidgetItem* item){
@@ -358,6 +362,27 @@ bool AssetTreeWidget::filterItem(const QString& filterString, QTreeWidgetItem* i
 void AssetTreeWidget::setFilter(const QString& filterText) {
 	auto text = filterText.trimmed();
 	filterItem(text, nullptr);
+}
+
+void AssetTreeWidget::toggleFolders() {
+	auto* item = findItem([&](QTreeWidgetItem* item) -> bool {
+		return item->isExpanded();
+	});
+	const bool hasExpandedFolder = item != nullptr;
+	const bool expand = !hasExpandedFolder;
+
+	if (expand) expandAll();
+	else collapseAll();
+
+	/*
+	mOpenFolders.clear();
+	applyToAllItems([&, expand](QTreeWidgetItem* item) {
+		int id = item->data(0, Qt::UserRole).toInt();
+		if (mAssetRefs[id].type == AssetType::Folder) {
+			
+		}
+	});
+	*/
 }
 
 void AssetTreeWidget::dropEvent(QDropEvent *event)
@@ -453,6 +478,20 @@ QTreeWidgetItem* AssetTreeWidget::findItem(std::function<bool(QTreeWidgetItem*)>
 		}
 
 		return nullptr;
+	}
+}
+
+void AssetTreeWidget::applyToAllItems(std::function<void(QTreeWidgetItem*)> function, QTreeWidgetItem* parent) {
+	if (parent == nullptr) {
+		for (int i = 0; i < topLevelItemCount(); ++i) {
+			applyToAllItems(function, topLevelItem(i));
+		}
+	}
+	else {
+		applyToAllItems(function, parent);
+		for (int i = 0; i < parent->childCount(); ++i) {
+			applyToAllItems(function, parent->child(i));
+		}
 	}
 }
 

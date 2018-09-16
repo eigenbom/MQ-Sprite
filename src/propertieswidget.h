@@ -26,6 +26,9 @@ public slots:
 	void targetPartPropertiesChanged();
 
 private:
+	void setProperties(const QString& properties);
+
+private:
     Ui::PropertiesWidget *ui = nullptr;
 	PartWidget* mTarget = nullptr;
 	QString mCurrentMode {};

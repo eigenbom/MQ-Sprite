@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>145</width>
-    <height>300</height>
+    <width>166</width>
+    <height>241</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -27,16 +27,61 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLineEdit" name="lineEditFilter">
-     <property name="enabled">
-      <bool>true</bool>
+    <widget class="QFrame" name="frame">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
      </property>
-     <property name="text">
-      <string/>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
      </property>
-     <property name="placeholderText">
-      <string>Search Sprite Explorer</string>
-     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Filter:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="lineEditFilter">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="placeholderText">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="toolButtonExpandFolders">
+        <property name="toolTip">
+         <string>Expand or collapse folders</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../icons.qrc">
+          <normaloff>:/icon/icons/gentleface/folder_open_icon&amp;16.png</normaloff>:/icon/icons/gentleface/folder_open_icon&amp;16.png</iconset>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
    <item>
@@ -44,20 +89,50 @@
      <property name="editTriggers">
       <set>QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
      </property>
+     <property name="alternatingRowColors">
+      <bool>false</bool>
+     </property>
      <property name="iconSize">
       <size>
        <width>16</width>
        <height>16</height>
       </size>
      </property>
+     <property name="textElideMode">
+      <enum>Qt::ElideRight</enum>
+     </property>
      <property name="indentation">
-      <number>10</number>
+      <number>15</number>
      </property>
      <property name="rootIsDecorated">
       <bool>true</bool>
      </property>
+     <property name="uniformRowHeights">
+      <bool>true</bool>
+     </property>
+     <property name="itemsExpandable">
+      <bool>true</bool>
+     </property>
+     <property name="animated">
+      <bool>false</bool>
+     </property>
+     <property name="allColumnsShowFocus">
+      <bool>true</bool>
+     </property>
+     <property name="headerHidden">
+      <bool>true</bool>
+     </property>
      <attribute name="headerVisible">
       <bool>false</bool>
+     </attribute>
+     <attribute name="headerCascadingSectionResizes">
+      <bool>false</bool>
+     </attribute>
+     <attribute name="headerShowSortIndicator" stdset="0">
+      <bool>false</bool>
+     </attribute>
+     <attribute name="headerStretchLastSection">
+      <bool>true</bool>
      </attribute>
      <column>
       <property name="text">
@@ -70,7 +145,7 @@
       </property>
       <property name="icon">
        <iconset resource="../icons.qrc">
-        <normaloff>:/icon/icons/gentleface/document_icon&amp;16.png</normaloff>:/icon/icons/gentleface/document_icon&amp;16.png</iconset>
+        <normaloff>:/icon/icons/gentleface/emotion_smile_icon&amp;16.png</normaloff>:/icon/icons/gentleface/emotion_smile_icon&amp;16.png</iconset>
       </property>
      </item>
      <item>
@@ -81,6 +156,33 @@
        <iconset resource="../icons.qrc">
         <normaloff>:/icon/icons/gentleface/folder_icon&amp;16.png</normaloff>:/icon/icons/gentleface/folder_icon&amp;16.png</iconset>
       </property>
+      <item>
+       <property name="text">
+        <string>Item</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../icons.qrc">
+         <normaloff>:/icon/icons/gentleface/balance_icon&amp;16.png</normaloff>:/icon/icons/gentleface/balance_icon&amp;16.png</iconset>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Folder</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../icons.qrc">
+         <normaloff>:/icon/icons/gentleface/folder_icon&amp;16.png</normaloff>:/icon/icons/gentleface/folder_icon&amp;16.png</iconset>
+       </property>
+       <item>
+        <property name="text">
+         <string>Item</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../icons.qrc">
+          <normaloff>:/icon/icons/gentleface/2x2_grid_icon&amp;16.png</normaloff>:/icon/icons/gentleface/2x2_grid_icon&amp;16.png</iconset>
+        </property>
+       </item>
+      </item>
      </item>
     </widget>
    </item>

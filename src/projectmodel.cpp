@@ -480,7 +480,35 @@ void ProjectModel::JsonToPart(const QJsonObject& obj, const QMap<QString,QShared
         const QString& modeName = it.key();
         
 		if (modeName == "properties"){
-            part->properties = it.value().toString();
+			auto properties = it.value().toString();
+			properties = properties.trimmed();
+			if (!properties.isEmpty()) {				
+				auto doc = QJsonDocument::fromJson(properties.toUtf8());
+				if (doc.isNull()) {
+					importLog.push_back("Error reading properties of " + part->name + " (Couldn't parse JSON)");
+				}
+				else if (!doc.isObject()) {
+					importLog.push_back("Error reading properties of " + part->name + " (Not a JSON object)");
+				}
+				else {					
+					properties = QString(doc.toJson(QJsonDocument::JsonFormat::Indented));
+					int start = properties.indexOf("{");
+					int end = properties.lastIndexOf("}");
+					if (start == -1 || end == -1) {
+						importLog.push_back("Properties of " + part->name + " were not surrounded by curly braces!");
+					}
+					properties = properties.mid(start + 1, end - (start + 1));
+					auto plist = properties.split("\n");
+					// TODO: Remove tabs from all lines?
+					for (auto& s : plist) {
+						if (s.startsWith("    ")) s = s.mid(4);
+					}
+					properties = plist.join("\n").trimmed();
+
+					// properties = properties.trimmed();
+				}
+			}
+            part->properties = properties;
             continue;
         }
 
@@ -539,10 +567,10 @@ void ProjectModel::PartToJson(const QString& name, const Part& part, QJsonObject
     qDebug() << "Support layers";
 
     /*
-    if (!part.properties.isEmpty()){
-        obj->insert("properties", part.properties);
+	auto properties = part.properties.trimmed();
+    if (!properties.isEmpty()){
+        obj->insert("properties", "{ " + properties + " }");
     }
-
 
     QMapIterator<QString,Part::Mode> mit(part.modes);
     QString partNameFixed = name;
@@ -597,8 +625,12 @@ void ProjectModel::PartToJson(const QString& name, const Part& part, QJsonObject
 
 void ProjectModel::CompositeToJson(const QString& name, const Composite& comp, QJsonObject* obj){
     obj->insert("root", comp.root);
-    obj->insert("properties", comp.properties);
     obj->insert("name", name);
+
+	// TODO: Reformat the properties
+	qWarning() << "TODO: Reformat comp properties";
+    obj->insert("properties", comp.properties);
+
 
     if (!comp.parent.isNull()){
         obj->insert("parent", comp.parent.idAsString());

@@ -30,6 +30,8 @@ public slots:
 
 	void setFilter(const QString& filter);
 
+	void toggleFolders();
+
 signals:
     void assetDoubleClicked(AssetRef ref);
 	void assetSelected(AssetRef ref);
@@ -42,6 +44,8 @@ protected:
 	bool filterItem(const QString& text, QTreeWidgetItem* item);
 	
 	QTreeWidgetItem* findItem(std::function<bool(QTreeWidgetItem*)> searchQuery, QTreeWidgetItem* root = nullptr);
+	void applyToAllItems(std::function<void(QTreeWidgetItem*)> function, QTreeWidgetItem* root = nullptr);
+
 protected:
     QVector<AssetRef> mAssetRefs;
     // QVector<QTreeWidgetItem*> mItems;
