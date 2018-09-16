@@ -1,9 +1,10 @@
 #ifndef PROPERTIESWIDGET_H
 #define PROPERTIESWIDGET_H
 
+#include <QColor>
 #include <QWidget>
-class QPlainTextEdit;
-
+class QLabel;
+class QTextEdit;
 class PartWidget;
 
 namespace Ui {
@@ -32,7 +33,9 @@ private:
     Ui::PropertiesWidget *ui = nullptr;
 	PartWidget* mTarget = nullptr;
 	QString mCurrentMode {};
-	QPlainTextEdit* mTextEditProperties = nullptr;
+	QTextEdit* mTextEditProperties = nullptr;
+	QLabel* mLabelParseStatus = nullptr;
+	QColor mDefaultTextEditColour;
 };
 
 #endif // PROPERTIESWIDGET_H

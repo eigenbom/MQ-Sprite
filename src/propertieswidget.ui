@@ -48,7 +48,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QPlainTextEdit" name="textEditProperties">
+    <widget class="QTextEdit" name="textEditProperties">
      <property name="font">
       <font>
        <family>Consolas</family>
@@ -57,14 +57,8 @@
      <property name="toolTip">
       <string>JSON formatted properties.</string>
      </property>
-     <property name="plainText">
-      <string/>
-     </property>
-     <property name="tabStopWidth">
-      <number>20</number>
-     </property>
-     <property name="placeholderText">
-      <string/>
+     <property name="acceptRichText">
+      <bool>false</bool>
      </property>
     </widget>
    </item>
@@ -83,6 +77,13 @@
      </property>
      <property name="readOnly">
       <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="labelParseStatus">
+     <property name="text">
+      <string>Status: Valid</string>
      </property>
     </widget>
    </item>

@@ -3,6 +3,9 @@
 
 #include "commands.h"
 #include "partwidget.h"
+#include <QJsonDocument>
+#include <QLabel>
+#include <QStyle>
 
 PropertiesWidget::PropertiesWidget(QWidget *parent) :
     QWidget(parent),
@@ -10,9 +13,13 @@ PropertiesWidget::PropertiesWidget(QWidget *parent) :
 {
     ui->setupUi(this);
 
-	mTextEditProperties = findChild<QPlainTextEdit*>("textEditProperties");
+	mTextEditProperties = findChild<QTextEdit*>("textEditProperties");
 	connect(mTextEditProperties, SIGNAL(textChanged()), this, SLOT(textPropertiesEdited()));
 	mTextEditProperties->setPlaceholderText(tr("\"emit\": true,\n\"wiggle\": 0.5,\n\"display_name\":\"worm\""));
+	mDefaultTextEditColour = mTextEditProperties->textColor();
+
+	mLabelParseStatus = findChild<QLabel*>("labelParseStatus");
+	mLabelParseStatus->setText("Status: Valid");
 
 	this->setEnabled(false);
 }
@@ -30,6 +37,7 @@ void PropertiesWidget::setTargetPartWidget(PartWidget* p) {
 	if (mTarget) {
 		mTarget = nullptr;
 		mCurrentMode.clear();
+		mLabelParseStatus->setText("Status: Valid");		
 	}
 
 	if (p) {
@@ -62,12 +70,23 @@ void PropertiesWidget::targetPartPropertiesChanged() {
 }
 
 void PropertiesWidget::setProperties(const QString& properties) {
-	// TODO: Format it ?
-
-	// Remove start and end
 	int cursorPos = mTextEditProperties->textCursor().position();
-
+	
 	QString text = properties;
+	QJsonParseError error;
+	auto doc = QJsonDocument::fromJson(("{" + properties + "}").toUtf8(), &error);
+	if (doc.isNull()) {
+		mTextEditProperties->setTextColor(QColor("red"));
+		mLabelParseStatus->setText("Status: " + error.errorString());
+	}
+	else if (!doc.isObject()) {
+		mTextEditProperties->setTextColor(QColor("red"));
+		mLabelParseStatus->setText("Status: " + error.errorString());
+	}
+	else {
+		mTextEditProperties->setTextColor(mDefaultTextEditColour);
+		mLabelParseStatus->setText("Status: Valid");
+	}
 
 	mTextEditProperties->blockSignals(true);
 	mTextEditProperties->setPlainText(text);
