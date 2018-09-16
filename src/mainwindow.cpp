@@ -472,6 +472,7 @@ void MainWindow::openPartWidget(AssetRef ref){
         PartWidget* p = new PartWidget(ref, mMdiArea);
         mMdiArea->addSubWindow(p);
         p->show();
+		p->fitToWindow();
         connect(p, SIGNAL(closed(PartWidget*)), this, SLOT(partWidgetClosed(PartWidget*)));
         mPartWidgets.insertMulti(ref, p);
     }

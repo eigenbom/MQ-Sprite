@@ -87,7 +87,8 @@ public:
     int playbackSpeedMultiplierIndex() const {return mPlaybackSpeedMultiplierIndex;}
 
 protected:
-    void closeEvent(QCloseEvent *event);
+    void closeEvent(QCloseEvent *event) override;
+	void resizeEvent(QResizeEvent *event) override;
 	void focusInEvent(QFocusEvent *focusInEvent) override final;
 
     void partViewMousePressEvent(QMouseEvent *mouseEvent);
@@ -191,6 +192,8 @@ protected:
     QBrush mBackgroundBrush;
 	QColor mBackgroundColour;
     QColor mBoundsColour;
+
+	QSet<QString> mSeenMode;
 };
 
 #endif // PARTWIDGET_H

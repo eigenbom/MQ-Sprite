@@ -122,6 +122,9 @@ struct Part: public Asset {
 		QList<QSharedPointer<QImage>> frames;
         QList<QPoint> anchor;
         QList<QPoint> pivots[MAX_PIVOTS];
+
+		// Derived and cached properties
+		QRect bounds {};
     };
 
     QMap<QString,Mode> modes; // fourcc->mode

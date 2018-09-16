@@ -34,7 +34,7 @@ PartWidget::PartWidget(AssetRef ref, QWidget *parent) :
 	QMdiSubWindow(parent, Qt::SubWindow),
     mPartRef(ref),
     mPartName(),
-    mModeName(),
+    mModeName("icon"),
     mPart(nullptr),
     mPartView(nullptr),
     mOverlayPixmapItem(nullptr),
@@ -56,7 +56,8 @@ PartWidget::PartWidget(AssetRef ref, QWidget *parent) :
     mClipboardItem(nullptr),
     mCopyRectItem(nullptr)
 {
-    setMinimumSize(64,64);
+    setMinimumSize(256, 256);
+	
     // setWindowFlags(Qt::CustomizeWindowHint); //Set window with no title bar
     // setWindowFlags(Qt::WindowCloseButtonHint);
     // setWindowFlags(Qt::FramelessWindowHint); //Set a frameless window
@@ -64,7 +65,7 @@ PartWidget::PartWidget(AssetRef ref, QWidget *parent) :
     // Setup part view
     mPartView = new PartView(this, new QGraphicsScene());
     mPartView->setTransform(QTransform::fromScale(mZoom,mZoom));
-		
+			
 	auto* frame = new QFrame();			
 	auto* vbox = new QVBoxLayout();
 	vbox->setMargin(0);
@@ -221,6 +222,9 @@ void PartWidget::updatePartFrames(){
             // Update draw tool type
             setDrawToolType(mDrawToolType);
 
+			const bool firstTime = !mSeenMode.contains(mModeName);
+			mSeenMode.insert(mModeName);
+			if (firstTime) fitToWindow();
         }
         else {
             mModeName = QString();
@@ -236,7 +240,9 @@ void PartWidget::updatePartFrames(){
     if (mFrameNumber >= numFrames()){
         mFrameNumber = numFrames()-1;
     }
+
     setFrame(mFrameNumber);
+	// fitToWindow();
 }
 
 void PartWidget::setFrame(int f){
@@ -373,7 +379,7 @@ void PartWidget::updatePropertiesOverlays(){
     }
     else {
 		const int strokeAlpha = 64;
-		const QColor strokeColour = mBackgroundColour.lightnessF() > 0.5 ? QColor(0, 0, 0, strokeAlpha) : QColor(255, 255, 255, strokeAlpha);
+		const QColor strokeColour = mBackgroundColour.lightnessF() > 0.5 ? QColor(128, 0, 128, strokeAlpha) : QColor(255, 0, 255, strokeAlpha);
 		// const QColor fontColour = mBackgroundColour.lightnessF() < 0.5 ? QColor(0, 0, 0, 255) : QColor(255, 255, 255, 255);
 
 		QFont labelFont ("monospace");
@@ -384,9 +390,19 @@ void PartWidget::updatePropertiesOverlays(){
 
         int index = 0;
         QJsonObject propObj = propDoc.object();
-        for(QJsonObject::iterator it = propObj.begin(); it!=propObj.end(); it++){
+		bool validMode = true;
+		
+		// Filter rects by valid modes
+		for (auto it = propObj.begin(); it != propObj.end(); it++) {
+			if (it.key().endsWith("_mode")){
+				validMode = it.value().toString() == mModeName;
+				break;
+			}
+		}
+
+        for(auto it = propObj.begin(); it!=propObj.end(); it++){
             QString key = it.key();
-            if (key.contains("rect") && it.value().isArray()){
+            if (key.contains("rect") && it.value().isArray() && validMode){
                 // draw a rectangle over the sprite
 
                 const QJsonArray& array = it.value().toArray();
@@ -416,6 +432,47 @@ void PartWidget::updatePropertiesOverlays(){
             }
         }
     }
+
+	// Test: add bounds
+	if (mPart && !mModeName.isEmpty() && mPart->modes.contains(mModeName)){
+		auto& mode = mPart->modes[mModeName];
+		auto& bounds = mode.bounds;
+		bounds = {};
+		for (auto img : mode.frames) {
+			int cropLeft = img->width();
+			int cropTop = img->height();
+			int cropRight = 0;
+			int cropBottom = 0;
+			for (int x = 0; x < img->width(); ++x) {
+				for (int y = 0; y < img->height(); ++y) {
+					const bool opaque = (img->pixelColor(x, y).alpha() > 0);
+					if (opaque) {
+						if (cropLeft > x) cropLeft = x;
+						if (cropRight < x) cropRight = x;
+						if (cropTop > y) cropTop = y;
+						if (cropBottom < y) cropBottom = y;
+					}
+				}
+			}
+
+			int left = cropLeft;
+			int top = cropTop;
+			int width = 1 + cropRight - cropLeft;
+			int height = 1 + cropBottom - cropTop;
+			
+			QRect frameBounds { left, top, width, height };			
+			if (frameBounds.isValid() && !frameBounds.isEmpty()) {
+				if (bounds.isNull()) bounds = frameBounds;
+				else bounds = bounds.united(frameBounds);
+			}
+		}
+
+		if (bounds.isNull() || bounds.isEmpty()) {
+			bounds = mode.frames[0]->rect();
+		}
+
+		// mPropertyItems.append(mPartView->scene()->addRect(bounds, Qt::NoPen, QColor(0, 0, 0, 64)));
+	}
 }
 
 void PartWidget::partPropertiesChanged(AssetRef part){
@@ -432,6 +489,11 @@ void PartWidget::closeEvent(QCloseEvent *event)
 {
     emit(closed(this));
     event->accept();
+}
+
+void PartWidget::resizeEvent(QResizeEvent *event) {
+	QMdiSubWindow::resizeEvent(event);
+	fitToWindow();
 }
 
 void PartWidget::focusInEvent(QFocusEvent *focusInEvent) {
@@ -467,9 +529,13 @@ void PartWidget::fitToWindow(){
     // use graphicsview fit to window
     if (mPartView){
         // mPartView->centerOn();
-
 		// TODO: Compute a tighter bounds item
-        mPartView->fitInView(mBoundsItem, Qt::KeepAspectRatio);
+		if (mPart && !mModeName.isEmpty() && mPart->modes.contains(mModeName) && mPart->modes[mModeName].bounds.isValid()) {
+			mPartView->fitInView(mPart->modes[mModeName].bounds.adjusted(-2, -2, 2, 2), Qt::KeepAspectRatio);
+		}
+		else {
+			mPartView->fitInView(mBoundsItem, Qt::KeepAspectRatio);
+		}
         QTransform transform = mPartView->transform();
         QPoint scale = transform.map(QPoint(1,1));
         mZoom = floor(scale.x());
@@ -1125,40 +1191,12 @@ void PartView::keyPressEvent(QKeyEvent *event){
     pw->partViewKeyPressEvent(event);
 }
 
-
 void PartView::drawBackground(QPainter *painter, const QRectF &rect)
 {
-    painter->fillRect(rect, pw->mBackgroundBrush);
+	painter->fillRect(rect, pw->mBackgroundBrush);
     if (pw->mBoundsItem){
         QPen pen = pw->mBoundsItem->pen();
         pen.setColor(pw->mBoundsColour);
         pw->mBoundsItem->setPen(pen);
     }
-
-    /*
-    float sc = 1.1;
-    QRectF sr = this->sceneRect();
-    QPointF center = sr.center();
-    sr.setWidth(sr.width()*sc);
-    sr.setHeight(sr.height()*sc);
-    sr.moveCenter(center - pw->mPosition/pw->mZoom);
-    painter->fillRect(sr, darker);
-    painter->fillRect(this->sceneRect().translated(-pw->mPosition/pw->mZoom), backgroundColour);
-
-    QRectF textRect = this->sceneRect().translated(-pw->mPosition/pw->mZoom);
-    textRect.translate(0, -textRect.height());
-    // textRect.setHeight(12.f);
-    // painter->setPen(QColor("white"));
-    painter->setPen(backgroundColour.lighter());
-    */
-
-    /*
-    QFont font;
-    font.setStyleHint(QFont::Monospace);
-    font.setPixelSize(ceil(12.f/pw->mZoom));
-    // font.setPointSizeF(12.f/pw->mZoom);
-    painter->setFont(font);
-    // painter->drawText(textRect, Qt::AlignLeft, pw->mPartName);
-    painter->drawText(textRect.bottomLeft(), pw->mPartName);
-    */
 }
