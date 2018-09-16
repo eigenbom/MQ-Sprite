@@ -24,7 +24,7 @@ public:
     void redo();
 
 private:
-    AssetRef mUuid;
+    AssetRef mRef;
 };
 
 class CCopyPart: public Command

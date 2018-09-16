@@ -7,7 +7,6 @@
 #include <QString>
 #include <QPoint>
 #include <QJsonObject>
-#include <QUuid>
 #include <QSharedPointer>
 
 static const int MAX_PIVOTS = 4;
@@ -26,9 +25,14 @@ enum class AssetType {
 };
 
 struct AssetRef {
-	QUuid uuid {};
+	int id { 0 }; // A unique ID for this project file
     AssetType type = AssetType::None;
 	bool isNull() const { return type == AssetType::None; }
+	QString idAsString() const {
+		QString str;
+		str.setNum(id);
+		return str;
+	}
 };
 
 bool operator==(const AssetRef& a, const AssetRef& b);
@@ -50,7 +54,7 @@ public:
     ~ProjectModel();
     static ProjectModel* Instance();
 
-    AssetRef createAssetRef();
+    AssetRef createAssetRef(AssetType type = AssetType::None);
 
     // Access assets
     Asset* getAsset(const AssetRef& ref);
@@ -83,6 +87,9 @@ public:
 public:
 	QString fileName {};
 	QList<QString> importLog;
+	
+private:
+	int mNextId = 1;
 
 protected:
     void JsonToFolder(const QJsonObject& obj, Folder* folder);

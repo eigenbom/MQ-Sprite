@@ -18,14 +18,13 @@ bool TryCommand(Command* command){
 }
 
 CNewPart::CNewPart() {
-    mUuid = PM()->createAssetRef();
-    mUuid.type = AssetType::Part;
+	mRef = PM()->createAssetRef(AssetType::Part);
     ok = true;
 }
 
 void CNewPart::undo()
 {
-    PM()->parts.take(mUuid);
+    PM()->parts.take(mRef);
     MainWindow::Instance()->partListChanged();
 }
 
@@ -40,7 +39,7 @@ void CNewPart::redo()
     } while (PM()->findPartByName(name)!=nullptr);
 
     QSharedPointer<Part> part =  QSharedPointer<Part>::create();
-    part->ref = mUuid;
+    part->ref = mRef;
     part->name = name;
     Part::Mode mode;
     mode.numFrames = 1;
