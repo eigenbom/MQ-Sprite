@@ -158,7 +158,7 @@ protected:
     QVector<QAbstractGraphicsShapeItem*> mAnchorItems;
     QVector<QAbstractGraphicsShapeItem*> mPivotItems[MAX_PIVOTS];
 
-    QVector<QGraphicsRectItem*> mRectItems;
+    QVector<QGraphicsItem*> mPropertyItems;
     QVector<QPoint> mAnchors;
     QVector<QPoint> mPivots[MAX_PIVOTS];
     int mNumPivots;
@@ -189,6 +189,7 @@ protected:
     QGraphicsRectItem* mCopyRectItem;
 
     QBrush mBackgroundBrush;
+	QColor mBackgroundColour;
     QColor mBoundsColour;
 };
 

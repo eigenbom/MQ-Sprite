@@ -206,6 +206,9 @@ bool ProjectModel::load(const QString& fileName, QString& reason){
         return false;
     }
 
+	qDebug() << "TODO: Serialise preferences";
+
+	/*
     if (fileMap.count("prefs.json")>0){
         auto& prefsRec = fileMap["prefs.json"];
 		int presLength = 0;
@@ -242,6 +245,7 @@ bool ProjectModel::load(const QString& fileName, QString& reason){
             }
         }
     }
+	*/
 
     // Load all the images (and store them in an image map)
 	// The ownership of these are taken by the sprites when they're loaded

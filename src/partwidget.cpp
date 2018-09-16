@@ -107,11 +107,11 @@ void PartWidget::updatePartFrames(){
         mPivots[i].clear();
     }
 
-    foreach(QGraphicsRectItem* pi, mRectItems){
+    for(auto* pi: mPropertyItems){
         mPartView->scene()->removeItem(pi);
         delete pi;
     }
-    mRectItems.clear();
+	mPropertyItems.clear();
 
     if (mClipboardItem!=nullptr){
         mPartView->scene()->removeItem(mClipboardItem);
@@ -173,7 +173,7 @@ void PartWidget::updatePartFrames(){
 			QColor pivotColour = QColor(settings.value("pivot_colour", QColor(255, 255, 255).rgba()).toUInt());
 
 			QFont font("monospace");
-			font.setHintingPreference(QFont::PreferFullHinting);
+			// font.setHintingPreference(QFont::PreferFullHinting);
             QPen pivotPen = QPen(pivotColour, 0.1);
 
             for(int i=0;i<m.numFrames;i++){
@@ -360,29 +360,33 @@ void PartWidget::partNumPivotsUpdated(AssetRef part, const QString& mode){
 void PartWidget::updatePropertiesOverlays(){
     // Parse the properties
     // trying to extra any info that we can draw into the scene
-    foreach(QGraphicsRectItem* pi, mRectItems){
+	for(auto* pi: mPropertyItems){
         mPartView->scene()->removeItem(pi);
         delete pi;
     }
-    mRectItems.clear();
+	mPropertyItems.clear();
 
     QJsonParseError error;
-    QJsonDocument propDoc = QJsonDocument::fromJson(QByteArray(mProperties.toStdString().c_str()), &error);
-    // QJsonDocument prefsDoc = QJsonDocument::fromJson(QByteArray(mProperties.buffer, mProperties.length), &error);
-
-    if (error.error!=QJsonParseError::NoError || propDoc.isNull() || propDoc.isEmpty() || !propDoc.isObject()){
+    QJsonDocument propDoc = QJsonDocument::fromJson(mProperties.toUtf8(), &error);
+    if (error.error != QJsonParseError::NoError || propDoc.isNull() || propDoc.isEmpty() || !propDoc.isObject()){
         // couldn't parse.. (or not object)
     }
     else {
-        static const int NUM_COLOURS = 4;
-        static const QColor COLOURS[NUM_COLOURS] = {QColor(255,0,255), QColor(150,100,255), QColor(255,100,150), QColor(200,150,200)};
+		const int strokeAlpha = 64;
+		const QColor strokeColour = mBackgroundColour.lightnessF() > 0.5 ? QColor(0, 0, 0, strokeAlpha) : QColor(255, 255, 255, strokeAlpha);
+		// const QColor fontColour = mBackgroundColour.lightnessF() < 0.5 ? QColor(0, 0, 0, 255) : QColor(255, 255, 255, 255);
+
+		QFont labelFont ("monospace");
+		const QColor labelColour = QColor(strokeColour.red(), strokeColour.green(), strokeColour.blue(), 128);
+		const QColor labelBgColour = mBackgroundColour;
+
+		// font.setHintingPreference(QFont::PreferFullHinting);
 
         int index = 0;
         QJsonObject propObj = propDoc.object();
         for(QJsonObject::iterator it = propObj.begin(); it!=propObj.end(); it++){
             QString key = it.key();
-
-            if (key.endsWith("_rect") && it.value().isArray()){
+            if (key.contains("rect") && it.value().isArray()){
                 // draw a rectangle over the sprite
 
                 const QJsonArray& array = it.value().toArray();
@@ -392,11 +396,21 @@ void PartWidget::updatePropertiesOverlays(){
                     double w = array.at(2).toDouble(1);
                     double h = array.at(3).toDouble(1);
 
-                    QPen pen = QPen(COLOURS[index%NUM_COLOURS], 0.1);
+					QPen pen = QPen(strokeColour, 0.1);
                     QBrush brush = Qt::NoBrush;
-                    QGraphicsRectItem* item = mPartView->scene()->addRect(x,y,w,h,pen,brush);
-                    mRectItems.append(item);
+					mPropertyItems.append(mPartView->scene()->addRect(x, y, w, h, pen, brush));
+					
+					auto* label = mPartView->scene()->addSimpleText(key, labelFont);
+					label->setScale(0.1);
+					label->setPos(x, y - 0.2 * labelFont.pointSizeF());
+					label->setBrush(labelColour);
+					label->setZValue(10);
+					mPropertyItems.append(label);
 
+					auto* labelRect = mPartView->scene()->addRect(label->sceneBoundingRect(), Qt::NoPen, QBrush(labelBgColour));
+					labelRect->setZValue(label->zValue() - 1);
+					mPropertyItems.append(labelRect);
+					
                     index++;
                  }
             }
@@ -453,17 +467,15 @@ void PartWidget::fitToWindow(){
     // use graphicsview fit to window
     if (mPartView){
         // mPartView->centerOn();
+
+		// TODO: Compute a tighter bounds item
         mPartView->fitInView(mBoundsItem, Qt::KeepAspectRatio);
         QTransform transform = mPartView->transform();
         QPoint scale = transform.map(QPoint(1,1));
-        mZoom = floor(scale.x()); // mPartView->transform();
+        mZoom = floor(scale.x());
         mPosition = QPoint(0,0);
         setZoom(mZoom);
-        // QPoint trans = transform.map(QPoint(0,0));
-        // mPosition = trans;
-
         zoomChanged();
-
     }
 }
 
@@ -475,8 +487,8 @@ void PartWidget::updateDropShadow(){
     float dy = settings.value("drop_shadow_offset_y", QVariant(0.5f)).toFloat();
     QColor dropShadowColour = QColor(settings.value("drop_shadow_colour", QColor(0,0,0).rgba()).toUInt());
 
-    if (mPartView){
-        foreach(QGraphicsPixmapItem* it, mPixmapItems){
+    if (mPartView){		
+        for(auto* it: mPixmapItems){
             auto* effect = (QGraphicsDropShadowEffect*) it->graphicsEffect();
 			if (effect) {
 				effect->setOffset(dx * 2 * mZoom / 4., dy * 2 * mZoom / 2.);
@@ -484,6 +496,8 @@ void PartWidget::updateDropShadow(){
 				effect->setBlurRadius(blur * 2 * mZoom * 2.0);
 			}
         }
+		
+		showFrame(mFrameNumber); // To re-enable drop shadow
     }
 }
 
@@ -988,11 +1002,8 @@ void PartWidget::showFrame(int f){
     }
 }
 
-
 void PartWidget::updateBackgroundBrushes(){
-
     QSettings settings;
-
     bool useGridPattern =  settings.value("background_grid_pattern", true).toBool();
 
     QColor boundsColour;
@@ -1001,9 +1012,11 @@ void PartWidget::updateBackgroundBrushes(){
          // QColor backgroundColour = QColor(settings.value("background_colour", QColor(111,198,143).rgba()).toUInt());
          mBackgroundBrush = QBrush(backgroundColour);
          boundsColour = backgroundColour;
+		 mBackgroundColour = backgroundColour;
     }
     else {
         QColor backgroundColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
+		mBackgroundColour = backgroundColour;
 
         QColor backgroundColour2 = backgroundColour;
         boundsColour = backgroundColour2;
@@ -1026,9 +1039,6 @@ void PartWidget::updateBackgroundBrushes(){
             val -= 10;
         }
         backgroundColour2.setHsv(h,s,val);
-
-        // QColor backgroundColour1 = QColor(settings.value("background_grid_colour_1", QColor(150,150,150).rgba()).toUInt());
-        // QColor backgroundColour2 = QColor(settings.value("background_grid_colour_2", QColor(140,140,140).rgba()).toUInt());
 
         int w = 2;
         QImage img(w, w, QImage::Format_RGB32);
