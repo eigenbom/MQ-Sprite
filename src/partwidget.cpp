@@ -39,7 +39,7 @@ PartWidget::PartWidget(AssetRef ref, QWidget *parent) :
     mPartView(nullptr),
     mOverlayPixmapItem(nullptr),
     mZoom(4),
-    mPosition(0,0),
+    mViewportCenter(0,0),
     mPenSize(1),
     mPenColour(QColor(0,0,0)),
     mDrawToolType(kDrawToolPaint),
@@ -65,7 +65,9 @@ PartWidget::PartWidget(AssetRef ref, QWidget *parent) :
     // Setup part view
     mPartView = new PartView(this, new QGraphicsScene());
     mPartView->setTransform(QTransform::fromScale(mZoom,mZoom));
-			
+	mViewportCenter = QPointF { 0, 0 };
+	mPartView->centerOn(mViewportCenter);
+				
 	auto* frame = new QFrame();			
 	auto* vbox = new QVBoxLayout();
 	vbox->setMargin(0);
@@ -128,6 +130,7 @@ void PartWidget::updatePartFrames(){
 
     mPartView->scene()->clear();
     mBoundsItem = nullptr;
+	bool triggerFitToWindow = false;
 
     if (PM()->hasPart(mPartRef)){
         mPart = PM()->getPart(mPartRef);
@@ -179,6 +182,7 @@ void PartWidget::updatePartFrames(){
 			// font.setHintingPreference(QFont::PreferFullHinting);
             QPen pivotPen = QPen(mPropertiesColour, 0.1);
 
+			const int anchorZ = 20;
             for(int i=0;i<m.numFrames;i++){
                 {
                     QPoint ap = m.anchor.at(i);
@@ -201,6 +205,7 @@ void PartWidget::updatePartFrames(){
 					it->setPen(Qt::NoPen); //  QPen(QColor(0, 0, 0, 128), 0.125 / 2, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin));
 					it->setBrush(mPropertiesColour);
 					it->setPos(ap.x(), ap.y());
+					it->setZValue(anchorZ);
 					list.push_back(it);
 									   
 					{
@@ -208,6 +213,7 @@ void PartWidget::updatePartFrames(){
 						it->setPen(Qt::NoPen);
 						it->setBrush(mPropertiesColour);
 						it->setPos(ap.x(), ap.y());
+						it->setZValue(anchorZ);
 						list.push_back(it);
 					}
 
@@ -217,6 +223,7 @@ void PartWidget::updatePartFrames(){
 						label->setBrush(QColor(255, 255, 255));
 						label->setScale(0.05 / 2);
 						label->setPos(ap.x() + 0.4, ap.y() + 0.68);
+						label->setZValue(anchorZ + 2);
 						list.push_back(label);
 					}
 
@@ -235,6 +242,7 @@ void PartWidget::updatePartFrames(){
 						it->setPen(Qt::NoPen);
 						it->setBrush(mPropertiesColour);
 						it->setPos(pp.x(), pp.y());
+						it->setZValue(anchorZ);
 						list.push_back(it);
 					}
 
@@ -243,6 +251,7 @@ void PartWidget::updatePartFrames(){
 						it->setPen(Qt::NoPen);
 						it->setBrush(mPropertiesColour);
 						it->setPos(pp.x(), pp.y());
+						it->setZValue(anchorZ);
 						list.push_back(it);
 					}
 
@@ -252,6 +261,7 @@ void PartWidget::updatePartFrames(){
 						label->setBrush(QColor(255,255,255));
 						label->setScale(0.05 / 2);
 						label->setPos(pp.x() + 0.4, pp.y() - 0.25);
+						label->setZValue(anchorZ + 1);
 						list.push_back(label);
 					}
 
@@ -269,7 +279,7 @@ void PartWidget::updatePartFrames(){
 
 			const bool firstTime = !mSeenMode.contains(mModeName);
 			mSeenMode.insert(mModeName);
-			if (firstTime) fitToWindow();
+			if (firstTime) triggerFitToWindow = true;
         }
         else {
             mModeName = QString();
@@ -287,7 +297,12 @@ void PartWidget::updatePartFrames(){
     }
 
     setFrame(mFrameNumber);
-	// fitToWindow();
+
+	auto sceneRect = mPartView->scene()->sceneRect();
+	sceneRect.adjust(-sceneRect.width() * 0.125/2, -sceneRect.height() * 0.125/2, sceneRect.width() * 0.125/2, sceneRect.height() * 0.125/2);
+	mPartView->setSceneRect(sceneRect);
+
+	if (triggerFitToWindow) fitToWindow();
 }
 
 void PartWidget::setFrame(int f){
@@ -430,8 +445,8 @@ void PartWidget::updatePropertiesOverlays(){
 		const QColor strokeColour = mPropertiesColour;
 
 		QFont labelFont ("monospace");
-		const QColor labelColour = mPropertiesColour; // QColor(strokeColour.red(), strokeColour.green(), strokeColour.blue(), 128);
-		const QColor labelBgColour = mBackgroundColour;
+		const QColor labelColour = QColor(255,255,255); // QColor(strokeColour.red(), strokeColour.green(), strokeColour.blue(), 128);
+		const QColor labelBgColour = mPropertiesColour;
 
 		// font.setHintingPreference(QFont::PreferFullHinting);
 
@@ -459,13 +474,14 @@ void PartWidget::updatePropertiesOverlays(){
                     double w = array.at(2).toDouble(1);
                     double h = array.at(3).toDouble(1);
 
-					QPen pen = QPen(strokeColour, 0.1);
+					QPen pen = QPen(strokeColour, 0.05);
                     QBrush brush = Qt::NoBrush;
 					mPropertyItems.append(mPartView->scene()->addRect(x, y, w, h, pen, brush));
 					
 					auto* label = mPartView->scene()->addSimpleText(key, labelFont);
-					label->setScale(0.1);
-					label->setPos(x, y - 0.2 * labelFont.pointSizeF());
+					label->setScale(0.05 / 2);
+					label->setPos(x, y - 0.45);
+					label->setPen(Qt::NoPen);
 					label->setBrush(labelColour);
 					label->setZValue(10);
 					mPropertyItems.append(label);
@@ -555,9 +571,10 @@ void PartWidget::updateOverlay(){
 
 void PartWidget::setZoom(int z){
     mZoom = z;
-    // mPartView->setTransform(QTransform::fromScale(mZoom,mZoom)*QTransform::fromTranslate(mPosition.x(),mPosition.y()));
-    mPartView->setTransform(QTransform::fromScale(mZoom,mZoom));
-    mPartView->setSceneRect(mPartView->scene()->sceneRect().translated(mPosition.x()/mZoom, mPosition.y()/mZoom));
+	// TODO: Zoom in on mouse position
+	QTransform tr = QTransform::fromScale(mZoom, mZoom);
+    mPartView->setTransform(tr);
+	// mPartView->setSceneRect(mPartView->scene()->sceneRect().translated(mPosition.x()/mZoom, mPosition.y()/mZoom));
     updateDropShadow();
     mPartView->update();
 }
@@ -586,8 +603,8 @@ void PartWidget::fitToWindow(){
         QTransform transform = mPartView->transform();
         QPoint scale = transform.map(QPoint(1,1));
         mZoom = floor(scale.x());
-        mPosition = QPoint(0,0);
-        setZoom(mZoom);
+        setZoom(mZoom);		
+		mViewportCenter = mPartView->mapToScene(mPartView->viewport()->rect().center());
         zoomChanged();
     }
 }
@@ -654,14 +671,19 @@ void PartWidget::updatePivots(){
     }
 }
 
+/*
 void PartWidget::setPosition(QPointF pos){
     mPosition = pos;
-    // mPartView->setTransform(QTransform::fromScale(mZoom,mZoom)*QTransform::fromTranslate(mPosition.x(),mPosition.y()));
+	
+	// auto rect = mPartView->scene()->sceneRect();
+	// auto toRect = rect.translated(pos.x() / mZoom, pos.y() / mZoom);
+	// qDebug() << rect << " -> " << toRect;
 
     mPartView->setTransform(QTransform::fromScale(mZoom,mZoom));
-    mPartView->setSceneRect(mPartView->scene()->sceneRect().translated(pos.x()/mZoom,pos.y()/mZoom));
+    // mPartView->setSceneRect(toRect);
     mPartView->update();
 }
+*/
 
 static float S_PER_UPDATE = 1.f/60;
 void PartWidget::play(bool play){
@@ -711,7 +733,6 @@ void PartWidget::partViewMousePressEvent(QMouseEvent *event){
     bool left = event->button()==Qt::LeftButton;
     bool right = event->button()==Qt::RightButton;
     bool middle = event->button()==Qt::MiddleButton;
-
 
     if (mScribbling && right && (mDrawToolType==kDrawToolPaint || mDrawToolType==kDrawToolEraser)){
         mScribbling = false;
@@ -773,8 +794,6 @@ void PartWidget::partViewMousePressEvent(QMouseEvent *event){
                 TryCommand(new CDrawOnPart(mPartRef, mModeName, mFrameNumber, fillPattern, QPoint(0,0)));
             }
         }
-
-
     }
     else if ((left&&mDrawToolType==kDrawToolPickColour) || right){
         // select colour under pen
@@ -788,13 +807,13 @@ void PartWidget::partViewMousePressEvent(QMouseEvent *event){
         }
     }
     else if (middle){
-        mLastCanvasPosition = mPosition;
+		mLastViewportCenter = mViewportCenter;
+		// mLastViewOrigin = mPartView->transform().map(QPointF(0, 0));
         mMovingCanvas = true;
     }
 }
 
 void PartWidget::partViewMouseMoveEvent(QMouseEvent *event){
-    // qDebug() << "moving..";
     mMousePos = event->pos();
 
     bool left = event->buttons()&Qt::LeftButton;
@@ -820,8 +839,10 @@ void PartWidget::partViewMouseMoveEvent(QMouseEvent *event){
 
     }
     else if (middle && mMovingCanvas){
-        QPoint diff = mLastPoint - mMousePos;
-        setPosition(mLastCanvasPosition + QPointF(diff));
+        QPointF diff = (mLastPoint - mMousePos) / mZoom;
+		mViewportCenter = mLastViewportCenter + diff;
+		mPartView->centerOn(mViewportCenter);
+		mPartView->update();
     }
 
     if (mClipboardItem!=nullptr){
@@ -1197,14 +1218,15 @@ PartView::PartView(PartWidget *parent, QGraphicsScene *scene)
       pw(parent)
 {
     setMouseTracking(true);
+
 	// setOptimizationFlags(QGraphicsView::OptimizationFlag::DontAdjustForAntialiasing);
     // setOptimizationFlags(QGraphicsView::DontSavePainterState | QGraphicsView::DontAdjustForAntialiasing);
 	// setRenderHints(0); 
 	// setViewport(new QOpenGLWidget(this));
 
     setCursor(QCursor(QPixmap::fromImage(QImage(":/icon/icons/tool_none.png")),8,8));
-    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 
     // QLabel* label = new QLabel("widget", this);
     // label->move(2,0);

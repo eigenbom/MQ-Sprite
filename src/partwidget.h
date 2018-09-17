@@ -121,7 +121,7 @@ public slots:
     void updateOnionSkinning();
     void updatePivots();
 
-    void setPosition(QPointF);
+    // void setPosition(QPointF);
 
     void selectColourUnderPoint(QPointF);
     void showFrame(int f);
@@ -140,7 +140,7 @@ protected:
     QGraphicsPixmapItem* mOverlayPixmapItem;
 
     float mZoom;
-    QPointF mPosition;
+    QPointF mViewportCenter;
     int mPenSize;
     QColor mPenColour;
     QColor mEraserColour;
@@ -172,7 +172,7 @@ protected:
     QPoint mLastPoint;
     QPoint mTopLeftPoint;
     QPoint mMousePos;
-    QPointF mLastCanvasPosition;
+	QPointF mLastViewportCenter;
     bool mScribbling;
     bool mMovingCanvas;
     QImage* mOverlayImage; // TODO: resize this when change mode
