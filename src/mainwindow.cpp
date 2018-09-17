@@ -49,9 +49,38 @@ MainWindow::MainWindow(QWidget *parent) :
     mPartList = findChild<PartList*>("partList");
     connect(mPartList, SIGNAL(assetDoubleClicked(AssetRef)), this, SLOT(assetDoubleClicked(AssetRef)));
 	connect(mPartList, SIGNAL(assetSelected(AssetRef)), this, SLOT(assetSelected(AssetRef)));
+
+	connect(mPartList->findChild<QToolButton*>("toolButtonNewSprite"), &QToolButton::clicked, [&]() { TryCommand(new CNewPart()); });
+	connect(mPartList->findChild<QToolButton*>("toolButtonNewFolder"), &QToolButton::clicked, [&]() { TryCommand(new CNewFolder()); });
+	connect(mPartList->findChild<QToolButton*>("toolButtonDeleteAsset"), &QToolButton::clicked, [&]() {
+		if (mSelectedAsset.isNull()) {
+			qWarning() << "Tried to delete asset but no asset is selected!";
+		}
+		else {
+			switch (mSelectedAsset.type) {
+			case AssetType::Part: TryCommand(new CDeletePart(mSelectedAsset)); break;
+			case AssetType::Composite: TryCommand(new CDeleteComposite(mSelectedAsset)); break;
+			case AssetType::Folder:TryCommand(new CDeleteFolder(mSelectedAsset)); break;
+			}
+			MainWindow::Instance()->partListChanged();
+		}
+	});
+
+	connect(mPartList->findChild<QToolButton*>("toolButtonDuplicateAsset"), &QToolButton::clicked, [&]() {
+		if (mSelectedAsset.isNull()) {
+			qWarning() << "Tried to duplicate asset but no asset is selected!";
+		}
+		else {
+			switch (mSelectedAsset.type) {
+			case AssetType::Part: TryCommand(new CCopyPart(mSelectedAsset)); break;
+			case AssetType::Composite: TryCommand(new CCopyComposite(mSelectedAsset)); break;
+			case AssetType::Folder: qDebug() << "TODO: Copy folder command."; break;
+			}
+		}
+	});
 	
-	connect(findChild<QAction*>("actionNewSprite"), &QAction::triggered, [&]() { TryCommand(new CNewPart()); });
-	connect(findChild<QAction*>("actionNewFolder"), &QAction::triggered, [&]() { TryCommand(new CNewFolder()); });
+	// connect(findChild<QAction*>("actionNewSprite"), &QAction::triggered, [&]() { TryCommand(new CNewPart()); });
+	// connect(findChild<QAction*>("actionNewFolder"), &QAction::triggered, [&]() { TryCommand(new CNewFolder()); });
 
     mMdiArea = findChild<QMdiArea*>(tr("mdiArea"));
     connect(mMdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(subWindowActivated(QMdiSubWindow*)));
@@ -64,16 +93,19 @@ MainWindow::MainWindow(QWidget *parent) :
 	{
 		auto* dock = new QDockWidget("Composite Tools", this);
 		dock->setLayout(new QVBoxLayout());
+		dock->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
 		mCompositeToolsWidget = new CompositeToolsWidget(this);
 		dock->setWidget(mCompositeToolsWidget);
 		dock->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea | Qt::DockWidgetArea::RightDockWidgetArea);
 		this->addDockWidget(Qt::RightDockWidgetArea, dock);
+		dock->setFloating(true);
 		dock->hide();
 	}
 
 	{
 		auto* dock = new QDockWidget("Drawing Tools", this);
 		dock->setLayout(new QVBoxLayout());
+		dock->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
 		mDrawingTools = new DrawingTools(dock);
 		dock->setWidget(mDrawingTools);
 		dock->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea | Qt::DockWidgetArea::RightDockWidgetArea);
@@ -83,6 +115,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	{
 		auto* dock = new QDockWidget("Animation", this);
 		dock->setLayout(new QVBoxLayout());
+		dock->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
 		mAnimationWidget = new AnimationWidget(dock);
 		dock->setWidget(mAnimationWidget);
 		dock->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea | Qt::DockWidgetArea::RightDockWidgetArea);
@@ -92,10 +125,12 @@ MainWindow::MainWindow(QWidget *parent) :
 	{
 		auto* dock = new QDockWidget("Properties", this);
 		dock->setLayout(new QVBoxLayout());
+		dock->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
+		// minSzHint = QSize(100, 100);
 		mPropertiesWidget = new PropertiesWidget(dock);
 		dock->setWidget(mPropertiesWidget);
 		dock->setAllowedAreas(Qt::DockWidgetArea::LeftDockWidgetArea | Qt::DockWidgetArea::RightDockWidgetArea);
-		this->addDockWidget(Qt::RightDockWidgetArea, dock);
+		this->addDockWidget(Qt::LeftDockWidgetArea, dock);
 	}
 
     createActions();
@@ -173,15 +208,11 @@ void MainWindow::showViewOptionsDialog(){
     }
 
     mViewOptionsDockWidget = new QDockWidget(tr("Options"), this);
-    // mViewOptionsDockWidget->setAllowedAreas(Qt::LeftDockWidgetArea |
-    //                                        Qt::RightDockWidgetArea);
     mViewOptionsDockWidget->setWindowTitle("Options");
 
 	auto* optionsWidget = new OptionsWidget(mViewOptionsDockWidget);
 	mViewOptionsDockWidget->setWidget(optionsWidget);
-
 	auto& prefs = GlobalPreferences();
-
 	{
 		auto* chgBGColour = optionsWidget->findChild<QPushButton*>("pushButtonBackgroundColour");
 		connect(chgBGColour, SIGNAL(clicked()), this, SLOT(changeBackgroundColour()));
@@ -304,7 +335,8 @@ void MainWindow::createMenus(){
     mEditMenu = menuBar()->addMenu(tr("&Edit"));
     mEditMenu->addAction(mUndoAction);
     mEditMenu->addAction(mRedoAction);
-
+	
+	/*
 	mEditMenu->addSeparator();
 	mDuplicateAssetAction = mEditMenu->addAction("&Duplicate");	
 	mDuplicateAssetAction->setShortcut(QKeySequence(tr("Ctrl+D")));
@@ -320,8 +352,9 @@ void MainWindow::createMenus(){
 			}
 		}
 	});
-	mDuplicateAssetAction->setEnabled(false);
-	
+	mDuplicateAssetAction->setEnabled(false);	
+	*/
+
 	mEditMenu->addSeparator();
     connect(mEditMenu->addAction("Options..."), SIGNAL(triggered()), this, SLOT(showViewOptionsDialog()));
 
@@ -442,22 +475,24 @@ void MainWindow::assetDoubleClicked(AssetRef ref){
 }
 
 void MainWindow::assetSelected(AssetRef ref) {
-	if (ref.isNull()) {
-		mDuplicateAssetAction->setEnabled(false);
-	}
-	else {
-		switch (ref.type) {
-		case AssetType::Folder: {
-			break;
+	if (mDuplicateAssetAction != nullptr) {
+		if (ref.isNull()) {
+			mDuplicateAssetAction->setEnabled(false);
 		}
-		case AssetType::Part: {
-			mDuplicateAssetAction->setEnabled(true);
-			break;
-		}
-		case AssetType::Composite: {
-			mDuplicateAssetAction->setEnabled(true);
-			break;
-		}
+		else {
+			switch (ref.type) {
+			case AssetType::Folder: {
+				break;
+			}
+			case AssetType::Part: {
+				mDuplicateAssetAction->setEnabled(true);
+				break;
+			}
+			case AssetType::Composite: {
+				mDuplicateAssetAction->setEnabled(true);
+				break;
+			}
+			}
 		}
 	}
 

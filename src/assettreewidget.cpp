@@ -95,7 +95,7 @@ AssetTreeWidget::AssetTreeWidget(QWidget *parent):QTreeWidget(parent)
 		}
 		emit(assetSelected(ref));
 	});
-
+	// setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
     setDragDropMode(QAbstractItemView::InternalMove);
     setSelectionMode(QAbstractItemView::ExtendedSelection);
     setDropIndicatorShown(true);

@@ -5,7 +5,6 @@ QT += core gui widgets
 CONFIG += c++11
 
 HEADERS += \
-    src/assetlistwidget.h \
     src/commands.h \
     src/compositetoolswidget.h \
     src/compositewidget.h \
@@ -17,7 +16,6 @@ HEADERS += \
     src/resizemodedialog.h \
     src/tarball.h \
     src/assettreewidget.h \
-    src/animatorwidget.h \
     src/modelistwidget.h \
     src/drawingtools.h \
     src/propertieswidget.h \
@@ -30,7 +28,6 @@ FORMS += \
     src/mainwindow.ui \
     src/partlist.ui \
     src/resizemodedialog.ui \
-    src/animatorwidget.ui \
     src/drawingtools.ui \
     src/propertieswidget.ui \
     src/animationwidget.ui \
@@ -38,7 +35,6 @@ FORMS += \
     src/optionswidget.ui
 
 SOURCES += \
-    src/assetlistwidget.cpp \
     src/commands.cpp \
     src/compositetoolswidget.cpp \
     src/compositewidget.cpp \
@@ -51,7 +47,6 @@ SOURCES += \
     src/resizemodedialog.cpp \
     src/tarball.cpp \
     src/assettreewidget.cpp \
-    src/animatorwidget.cpp \
     src/modelistwidget.cpp \
     src/drawingtools.cpp \
     src/propertieswidget.cpp \

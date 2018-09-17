@@ -24,8 +24,8 @@ struct Preferences {
 
 	bool showDropShadow = true;
 	QColor dropShadowColour { 0, 0, 0, 255 };
-	float dropShadowOpacity = 0.4f;
-	float dropShadowBlurRadius = 2.0f;
+	float dropShadowOpacity = 0.2f;
+	float dropShadowBlurRadius = 1.6f;
 	float dropShadowOffsetH = 0.2f;
 	float dropShadowOffsetV = 0.3f;
 

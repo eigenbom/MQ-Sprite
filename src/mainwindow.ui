@@ -158,28 +158,7 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionNewSprite"/>
-   <addaction name="actionNewFolder"/>
-   <addaction name="separator"/>
   </widget>
-  <action name="actionNewSprite">
-   <property name="icon">
-    <iconset resource="../icons.qrc">
-     <normaloff>:/icon/icons/gentleface/doc_plus_icon&amp;16.png</normaloff>:/icon/icons/gentleface/doc_plus_icon&amp;16.png</iconset>
-   </property>
-   <property name="text">
-    <string>New Sprite</string>
-   </property>
-  </action>
-  <action name="actionNewFolder">
-   <property name="icon">
-    <iconset resource="../icons.qrc">
-     <normaloff>:/icon/icons/gentleface/folder_plus_icon&amp;16.png</normaloff>:/icon/icons/gentleface/folder_plus_icon&amp;16.png</iconset>
-   </property>
-   <property name="text">
-    <string>New Folder</string>
-   </property>
-  </action>
   <zorder>dockWidgetAssets</zorder>
   <zorder>dockWidgetTools</zorder>
  </widget>
@@ -192,9 +171,7 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources>
-  <include location="../icons.qrc"/>
- </resources>
+ <resources/>
  <connections/>
  <slots>
   <slot>assetListSelectionChanged()</slot>

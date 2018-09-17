@@ -626,7 +626,7 @@ void PartWidget::updateOnionSkinning(){
     if (mPartView){
 		mOnionSkinningEnabled = prefs.showOnionSkinning;
 		mOnionSkinningOpacity = prefs.onionSkinningOpacity;
-        mOnionSkinningEnabledDuringPlayback = true;
+        mOnionSkinningEnabledDuringPlayback = false;
         showFrame(mFrameNumber);
     }
 }
