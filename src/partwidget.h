@@ -156,8 +156,8 @@ protected:
     QVector<QGraphicsPixmapItem*> mPixmapItems;
 
     // Frames
-    QVector<QAbstractGraphicsShapeItem*> mAnchorItems;
-    QVector<QAbstractGraphicsShapeItem*> mPivotItems[MAX_PIVOTS];
+    QVector< QList<QAbstractGraphicsShapeItem*>> mAnchorItems;
+    QVector<QList<QAbstractGraphicsShapeItem*>> mPivotItems[MAX_PIVOTS];
 
     QVector<QGraphicsItem*> mPropertyItems;
     QVector<QPoint> mAnchors;
@@ -191,7 +191,9 @@ protected:
 
     QBrush mBackgroundBrush;
 	QColor mBackgroundColour;
+	QColor mOutOfBoundsColour;
     QColor mBoundsColour;
+	QColor mPropertiesColour;
 
 	QSet<QString> mSeenMode;
 };

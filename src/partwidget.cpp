@@ -147,9 +147,11 @@ void PartWidget::updatePartFrames(){
 			const int h = mPart->modes.value(mModeName).height;
             setWindowTitle(mPartName + tr(": ") + mModeName + tr(""));
 
-            const float boundsWidth = 0.1f; // 1.0f;
-            mBoundsItem = mPartView->scene()->addRect(-boundsWidth/2,-boundsWidth/2,w+boundsWidth,h+boundsWidth, QPen(QColor(0,0,0), boundsWidth, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin), QBrush(QColor(0,0,0,0)));
-
+			const int strokeAlpha = 255;
+			mBoundsColour = mBackgroundColour.lightnessF() > 0.5 ? QColor(0, 0, 0, strokeAlpha) : QColor(255, 255, 255, strokeAlpha);
+            const float boundsWidth = 0.05f;
+            mBoundsItem = mPartView->scene()->addRect(-boundsWidth/2,-boundsWidth/2,w+boundsWidth,h+boundsWidth, QPen(mBoundsColour, boundsWidth, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin), QBrush(QColor(0,0,0,0)));
+			
             Q_ASSERT(m.numFrames>0);
 
             for(int i=0;i<m.numFrames;i++){
@@ -170,47 +172,90 @@ void PartWidget::updatePartFrames(){
             mOverlayImage->fill(0x00FFFFFF);
             mOverlayPixmapItem = mPartView->scene()->addPixmap(QPixmap::fromImage(*mOverlayImage));
 			
-			QSettings settings;
-			QColor pivotColour = QColor(settings.value("pivot_colour", QColor(255, 255, 255).rgba()).toUInt());
+			// QSettings settings;
+			// QColor pivotColour = QColor(settings.value("pivot_colour", QColor(255, 255, 255).rgba()).toUInt());
 
 			QFont font("monospace");
 			// font.setHintingPreference(QFont::PreferFullHinting);
-            QPen pivotPen = QPen(pivotColour, 0.1);
+            QPen pivotPen = QPen(mPropertiesColour, 0.1);
 
             for(int i=0;i<m.numFrames;i++){
                 {
                     QPoint ap = m.anchor.at(i);
                     mAnchors.push_back(ap);
 
+					QList<QAbstractGraphicsShapeItem*> list;
+
+					/*
 					auto* it = mPartView->scene()->addRect(QRectF(0.25, 0.25, 0.5, 0.5));
 					it->setPen(QPen(QColor("#000000"), 0.125 / 2, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin));
 					it->setBrush(QBrush(QColor("#ffffff")));
 					it->setPos(ap.x(), ap.y());
 					mAnchorItems.push_back(it);
-
-					/*
-                    QGraphicsSimpleTextItem* ti = mPartView->scene()->addSimpleText("a", font);
-                    ti->setPen(pivotPen);
-                    ti->setBrush(QBrush(QColor(255,0,255)));
-                    ti->setScale(0.05);
-                    ti->setPos(ap.x()+0.3,ap.y()-0.1);
-                    mAnchorItems.push_back(ti);
 					*/
 
-                    //  QGraphicsPolygonItem* pi = mPartView->scene()->addPolygon(QPolygonF(QRectF(ap.x()+0.5, ap.y()+0.5, 0.25, 0.25)), pivotPen);
+					// QPolygonF polygon({ QPointF(0.25, 0.5), QPointF(0.5,0.25), QPointF(0.75,0.5),  QPointF(0.5,0.75), });
+					QPolygonF polygon({ QPointF(0.75,0.75),  QPointF(0.5,0.5), QPointF(0.25, 0.75) });
+					
+					auto* it = mPartView->scene()->addPolygon(polygon);
+					it->setPen(Qt::NoPen); //  QPen(QColor(0, 0, 0, 128), 0.125 / 2, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin));
+					it->setBrush(mPropertiesColour);
+					it->setPos(ap.x(), ap.y());
+					list.push_back(it);
+									   
+					{
+						auto* it = mPartView->scene()->addRect(QRectF(0.25, 0.75, 0.5, 0.5));
+						it->setPen(Qt::NoPen);
+						it->setBrush(mPropertiesColour);
+						it->setPos(ap.x(), ap.y());
+						list.push_back(it);
+					}
+
+					{
+						QGraphicsSimpleTextItem* label = mPartView->scene()->addSimpleText("A", font);
+						label->setPen(Qt::NoPen);
+						label->setBrush(QColor(255, 255, 255));
+						label->setScale(0.05 / 2);
+						label->setPos(ap.x() + 0.4, ap.y() + 0.68);
+						list.push_back(label);
+					}
+
+					mAnchorItems.push_back(list);
                 }
 
-                for(int p=0;p<MAX_PIVOTS;p++){
-                    QPoint pp = m.pivots[p].at(i);
-                    QGraphicsSimpleTextItem* ti = mPartView->scene()->addSimpleText(QString::number(p+1), font);
-                    ti->setPen(pivotPen);
-                    ti->setBrush(QBrush(pivotColour));
-                    ti->setScale(0.05);
-                    ti->setPos(pp.x()+0.3,pp.y()-0.1);
-                    // QGraphicsPolygonItem* pi = mPartView->scene()->addPolygon(QPolygonF(QRectF(pp.x()+0.5, pp.y()+0.5, 0.25, 0.25)), pivotPen);
+                for(int p=0;p<MAX_PIVOTS;p++){			
+					QList<QAbstractGraphicsShapeItem*> list;
 
+                    QPoint pp = m.pivots[p].at(i);
                     mPivots[p].push_back(pp);
-                    mPivotItems[p].push_back(ti);
+
+					{
+						QPolygonF polygon({ QPointF(0.25, 0.25), QPointF(0.5,0.5), QPointF(0.75,0.25) });
+						auto* it = mPartView->scene()->addPolygon(polygon);
+						it->setPen(Qt::NoPen);
+						it->setBrush(mPropertiesColour);
+						it->setPos(pp.x(), pp.y());
+						list.push_back(it);
+					}
+
+					{
+						auto* it = mPartView->scene()->addRect(QRectF(0.25, -0.25, 0.5, 0.5));
+						it->setPen(Qt::NoPen);
+						it->setBrush(mPropertiesColour);
+						it->setPos(pp.x(), pp.y());
+						list.push_back(it);
+					}
+
+					{
+						QGraphicsSimpleTextItem* label = mPartView->scene()->addSimpleText(QString::number(p + 1), font);
+						label->setPen(Qt::NoPen);
+						label->setBrush(QColor(255,255,255));
+						label->setScale(0.05 / 2);
+						label->setPos(pp.x() + 0.4, pp.y() - 0.25);
+						list.push_back(label);
+					}
+
+					mPivotItems[p].push_back(list);
                 }
             }
 
@@ -378,12 +423,14 @@ void PartWidget::updatePropertiesOverlays(){
         // couldn't parse.. (or not object)
     }
     else {
-		const int strokeAlpha = 64;
-		const QColor strokeColour = mBackgroundColour.lightnessF() > 0.5 ? QColor(128, 0, 128, strokeAlpha) : QColor(255, 0, 255, strokeAlpha);
+		// const int strokeAlpha = 64;
+		// const QColor strokeColour = mBackgroundColour.lightnessF() > 0.5 ? QColor(128, 0, 128, strokeAlpha) : QColor(255, 0, 255, strokeAlpha);
 		// const QColor fontColour = mBackgroundColour.lightnessF() < 0.5 ? QColor(0, 0, 0, 255) : QColor(255, 255, 255, 255);
 
+		const QColor strokeColour = mPropertiesColour;
+
 		QFont labelFont ("monospace");
-		const QColor labelColour = QColor(strokeColour.red(), strokeColour.green(), strokeColour.blue(), 128);
+		const QColor labelColour = mPropertiesColour; // QColor(strokeColour.red(), strokeColour.green(), strokeColour.blue(), 128);
 		const QColor labelBgColour = mBackgroundColour;
 
 		// font.setHintingPreference(QFont::PreferFullHinting);
@@ -591,7 +638,7 @@ void PartWidget::updatePivots(){
         mPivotColour = pivotColour;
 
         // qDebug() << mPivotsEnabled << mPivotsEnabledDuringPlayback << mPivotColour;
-
+		/*
         for(auto* it: mAnchorItems){
             // it->setPen(QColor(mPivotColour));
             it->setBrush(QBrush(mPivotColour));
@@ -602,6 +649,7 @@ void PartWidget::updatePivots(){
                 it->setBrush(QBrush(mPivotColour));
             }
         }
+		*/
         showFrame(mFrameNumber);
     }
 }
@@ -1043,15 +1091,27 @@ void PartWidget::showFrame(int f){
         QGraphicsPixmapItem* pi = mPixmapItems.at(i);
 		auto* effect = pi->graphicsEffect();		
         if (effect) effect->setEnabled(false);        
-        mAnchorItems.at(i)->hide();
-        for(int p=0;p<MAX_PIVOTS;p++) mPivotItems[p].at(i)->hide();
+		for (auto* it : mAnchorItems.at(i)) {
+			it->hide();
+		}
+		for (int p = 0; p < MAX_PIVOTS; p++) {
+			for (auto* it : mPivotItems[p].at(i)) {
+				it->hide();
+			}
+		}
         if (i == f){
 			pi->show();
             pi->setOpacity(1);
 			if (!disableDropShadow && effect && static_cast<QGraphicsDropShadowEffect*>(effect)->color().alpha() > 0) effect->setEnabled(true);
             if (pivots){
-                mAnchorItems.at(i)->show();
-                for(int p=0;p<mNumPivots;p++) mPivotItems[p].at(i)->show();
+				for (auto* it : mAnchorItems.at(i)) {
+					it->show();
+				}
+				for (int p = 0; p < mNumPivots; p++) {
+					for (auto* it : mPivotItems[p].at(i)) {
+						it->show();
+					}
+				}
             }
         }
         else if (onion && ((i-f)==1 || (i-f)==-1)){
@@ -1072,75 +1132,59 @@ void PartWidget::updateBackgroundBrushes(){
     QSettings settings;
     bool useGridPattern =  settings.value("background_grid_pattern", true).toBool();
 
+	auto secondaryColor = [](QColor colour1) {
+		int h = colour1.hue();
+		int s = colour1.saturation();
+		int val = colour1.value();
+		if (val < 50) {
+			val += 10;
+		}
+		else if (val < 255 / 2) {
+			val *= 1.05;
+		}
+		else if (val < (255 / 2 - 50)) {
+			val /= 1.05;
+		}
+		else {
+			val -= 10;
+		}
+		QColor colour2;
+		colour2.setHsv(h, s, val);
+		return colour2;
+	};
+
     QColor boundsColour;
     if (!useGridPattern){
          QColor backgroundColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
          // QColor backgroundColour = QColor(settings.value("background_colour", QColor(111,198,143).rgba()).toUInt());
          mBackgroundBrush = QBrush(backgroundColour);
          boundsColour = backgroundColour;
-		 mBackgroundColour = backgroundColour;
+		 mBackgroundColour = backgroundColour;		 
     }
     else {
-        QColor backgroundColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
-		mBackgroundColour = backgroundColour;
-
-        QColor backgroundColour2 = backgroundColour;
-        boundsColour = backgroundColour2;
-
-        // Calculate good colour for grid
-        int h = backgroundColour2.hue();
-        int s = backgroundColour2.saturation();
-        int val = backgroundColour2.value();
-
-        if (val < 50){
-            val += 10;
-        }
-        else if (val < 255/2){
-            val *= 1.05;
-        }
-        else if (val < (255/2 - 50)){
-            val /= 1.05;
-        }
-        else {
-            val -= 10;
-        }
-        backgroundColour2.setHsv(h,s,val);
+		mBackgroundColour = QColor(settings.value("background_colour", QColor(255, 255, 255).rgba()).toUInt());
+		QColor backgroundColour2 = secondaryColor(mBackgroundColour);
 
         int w = 2;
         QImage img(w, w, QImage::Format_RGB32);
         for(int i=0;i<w;i++){
          for(int j=0;j<w;j++){
             bool d = (i/(w/2) + j/(w/2))%2==0;
-            if (d) img.setPixel(i, j, backgroundColour.rgb());
+            if (d) img.setPixel(i, j, mBackgroundColour.rgb());
             else img.setPixel(i, j, backgroundColour2.rgb());
          }
         }
 
         mBackgroundBrush = QBrush(img);
         mBackgroundBrush.setTransform(QTransform::fromScale(0.5,0.5));
-
         boundsColour = QColor(0,0,0);
-
     }
 
-    // Calculate good colour for bounds rect
-    int h = boundsColour.hue();
-    int s = boundsColour.saturation();
-    int val = boundsColour.value();
+	// mOutOfBoundsColour = secondaryColor(mBackgroundColour);
+	mOutOfBoundsColour = QColor(160, 160, 160, 255); // Colour of mdi window
 
-    if (val < 50){
-        val += 30;
-    }
-    else if (val < 255/2){
-        val *= 1.2;
-    }
-    else if (val < (255/2 - 50)){
-        val /= 1.2;
-    }
-    else {
-        val -= 30;
-    }
-    boundsColour.setHsv(h,s,val);
+	// TODO: Compute properties colour
+	mPropertiesColour = QColor(255, 0, 255, 255);
 }
 
 
@@ -1193,10 +1237,11 @@ void PartView::keyPressEvent(QKeyEvent *event){
 
 void PartView::drawBackground(QPainter *painter, const QRectF &rect)
 {
-	painter->fillRect(rect, pw->mBackgroundBrush);
+	painter->fillRect(rect, QBrush(pw->mOutOfBoundsColour));
     if (pw->mBoundsItem){
-        QPen pen = pw->mBoundsItem->pen();
-        pen.setColor(pw->mBoundsColour);
-        pw->mBoundsItem->setPen(pen);
+        // QPen pen = pw->mBoundsItem->pen();
+        // pen.setColor(pw->mBoundsColour);
+        pw->mBoundsItem->setPen(Qt::NoPen);
+		pw->mBoundsItem->setBrush(pw->mBackgroundBrush);
     }
 }
