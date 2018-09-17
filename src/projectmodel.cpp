@@ -8,7 +8,6 @@
 #include <QJsonArray>
 #include <QFile>
 #include <QTextStream>
-// #include <QSettings>
 #include <QImageWriter>
 #include <QTemporaryFile>
 #include <QDir>
@@ -23,7 +22,6 @@
 #include <ios>
 #include "tarball.h"
 
-// TODO: Convert old files
 static const int PROJECT_SAVE_FILE_VERSION = 2;
 
 bool operator==(const AssetRef& a, const AssetRef& b){
@@ -311,61 +309,41 @@ bool ProjectModel::load(const QString& fileName, QString& reason){
 }
 
 bool ProjectModel::save(const QString& fileName){
-	qDebug() << "TODO: Implement saving";
-    return false;
-
-    /*
-
-    std::fstream out(fileName.toStdString().c_str(), std::ios::out | std::ios::binary);
+    std::ofstream out(fileName.toStdString().c_str(), std::ios::out | std::ios::binary);
     if(!out.is_open()){
-        qDebug() << "Cannot open out";
+		exportLog.push_back("Cannot open " + fileName);
         return false;
     }
-    QMap<QString,QImage*> imageMap;
+
+    QMap<QString, QSharedPointer<QImage>> imageMap;
 
     lindenb::io::TarOut tarball(out);
-
-    //////////////////////
-    // data.json
-    // NB: build the image set while processing data
-    //////////////////////
-
+	
     {
         QJsonObject data;
-
-        // version etc
         data.insert("version", PROJECT_SAVE_FILE_VERSION);
 
         // folder
-        QJsonObject foldersObject;
-
-        QMapIterator<AssetRef, Folder*> fit(this->folders);
-        while (fit.hasNext()){
-            fit.next();
+        QJsonArray foldersArray;
+        for (auto folder: folders){
             QJsonObject folderObject;
-            const Folder* f = fit.value();
-            FolderToJson(f->name, *f, &folderObject);
-
-            QString& uuid = f->ref.uuid.toString();
-            foldersObject.insert(uuid, folderObject);
+			folderObject.insert("id", folder->ref.id);			
+            FolderToJson(folder->name, *folder, &folderObject);
+            foldersArray.append(folderObject);
         }
-        data.insert("folders", foldersObject);
+        data.insert("folders", foldersArray);
 
         // parts
-        QJsonObject partsObject;
-
-        QMapIterator<AssetRef, Part*> pit(this->parts);
-        while (pit.hasNext()){
-            pit.next();
+		QJsonArray partsArray;
+		for (auto part: parts) {
             QJsonObject partObject;
-            const Part* p = pit.value();
-            PartToJson(p->name, *p, &partObject, &imageMap);
-
-            QString& uuid = p->ref.uuid.toString();
-            partsObject.insert(uuid, partObject);
+			partObject.insert("id", part->ref.id);
+            PartToJson(part->name, *part, &partObject, &imageMap);
+			partsArray.append(partObject);
         }
-        data.insert("parts", partsObject);
+        data.insert("parts", partsArray);
 
+		/*
         // comps
         QJsonObject compsObject;
         {
@@ -383,6 +361,7 @@ bool ProjectModel::save(const QString& fileName){
             }
         }
         data.insert("comps", compsObject);
+		*/
 
         // Send it out
         QString dataStr;
@@ -390,32 +369,6 @@ bool ProjectModel::save(const QString& fileName){
         QJsonDocument doc(data);
         out << doc.toJson();
         tarball.put("data.json", dataStr.toStdString().c_str());
-    }
-
-    //////////////////////
-    // prefs.json
-    //////////////////////
-
-    {
-        QJsonObject settingsObj;
-        QSettings settings;
-        foreach(QString key, settings.allKeys()){
-            const QVariant& val = settings.value(key);
-            if (key=="background_colour"){
-                uint col = val.toUInt();
-                settingsObj.insert(key, QString::number(col));
-            }
-            else {
-                settingsObj.insert(key, QJsonValue::fromVariant(val));
-            }
-        }
-
-        QString prefsdataStr;
-        QTextStream prefsout(&prefsdataStr);
-        QJsonDocument prefsdoc(settingsObj);
-        prefsout << prefsdoc.toJson();
-
-        tarball.put("prefs.json", prefsdataStr.toStdString().c_str());
     }
 
     ////////////////
@@ -426,18 +379,15 @@ bool ProjectModel::save(const QString& fileName){
         QDir tempPath = QDir(QDir::tempPath());
         QString tempFileName = tempPath.absoluteFilePath("tmp.png");
 
-        QMapIterator<QString,QImage*> it(imageMap);
-        while (it.hasNext()){
-            it.next();
-
-            const QImage* img = it.value();
+		for (auto it = imageMap.begin(); it != imageMap.end(); ++it){
+            auto img = it.value();
             if (img){
                 bool res = img->save(tempFileName, "PNG");
                 if (res){
-                    tarball.putFile(tempFileName.toStdString().c_str(),it.key().toStdString().c_str());
+                    tarball.putFile(tempFileName.toStdString().c_str(), it.key().toStdString().c_str());
                 }
                 else {
-                    qDebug() << "Couldn't save image: " << it.key();
+					exportLog.append("Couldn't save image " + it.key());
                 }
             }
         }
@@ -448,7 +398,6 @@ bool ProjectModel::save(const QString& fileName){
 
     this->fileName = fileName;
     return true;
-    */
 }
 
 void ProjectModel::JsonToFolder(const QJsonObject& obj, Folder* folder){
@@ -463,7 +412,7 @@ void ProjectModel::FolderToJson(const QString& name, const Folder& folder, QJson
 
     obj->insert("name", name);
     if (!folder.parent.isNull()){
-        obj->insert("parent", folder.parent.idAsString());
+        obj->insert("parent", folder.parent.id);
     }
 }
 
@@ -532,67 +481,76 @@ void ProjectModel::JsonToPart(const QJsonObject& obj, const QMap<QString,QShared
     }
 }
 
-void ProjectModel::PartToJson(const QString& name, const Part& part, QJsonObject* obj, QMap<QString, QSharedPointer<QImage>>* imageMap){
-    qDebug() << "Support layers";
+void BuildFolderList(ProjectModel* pm, Folder& folder, QStringList& list) {
+	if (!folder.parent.isNull()) {
+		Q_ASSERT(pm->getFolder(folder.parent) != nullptr);
+		BuildFolderList(pm, *pm->getFolder(folder.parent), list);
+	}
 
-    /*
-	auto properties = part.properties.trimmed();
+	list.append(folder.name);
+}
+
+void ProjectModel::PartToJson(const QString& name, const Part& part, QJsonObject* obj, QMap<QString, QSharedPointer<QImage>>* imageMap){
+    auto properties = part.properties.trimmed();
     if (!properties.isEmpty()){
         obj->insert("properties", "{ " + properties + " }");
     }
 
-    QMapIterator<QString,Part::Mode> mit(part.modes);
-    QString partNameFixed = name;
-    partNameFixed.replace(' ', '_');
+    QString imageNamePrefix = name;
+	imageNamePrefix.append(" " + part.ref.id); // Append id to ensure uniqueness
+	if (!part.parent.isNull()) {
+		Q_ASSERT(getFolder(part.parent) != nullptr);
+		QStringList list;
+		BuildFolderList(this, *getFolder(part.parent), list);		
+		imageNamePrefix.prepend(list.join("_"));
+		imageNamePrefix.append("_");
+	}
+	imageNamePrefix.replace(' ', '_');
+
     obj->insert("name", name);
 
     if (!part.parent.isNull()){
-        obj->insert("parent", part.parent.idAsString());
+        obj->insert("parent", part.parent.id);
     }
 
-    while (mit.hasNext()){
-        mit.next();
+	QJsonArray modeArray;
+	for (auto mit = part.modes.begin(); mit != part.modes.end(); ++mit) {
+		const auto& m = mit.value();
+		QString modeNameFixed = mit.key();
+		modeNameFixed.replace(' ', '_');
 
-        const Part::Mode& m = mit.value();
-        QString modeNameFixed = mit.key();
-        modeNameFixed.replace(' ', '_');
+		QJsonObject modeObject;
+		modeObject.insert("name", mit.key());
+		modeObject.insert("width", m.width);
+		modeObject.insert("height", m.height);
+		modeObject.insert("numFrames", m.numFrames);
+		modeObject.insert("numPivots", m.numPivots);
+		modeObject.insert("framesPerSecond", m.framesPerSecond);
 
-        // part, mode..
-        QJsonObject modeObject;
-        modeObject.insert("width", m.width);
-        modeObject.insert("height", m.height);
-        modeObject.insert("numFrames", m.numFrames);
-        modeObject.insert("numPivots", m.numPivots);
-        modeObject.insert("framesPerSecond", m.framesPerSecond);
+		QJsonArray frameArray;
+		for (int frame = 0; frame < m.numFrames; frame++) {
+			QJsonObject frameObject;
+			frameObject.insert("ax", m.anchor.at(frame).x());
+			frameObject.insert("ay", m.anchor.at(frame).y());
+			QString frameNum = QString("%1").arg(frame, 3, 10, QChar('0')).toUpper();
+			QString imageName = QString("%1_%2_%3.png").arg(imageNamePrefix, modeNameFixed, frameNum);
+			imageMap->insert(imageName, m.frames.at(frame));
+			frameObject.insert("image", imageName);
+			for (int p = 0; p < m.numPivots; p++) {
+				frameObject.insert(QString("p%1x").arg(p), m.pivots[p].at(frame).x());
+				frameObject.insert(QString("p%1y").arg(p), m.pivots[p].at(frame).y());
+			}
+			frameArray.append(frameObject);
+		}
 
-        QJsonArray frameArray;
-        for(int frame=0;frame<m.numFrames;frame++){
-            QJsonObject frameObject;
-            frameObject.insert("ax", m.anchor.at(frame).x());
-            frameObject.insert("ay", m.anchor.at(frame).y());
-
-            QString frameNum = QString("%1").arg(frame, 3, 10, QChar('0')).toUpper();
-            QString imageName = QString("%1_%2_%3.png").arg(partNameFixed,modeNameFixed,frameNum);
-
-            imageMap->insert(imageName, m.images.at(frame));
-            frameObject.insert("image", imageName);
-
-            // pivots
-            for(int p=0;p<m.numPivots;p++){
-                frameObject.insert(QString("p%1x").arg(p), m.pivots[p].at(frame).x());
-                frameObject.insert(QString("p%1y").arg(p), m.pivots[p].at(frame).y());
-            }
-
-            frameArray.append(frameObject);
-        }
-
-        modeObject.insert("frames", frameArray);
-        obj->insert(mit.key(), modeObject);
-    }
-    */
+		modeObject.insert("frames", frameArray);
+		modeArray.append(modeObject);
+	}
+	obj->insert("modes", modeArray);
 }
 
 void ProjectModel::CompositeToJson(const QString& name, const Composite& comp, QJsonObject* obj){
+	/*
     obj->insert("root", comp.root);
     obj->insert("name", name);
 
@@ -627,6 +585,7 @@ void ProjectModel::CompositeToJson(const QString& name, const Composite& comp, Q
         // compChildren.insert(fixedChildName, childObject);
     }
     obj->insert("parts", compChildren);
+	*/
 }
 
 void ProjectModel::JsonToComposite(const QJsonObject& obj, Composite* comp){

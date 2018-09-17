@@ -46,11 +46,6 @@ struct AssetRef {
 	int id { 0 }; // A unique ID for this project file
     AssetType type = AssetType::None;
 	bool isNull() const { return type == AssetType::None; }
-	QString idAsString() const {
-		QString str;
-		str.setNum(id);
-		return str;
-	}
 };
 
 bool operator==(const AssetRef& a, const AssetRef& b);
@@ -105,6 +100,7 @@ public:
 public:
 	QString fileName {};
 	QList<QString> importLog;
+	QList<QString> exportLog;
 	
 private:
 	int mNextId = 1;

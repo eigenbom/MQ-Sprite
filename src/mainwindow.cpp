@@ -923,10 +923,13 @@ void MainWindow::loadProject(const QString& fileName){
 	QString reason;
     bool result = ProjectModel::Instance()->load(fileName, reason);
     if (!result){
-		qWarning() << "Error while loading " << fileName << "! Reason: " << reason;
-        ProjectModel::Instance()->clear();
-        mPartList->updateList();
+		// qWarning() << "Error while loading " << fileName << "! Reason: " << reason;
 		QMessageBox::warning(this, "Error during load", tr("Couldn't load ") + fileName + tr("\nReason: ") + reason);
+		if (!mProjectModel->importLog.isEmpty()) {
+			QMessageBox::warning(this, "Import issues", mProjectModel->importLog.join("\n"));
+		}
+		mProjectModel->clear();
+        mPartList->updateList();
     }
     else {
         mPartList->updateList();
@@ -980,19 +983,21 @@ void MainWindow::saveProject(){
     QString fileName = ProjectModel::Instance()->fileName;
 
     if (fileName.isNull() || fileName.isEmpty() || !QFileInfo(fileName).isFile()){
-        // Run Save As..
         saveProjectAs();
     }
     else {
-        // Save to filename
         bool result = ProjectModel::Instance()->save(fileName);
         if (!result){
-            QMessageBox::warning(this, "Error during save", tr("Couldn't save as ") + fileName);
+            QMessageBox::warning(this, "Error during save", tr("Couldn't save ") + fileName + "!\n" + mProjectModel->exportLog.join("\n"));			
         }
         else {
             mProjectModifiedSinceLastSave = false;
 			setWindowTitle(makeWindowTitle(fileName, true));
             MainWindow::Instance()->showMessage("Successfully saved");
+
+			if (!mProjectModel->exportLog.isEmpty()) {
+				QMessageBox::warning(this, "Export issues", mProjectModel->exportLog.join("\n"));
+			}
         }
     }
 }
@@ -1005,7 +1010,7 @@ void MainWindow::saveProjectAs(){
     if (!fileName.isNull()){
         bool result = ProjectModel::Instance()->save(fileName);
         if (!result){
-            QMessageBox::warning(this, "Error during save", tr("Couldn't save as ") + fileName);
+			QMessageBox::warning(this, "Error during save", tr("Couldn't save ") + fileName + "!\n" + mProjectModel->exportLog.join("\n"));
         }
         else {
             // Update last saved project location
@@ -1015,6 +1020,10 @@ void MainWindow::saveProjectAs(){
             mProjectModifiedSinceLastSave = false;
 			setWindowTitle(makeWindowTitle(fileName, true));
             MainWindow::Instance()->showMessage("Successfully saved");
+
+			if (!mProjectModel->exportLog.isEmpty()) {
+				QMessageBox::warning(this, "Export issues", mProjectModel->exportLog.join("\n"));
+			}
         }
     }
 }
