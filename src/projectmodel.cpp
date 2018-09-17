@@ -26,10 +26,6 @@
 // TODO: Convert old files
 static const int PROJECT_SAVE_FILE_VERSION = 2;
 
-static int StringToId(QString str) {
-	return str.toInt();
-}
-
 bool operator==(const AssetRef& a, const AssetRef& b){
     return (a.type == AssetType::None && b.type == AssetType::None) ||  (a.id == b.id && a.type == b.type);
 }
@@ -264,9 +260,9 @@ bool ProjectModel::load(const QString& fileName, QString& reason){
 
     // Load data.json, connecting the Images* too
     {
-		QJsonArray folders = dataObj.value("folders").toArray();
-        QJsonArray parts = dataObj.value("parts").toArray();
-        QJsonObject comps = dataObj.value("comps").toObject();
+		auto folders = dataObj.value("folders").toArray();
+		auto parts = dataObj.value("parts").toArray();
+		auto comps = dataObj.value("comps").toArray();
 		
         if (!folders.isEmpty()){
             for(auto it = folders.begin(); it!=folders.end(); it++){
@@ -282,8 +278,8 @@ bool ProjectModel::load(const QString& fileName, QString& reason){
 
         if (!parts.isEmpty()){
             for(auto it = parts.begin(); it!=parts.end(); it++){
-				auto part = QSharedPointer<Part>::create();
                 const auto& partObj = it->toObject();
+				auto part = QSharedPointer<Part>::create();
 				part->ref.id = partObj["id"].toInt();
                 part->ref.type = AssetType::Part;
 				mNextId = std::max(mNextId, part->ref.id + 1);
@@ -292,23 +288,17 @@ bool ProjectModel::load(const QString& fileName, QString& reason){
             }
         }
 
-		/*
         if (!comps.isEmpty()){
             for(auto it = comps.begin(); it!=comps.end(); it++){
-                const QString& uuid = it.key();
-                const QJsonObject& compObj = it.value().toObject();
+                const auto& compObj = it->toObject();
 				auto composite = QSharedPointer<Composite>::create();
-                composite->ref.uuid = QUuid(uuid);
+				composite->ref.id = compObj["id"].toInt();
                 composite->ref.type = AssetType::Composite;
-                composite->properties = QString();
-				composite->name = it.key();
-
-				mNextId = std::max(mNextId, part->ref.id + 1);
-
+				mNextId = std::max(mNextId, composite->ref.id + 1);
                 JsonToComposite(compObj, composite.get());
                 this->composites.insert(composite->ref, composite);
             }
-        }*/
+        }
     }
 
     this->fileName = fileName;
@@ -472,6 +462,7 @@ void ProjectModel::FolderToJson(const QString& name, const Folder& folder, QJson
     }
 }
 
+
 void ProjectModel::JsonToPart(const QJsonObject& obj, const QMap<QString,QSharedPointer<QImage>>& imageMap, Part* part){
 	part->name = obj["name"].toString();
 
@@ -480,44 +471,16 @@ void ProjectModel::JsonToPart(const QJsonObject& obj, const QMap<QString,QShared
         part->parent.type = AssetType::Folder;
     }
 
-    for(auto it = obj.begin(); it != obj.end(); it++){        
-        const QString& modeName = it.key();
-        
-		if (modeName == "properties"){
-			auto properties = it.value().toString();
-			properties = properties.trimmed();
-			if (!properties.isEmpty()) {				
-				auto doc = QJsonDocument::fromJson(properties.toUtf8());
-				if (doc.isNull()) {
-					importLog.push_back("Error reading properties of " + part->name + " (Couldn't parse JSON)");
-				}
-				else if (!doc.isObject()) {
-					importLog.push_back("Error reading properties of " + part->name + " (Not a JSON object)");
-				}
-				else {					
-					properties = QString(doc.toJson(QJsonDocument::JsonFormat::Indented));
-					int start = properties.indexOf("{");
-					int end = properties.lastIndexOf("}");
-					if (start == -1 || end == -1) {
-						importLog.push_back("Properties of " + part->name + " were not surrounded by curly braces!");
-					}
-					properties = properties.mid(start + 1, end - (start + 1));
-					auto plist = properties.split("\n");
-					// TODO: Remove tabs from all lines?
-					for (auto& s : plist) {
-						if (s.startsWith("    ")) s = s.mid(4);
-					}
-					properties = plist.join("\n").trimmed();
+	if (obj.contains("properties")) {
+		part->properties = importAndFormatProperties(part->name, obj["properties"].toString());
+	}
 
-					// properties = properties.trimmed();
-				}
-			}
-            part->properties = properties;
-            continue;
-        }
-
-        const QJsonObject& modeObject = it.value().toObject();
+	const auto& modeArray = obj["modes"].toArray();
+    for(auto it = modeArray.begin(); it != modeArray.end(); it++){
+		const auto& modeObject = it->toObject();
         if (!modeObject.isEmpty()){
+			const QString& modeName = modeObject["name"].toString();
+
             Part::Mode m;
 
             m.width = modeObject.value("width").toInt();
@@ -543,10 +506,7 @@ void ProjectModel::JsonToPart(const QJsonObject& obj, const QMap<QString,QShared
 				int imageWidth = image->width();
 
 				if (imageWidth != m.width || imageHeight != m.height) {
-					// TODO: Log this to an "import results" window!
-					qWarning() << "Warning! Sprite " << part->name << " had invalid width and height! Anchors may be incorrect!";
 					importLog.append("Sprite " + part->name + " had invalid width and height! Anchors may be incorrect!");
-
 					m.width = imageWidth;
 					m.height = imageHeight;
 				}
@@ -635,7 +595,6 @@ void ProjectModel::CompositeToJson(const QString& name, const Composite& comp, Q
 	qWarning() << "TODO: Reformat comp properties";
     obj->insert("properties", comp.properties);
 
-
     if (!comp.parent.isNull()){
         obj->insert("parent", comp.parent.idAsString());
     }
@@ -666,36 +625,69 @@ void ProjectModel::CompositeToJson(const QString& name, const Composite& comp, Q
 }
 
 void ProjectModel::JsonToComposite(const QJsonObject& obj, Composite* comp){
-    comp->root = obj.value("root").toVariant().toInt();    
-    // comp->name = obj["name"].toString();
-    comp->properties = obj.value("properties").toString();
+    comp->root = obj.value("root").toInt();    
+    comp->name = obj["name"].toString();
+
+	if (obj.contains("properties")) {
+		comp->properties = importAndFormatProperties(comp->name, obj["properties"].toString());
+	}
 
     if (obj.contains("parent")){
-        comp->parent.id = StringToId(obj["parent"].toString());
+		comp->parent.id = obj["parent"].toInt();
         comp->parent.type = AssetType::Folder;
     }
 
-    QJsonArray children = obj.value("parts").toArray();
+    const auto& children = obj.value("parts").toArray();
     int index = 0;
-    foreach(const QJsonValue& value, children){
+    for(const auto& value: children){
         QJsonObject childObject = value.toObject();
         QString name = childObject.value("name").toString();
         comp->children.push_back(name);
 
         Composite::Child child;
-        child.parent = childObject.value("parent").toVariant().toInt();
-        child.parentPivot = childObject.value("parentPivot").toVariant().toInt();
-        child.z = childObject.value("z").toVariant().toInt();
-        child.part.id = StringToId(childObject.value("part").toString());
+		child.id = childObject.value("id").toInt();
+        child.parent = childObject.value("parent").toInt();
+        child.parentPivot = childObject.value("parentPivot").toInt();
+        child.z = childObject.value("z").toInt();
+		child.part.id = childObject.value("part").toInt();
         child.part.type = AssetType::Part;
         child.index = index;
 
         QJsonArray childrenOfChild = childObject.value("children").toArray();
-        foreach(const QJsonValue& ci, childrenOfChild){
-            child.children.push_back(ci.toVariant().toInt());
+        for(const auto& ci: childrenOfChild){
+            child.children.push_back(ci.toInt());
         }
         comp->childrenMap.insert(name, child);
 
         index++;
     }
+}
+
+QString ProjectModel::importAndFormatProperties(const QString& assetName, const QString& properties_) {
+	auto properties = properties_;
+	properties = properties.trimmed();
+	if (!properties.isEmpty()) {
+		auto doc = QJsonDocument::fromJson(properties.toUtf8());
+		if (doc.isNull()) {
+			importLog.push_back("Error reading properties of " + assetName + " (Couldn't parse JSON)");
+		}
+		else if (!doc.isObject()) {
+			importLog.push_back("Error reading properties of " + assetName + " (Not a JSON object)");
+		}
+		else {
+			properties = QString(doc.toJson(QJsonDocument::JsonFormat::Indented));
+			int start = properties.indexOf("{");
+			int end = properties.lastIndexOf("}");
+			if (start == -1 || end == -1) {
+				importLog.push_back("Properties of " + assetName + " were not surrounded by curly braces!");
+			}
+			properties = properties.mid(start + 1, end - (start + 1));
+			auto plist = properties.split("\n");
+			for (auto& s : plist) {
+				if (s.startsWith("    ")) s = s.mid(4);
+			}
+			properties = plist.join("\n").trimmed();
+		}
+	}
+	return properties;
 }

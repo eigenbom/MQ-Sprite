@@ -98,6 +98,7 @@ protected:
     void PartToJson(const QString& name, const Part& part, QJsonObject* obj, QMap<QString,QSharedPointer<QImage>>* imageMap);
     void CompositeToJson(const QString& name, const Composite& comp, QJsonObject* obj);
     void JsonToComposite(const QJsonObject& obj, Composite* comp);
+	QString importAndFormatProperties(const QString& assetName, const QString& properties);
 };
 
 struct Asset {
@@ -133,18 +134,19 @@ struct Part: public Asset {
 
 struct Composite: public Asset {
     struct Child {
-        AssetRef part;
-        int index; // in children
-        int parent; // index of parent
-        int parentPivot; // pivot index connected to
-        int z; // z-order (comp is drawn from lowest z to highest z)
+		AssetRef part {};
+		int id = -1; // unused for now
+        int index = -1; // in children
+        int parent = -1; // index of parent
+        int parentPivot = -1; // pivot index connected to
+        int z = 0; // z-order (comp is drawn from lowest z to highest z)
         QList<int> children; // list of children (indices)
     };
 
-    int root;
+    int root = -1;
     QMap<QString,Child> childrenMap;
     QList<QString> children;
-    QString properties;
+	QString properties{};
 };
 
 

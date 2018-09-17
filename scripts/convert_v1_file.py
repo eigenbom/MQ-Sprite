@@ -25,6 +25,8 @@ def process(filename, outputfilename):
         data_json_path = os.path.join(tar_output_dir, "data.json")
         data_obj = json.load(open(data_json_path))
 
+        os.remove(os.path.join(tar_output_dir, "prefs.json"))
+
     assert data_obj is not None
 
     print("Found data.json")
@@ -55,9 +57,9 @@ def process(filename, outputfilename):
                 current_dir = sub_dir
         return current_dir
 
-    parts = data_obj["parts"]
     part_list = []
-    for name, part in parts.iteritems():
+    parts_by_name = {}
+    for name, part in data_obj["parts"].iteritems():
         part["id"] = get_next_id()
         names = list(name.split("/"))        
         part_dir = None
@@ -66,11 +68,37 @@ def process(filename, outputfilename):
         part["name"] = names[-1]
         if part_dir:
             part["parent"] = part_dir["id"]
+        # move modes to special sub object
+        part["modes"] = []
+        for k, v in part.items():
+            if type(v) is dict:
+                v["name"] = k
+                part["modes"].append(v)
+                del part[k]
+        parts_by_name[name] = part
         part_list.append(part)
     data_obj["parts"] = part_list
 
-    print("WARNING: Deleting comps while debugging!")
-    del data_obj["comps"]
+    comp_list = []
+    for name, comp in data_obj["comps"].iteritems():
+        comp["id"] = get_next_id()
+        names = list(name.split("/"))
+        comp_dir = None
+        if len(names) > 1:
+            comp_dir = create_dirs(names[:-1])
+        comp["name"] = names[-1]
+        if comp_dir:
+            comp["parent"] = comp_dir["id"]
+        for part in comp["parts"]:
+            part["id"] = get_next_id()
+            part_ref = part["part"] if "part" else ""
+            if len(part_ref) > 0:
+                assert part_ref in parts_by_name, "%s not in %s"%(str(part_ref), str(parts_by_name.keys()))
+                part_ref = parts_by_name[part_ref]["id"]
+                part["part"] = part_ref
+        comp_list.append(comp)
+
+    data_obj["comps"] = comp_list    
 
     # build folders tree
     def flatten(node):
