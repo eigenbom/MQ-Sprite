@@ -17,6 +17,24 @@ struct Part;
 struct Composite;
 struct Folder;
 
+struct Preferences {
+	QColor backgroundColour { 255, 255, 255, 255 };
+	bool backgroundCheckerboard = true;
+	bool showAnchors = false;
+
+	bool showDropShadow = true;
+	QColor dropShadowColour { 0, 0, 0, 255 };
+	float dropShadowOpacity = 0.4f;
+	float dropShadowBlurRadius = 2.0f;
+	float dropShadowOffsetH = 0.2f;
+	float dropShadowOffsetV = 0.3f;
+
+	bool showOnionSkinning = false;
+	float onionSkinningOpacity = 0.2f;
+};
+
+Preferences& GlobalPreferences();
+
 enum class AssetType {
 	None = 0,
     Part = 1,

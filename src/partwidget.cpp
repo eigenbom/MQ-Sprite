@@ -14,8 +14,6 @@
 #include <QRgb>
 #include <QMdiSubWindow>
 #include <QGraphicsDropShadowEffect>
-// #include <QOpenGLWidget> 
-#include <QSettings>
 #include <QSlider>
 #include <QTimer>
 #include <QJsonDocument>
@@ -57,12 +55,8 @@ PartWidget::PartWidget(AssetRef ref, QWidget *parent) :
     mCopyRectItem(nullptr)
 {
     setMinimumSize(256, 256);
-	
-    // setWindowFlags(Qt::CustomizeWindowHint); //Set window with no title bar
-    // setWindowFlags(Qt::WindowCloseButtonHint);
-    // setWindowFlags(Qt::FramelessWindowHint); //Set a frameless window
+	setWindowIcon(QIcon { ":/icon/icons/gentleface/picture_icon&16.png" });
 
-    // Setup part view
     mPartView = new PartView(this, new QGraphicsScene());
     mPartView->setTransform(QTransform::fromScale(mZoom,mZoom));
 	mViewportCenter = QPointF { 0, 0 };
@@ -175,11 +169,7 @@ void PartWidget::updatePartFrames(){
             mOverlayImage->fill(0x00FFFFFF);
             mOverlayPixmapItem = mPartView->scene()->addPixmap(QPixmap::fromImage(*mOverlayImage));
 			
-			// QSettings settings;
-			// QColor pivotColour = QColor(settings.value("pivot_colour", QColor(255, 255, 255).rgba()).toUInt());
-
 			QFont font("monospace");
-			// font.setHintingPreference(QFont::PreferFullHinting);
             QPen pivotPen = QPen(mPropertiesColour, 0.1);
 
 			const int anchorZ = 20;
@@ -340,8 +330,7 @@ void PartWidget::setDrawToolType(DrawToolType type){
             break;
         }
         case kDrawToolEraser: {
-            QSettings settings;
-            mEraserColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
+            mEraserColour = GlobalPreferences().backgroundColour;
             mPartView->setCursor(QCursor(QPixmap::fromImage(QImage(":/icon/icons/tool_erase.png")),8,8));
             break;
         }
@@ -610,20 +599,21 @@ void PartWidget::fitToWindow(){
 }
 
 void PartWidget::updateDropShadow(){
-    QSettings settings;
-    float opacity = settings.value("drop_shadow_opacity", QVariant(0.f)).toFloat();
-    float blur = settings.value("drop_shadow_blur", QVariant(0.5f)).toFloat();
-    float dx = settings.value("drop_shadow_offset_x", QVariant(0.5f)).toFloat();
-    float dy = settings.value("drop_shadow_offset_y", QVariant(0.5f)).toFloat();
-    QColor dropShadowColour = QColor(settings.value("drop_shadow_colour", QColor(0,0,0).rgba()).toUInt());
+	const auto& prefs = GlobalPreferences();
+    float opacity = prefs.showDropShadow ? prefs.dropShadowOpacity : 0.0f;
+    float blur = prefs.dropShadowBlurRadius;
+    float dx = prefs.dropShadowOffsetH;
+	float dy = prefs.dropShadowOffsetV;
+	QColor dropShadowColour = prefs.dropShadowColour;
+	dropShadowColour.setAlphaF(opacity);
 
     if (mPartView){		
         for(auto* it: mPixmapItems){
             auto* effect = (QGraphicsDropShadowEffect*) it->graphicsEffect();
 			if (effect) {
-				effect->setOffset(dx * 2 * mZoom / 4., dy * 2 * mZoom / 2.);
-				effect->setColor(QColor(dropShadowColour.red(), dropShadowColour.green(), dropShadowColour.blue(), opacity * 255));
-				effect->setBlurRadius(blur * 2 * mZoom * 2.0);
+				effect->setOffset(dx * mZoom, dy * mZoom);
+				effect->setColor(dropShadowColour);
+				effect->setBlurRadius(blur * mZoom);
 			}
         }
 		
@@ -631,59 +621,26 @@ void PartWidget::updateDropShadow(){
     }
 }
 
-void PartWidget::updateOnionSkinning(){
-    QSettings settings;
-    float trans = settings.value("onion_skinning_transparency", 0.0f).toFloat();
-    bool edp = settings.value("onion_skinning_enabled_during_playback", false).toBool();
+void PartWidget::updateOnionSkinning(){	
+	const auto& prefs = GlobalPreferences();
     if (mPartView){
-        mOnionSkinningEnabled = (trans>0);
-        mOnionSkinningTransparency = trans*0.3;
-        mOnionSkinningEnabledDuringPlayback = edp;
+		mOnionSkinningEnabled = prefs.showOnionSkinning;
+		mOnionSkinningOpacity = prefs.onionSkinningOpacity;
+        mOnionSkinningEnabledDuringPlayback = true;
         showFrame(mFrameNumber);
     }
 }
 
 void PartWidget::updatePivots(){
-    // qDebug() << "UpdatePivots";
-    QSettings settings;
-    bool pivotsEnabled = settings.value("pivot_enabled", true).toBool();
-    bool pivotsEnabledDuringPlayback = settings.value("pivot_enabled_during_playback", true).toBool();
-    QColor pivotColour = QColor(settings.value("pivot_colour", QColor(255,255,255).rgba()).toUInt());
+	const auto& prefs = GlobalPreferences();
+	bool pivotsEnabled = prefs.showAnchors;
+	bool pivotsEnabledDuringPlayback = true;
     if (mPartView){
         mPivotsEnabled = pivotsEnabled;
         mPivotsEnabledDuringPlayback = pivotsEnabledDuringPlayback;
-        mPivotColour = pivotColour;
-
-        // qDebug() << mPivotsEnabled << mPivotsEnabledDuringPlayback << mPivotColour;
-		/*
-        for(auto* it: mAnchorItems){
-            // it->setPen(QColor(mPivotColour));
-            it->setBrush(QBrush(mPivotColour));
-        }
-        for(int i=0;i<MAX_PIVOTS;i++){
-            for(auto* it: mPivotItems[i]){
-                // it->setPen(QColor(mPivotColour));
-                it->setBrush(QBrush(mPivotColour));
-            }
-        }
-		*/
         showFrame(mFrameNumber);
     }
 }
-
-/*
-void PartWidget::setPosition(QPointF pos){
-    mPosition = pos;
-	
-	// auto rect = mPartView->scene()->sceneRect();
-	// auto toRect = rect.translated(pos.x() / mZoom, pos.y() / mZoom);
-	// qDebug() << rect << " -> " << toRect;
-
-    mPartView->setTransform(QTransform::fromScale(mZoom,mZoom));
-    // mPartView->setSceneRect(toRect);
-    mPartView->update();
-}
-*/
 
 static float S_PER_UPDATE = 1.f/60;
 void PartWidget::play(bool play){
@@ -912,20 +869,17 @@ void PartWidget::partViewMouseReleaseEvent(QMouseEvent *event){
 }
 
 void PartWidget::partViewWheelEvent(QWheelEvent *event){
-    if (event->modifiers()&Qt::ControlModifier){
-        // qDebug() << "PartView::wheelEvent\t" << event->angleDelta();
+    {
         QPoint pt = event->angleDelta();
         if (pt.y()>0){
-            // zoom in
             if (zoom()<48){
                 // zoom in proportional to current zoom..
-                int nz = std::min(48,zoom()*2);
+                int nz = std::min(48, zoom()*2);
                 setZoom(nz);
                 emit(zoomChanged());
             }
         }
         else if (pt.y()<0) {
-            // zoom out
             if (zoom()>1){
                 int nz = std::max(1, zoom()/2);
                 setZoom(nz);
@@ -1106,7 +1060,7 @@ void PartWidget::showFrame(int f){
     bool pivots = mPivotsEnabled && ((mIsPlaying&&mPivotsEnabledDuringPlayback) || !mIsPlaying);
 
 	// Drop shadow kills perf when zoomed in too much
-	const bool disableDropShadow = (mZoom > 10);
+	const bool disableDropShadow = (mIsPlaying && mZoom > 10) || (!mIsPlaying && mZoom > 50);
 
     for(int i=0;i<mPixmapItems.size();i++){
         QGraphicsPixmapItem* pi = mPixmapItems.at(i);
@@ -1137,11 +1091,11 @@ void PartWidget::showFrame(int f){
         }
         else if (onion && ((i-f)==1 || (i-f)==-1)){
 			pi->show();
-            pi->setOpacity(mOnionSkinningTransparency);
+            pi->setOpacity(mOnionSkinningOpacity);
         }
         else if (onion && ((i-f)==2 || (i-f)==-2)){
 			pi->show();
-            pi->setOpacity(mOnionSkinningTransparency/4);
+            pi->setOpacity(mOnionSkinningOpacity /4);
         }
         else {
             pi->hide();
@@ -1150,9 +1104,7 @@ void PartWidget::showFrame(int f){
 }
 
 void PartWidget::updateBackgroundBrushes(){
-    QSettings settings;
-    bool useGridPattern =  settings.value("background_grid_pattern", true).toBool();
-
+	const auto& prefs = GlobalPreferences();
 	auto secondaryColor = [](QColor colour1) {
 		int h = colour1.hue();
 		int s = colour1.saturation();
@@ -1174,16 +1126,12 @@ void PartWidget::updateBackgroundBrushes(){
 		return colour2;
 	};
 
-    QColor boundsColour;
-    if (!useGridPattern){
-         QColor backgroundColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
-         // QColor backgroundColour = QColor(settings.value("background_colour", QColor(111,198,143).rgba()).toUInt());
-         mBackgroundBrush = QBrush(backgroundColour);
-         boundsColour = backgroundColour;
-		 mBackgroundColour = backgroundColour;		 
+    if (!prefs.backgroundCheckerboard){
+		 mBackgroundColour = prefs.backgroundColour;
+         mBackgroundBrush = QBrush(mBackgroundColour);
     }
     else {
-		mBackgroundColour = QColor(settings.value("background_colour", QColor(255, 255, 255).rgba()).toUInt());
+		mBackgroundColour = prefs.backgroundColour;
 		QColor backgroundColour2 = secondaryColor(mBackgroundColour);
 
         int w = 2;
@@ -1195,19 +1143,15 @@ void PartWidget::updateBackgroundBrushes(){
             else img.setPixel(i, j, backgroundColour2.rgb());
          }
         }
-
         mBackgroundBrush = QBrush(img);
         mBackgroundBrush.setTransform(QTransform::fromScale(0.5,0.5));
-        boundsColour = QColor(0,0,0);
     }
 
-	// mOutOfBoundsColour = secondaryColor(mBackgroundColour);
 	mOutOfBoundsColour = QColor(160, 160, 160, 255); // Colour of mdi window
 
-	// TODO: Compute properties colour
+	// TODO: Compute properties colour?
 	mPropertiesColour = QColor(255, 0, 255, 255);
 }
-
 
 ////////////////////////////////////////////////
 // Part View
@@ -1225,11 +1169,8 @@ PartView::PartView(PartWidget *parent, QGraphicsScene *scene)
 	// setViewport(new QOpenGLWidget(this));
 
     setCursor(QCursor(QPixmap::fromImage(QImage(":/icon/icons/tool_none.png")),8,8));
-    setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-
-    // QLabel* label = new QLabel("widget", this);
-    // label->move(2,0);
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 }
 
 void PartView::scrollContentsBy(int sx, int sy)

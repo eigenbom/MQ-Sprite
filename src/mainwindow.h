@@ -60,6 +60,9 @@ public:
 
 protected:
     void closeEvent(QCloseEvent* event);
+	void loadPreferences();
+	void savePreferences();
+	void updatePreferences();
 
 public slots:
     void assetDoubleClicked(AssetRef ref);
@@ -75,16 +78,13 @@ public slots:
     // Misc actions
     void changeBackgroundColour();
     void setBackgroundGridPattern(bool);
-    void changePivotColour();
     void setPivotsEnabled(bool);
-    void setPivotsEnabledDuringPlayback(bool);
     void setDropShadowOpacity(int);
     void setDropShadowBlur(int);
     void setDropShadowXOffset(int);
     void setDropShadowYOffset(int);
     void changeDropShadowColour();
     void setOnionSkinningTransparency(int);
-    void setOnionSkinningEnabledDuringPlayback(bool);
 
     void showAbout();
     void resetSettings();
@@ -97,7 +97,6 @@ public slots:
     void saveProjectAs();
 
     void undoStackIndexChanged(int);
-    void openEigenbom();
 
 private:
     Ui::MainWindow *ui = nullptr;
@@ -128,8 +127,6 @@ private:
 	QAction* mDuplicateAssetAction = nullptr;
 
     bool mProjectModifiedSinceLastSave = false;
-
-	// QSettings mSettings; // TODO: Initialise and maintain this?
 };
 
 #endif // MAINWINDOW_H

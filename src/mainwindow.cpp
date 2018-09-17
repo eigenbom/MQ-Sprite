@@ -7,6 +7,7 @@
 #include "drawingtools.h"
 #include "animationwidget.h"
 #include "propertieswidget.h"
+#include "optionswidget.h"
 
 #include <QSortFilterProxyModel>
 #include <QDebug>
@@ -22,8 +23,12 @@ static MainWindow* sWindow = nullptr;
 
 static QString makeWindowTitle(QString filename = {}, bool saved = true) {
 	static const QString appName { "MoonQuest Sprite Editor" };
-	if (filename.isEmpty()) return appName;
-	else return filename + (saved ? "" : "*") + " - " + appName;
+	if (filename.isEmpty()) {
+		filename = "untitled project";
+		saved = false;
+	}
+	
+	return filename + (saved ? "" : "*") + " - " + appName;
 }
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -31,15 +36,16 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     sWindow = this;
-    mProjectModel = new ProjectModel();
+    mProjectModel = new ProjectModel();	
     // mProjectModel->loadTestData();
 
     ui->setupUi(this);
+	   	 
+    
 
-    QSettings settings;
-
-    // Setup Part List widget
-    // SETUP actions etc
+	// Load preferences
+	loadPreferences();
+	
     mPartList = findChild<PartList*>("partList");
     connect(mPartList, SIGNAL(assetDoubleClicked(AssetRef)), this, SLOT(assetDoubleClicked(AssetRef)));
 	connect(mPartList, SIGNAL(assetSelected(AssetRef)), this, SLOT(assetSelected(AssetRef)));
@@ -49,11 +55,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     mMdiArea = findChild<QMdiArea*>(tr("mdiArea"));
     connect(mMdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(subWindowActivated(QMdiSubWindow*)));
-
-    // mMdiArea
-    // QColor backgroundColour = QColor(settings.value("background_colour", QColor(111,198,143).rgba()).toUInt());
-    // QColor backgroundColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
-    // mMdiArea->setBackground(QBrush(backgroundColour));
 
     auto* assetsWidget = findChild<QFrame*>("assets");
 	
@@ -125,8 +126,12 @@ MainWindow::MainWindow(QWidget *parent) :
 	}
 
 	setWindowTitle(makeWindowTitle());
-    restoreGeometry(settings.value("main_window_geometry").toByteArray());
-    restoreState(settings.value("main_window_state").toByteArray());
+
+	{
+		QSettings settings;
+		restoreGeometry(settings.value("main_window_geometry").toByteArray());
+		restoreState(settings.value("main_window_state").toByteArray());
+	}
 }
 
 MainWindow::~MainWindow()
@@ -172,150 +177,98 @@ void MainWindow::showViewOptionsDialog(){
     //                                        Qt::RightDockWidgetArea);
     mViewOptionsDockWidget->setWindowTitle("Options");
 
-    QWidget* centralWidget = new QFrame();
-    QVBoxLayout* layout = new QVBoxLayout();
-    centralWidget->setLayout(layout);
-    mViewOptionsDockWidget->setWidget(centralWidget);
+	auto* optionsWidget = new OptionsWidget(mViewOptionsDockWidget);
+	mViewOptionsDockWidget->setWidget(optionsWidget);
 
-    // Options
-    QSettings settings;
+	auto& prefs = GlobalPreferences();
 
-    {
-        layout->addWidget(new QLabel("Background"));
+	{
+		auto* chgBGColour = optionsWidget->findChild<QPushButton*>("pushButtonBackgroundColour");
+		connect(chgBGColour, SIGNAL(clicked()), this, SLOT(changeBackgroundColour()));
 
-        QPushButton* chgBGColour = new QPushButton("Change Colour");
-        connect(chgBGColour, SIGNAL(clicked()), this, SLOT(changeBackgroundColour()));
-        layout->addWidget(chgBGColour);
-
-        QCheckBox* checkBox = new QCheckBox("Patterned");
-        checkBox->setChecked(settings.value("background_grid_pattern", true).toBool());
-        connect(checkBox, SIGNAL(toggled(bool)), this, SLOT(setBackgroundGridPattern(bool)));
-        layout->addWidget(checkBox);
-    }
-
-    {
-        layout->addWidget(new QLabel("Pivots"));
-
-        QPushButton* changePivotColour = new QPushButton("Change Colour");
-        connect(changePivotColour, SIGNAL(clicked()), this, SLOT(changePivotColour()));
-        layout->addWidget(changePivotColour);
-
-        QCheckBox* checkBox = new QCheckBox("Enabled");
-        checkBox->setChecked(settings.value("pivot_enabled", true).toBool());
+		auto* checkBox = optionsWidget->findChild<QCheckBox*>("checkBoxCheckerboard");
+		checkBox->setChecked(prefs.backgroundCheckerboard);
+		connect(checkBox, SIGNAL(toggled(bool)), this, SLOT(setBackgroundGridPattern(bool)));
+	    
+		checkBox = optionsWidget->findChild<QCheckBox*>("checkBoxShowAnchors");
+        checkBox->setChecked(prefs.showAnchors);
         connect(checkBox, SIGNAL(toggled(bool)), this, SLOT(setPivotsEnabled(bool)));
-        layout->addWidget(checkBox);
-
-        QCheckBox* checkBox2 = new QCheckBox("Enabled During Playback");
-        checkBox2->setChecked(settings.value("pivot_enabled_during_playback", true).toBool());
-        connect(checkBox2, SIGNAL(toggled(bool)), this, SLOT(setPivotsEnabledDuringPlayback(bool)));
-        layout->addWidget(checkBox2);
     }
 
-    {
-        layout->addWidget(new QLabel("Drop Shadow"));
+	{
+		auto* groupBox = optionsWidget->findChild<QGroupBox*>("groupBoxDropShadow");
+		groupBox->setChecked(prefs.showDropShadow);
+		connect(groupBox, &QGroupBox::toggled, [&, groupBox]() {
+			GlobalPreferences().showDropShadow = groupBox->isChecked();
+			this->updatePreferences();
+		});
 
-        QSlider* dsoSlider = new QSlider(Qt::Horizontal);
-        dsoSlider->setMinimum(0);
-        dsoSlider->setMaximum(10);
-        dsoSlider->setSingleStep(1);
-        dsoSlider->setPageStep(2);
-        dsoSlider->setValue(settings.value("drop_shadow_opacity", QVariant(0.f)).toFloat()*10);
-        connect(dsoSlider, SIGNAL(valueChanged(int)), this, SLOT(setDropShadowOpacity(int)));
-        QWidget* widget = new QWidget;
-        widget->setLayout(new QHBoxLayout);
-        widget->layout()->addWidget(new QLabel("Opacity"));
-        widget->layout()->addWidget(dsoSlider);
-        layout->addWidget(widget);
+		QSlider* dsoSlider = optionsWidget->findChild<QSlider*>("horizontalSliderDropShadowOpacity");
+		dsoSlider->setMinimum(0);
+		dsoSlider->setMaximum(10);
+		dsoSlider->setSingleStep(1);
+		dsoSlider->setPageStep(2);
+		dsoSlider->setValue(prefs.dropShadowOpacity * 10);
+		connect(dsoSlider, SIGNAL(valueChanged(int)), this, SLOT(setDropShadowOpacity(int)));
 
-        QSlider* dsbSlider = new QSlider(Qt::Horizontal);
-        dsbSlider->setMinimum(0);
-        dsbSlider->setMaximum(10);
-        dsbSlider->setSingleStep(1);
-        dsbSlider->setPageStep(2);
-        dsbSlider->setValue(settings.value("drop_shadow_blur", QVariant(0.5f)).toFloat()*10);
-        connect(dsbSlider, SIGNAL(valueChanged(int)), this, SLOT(setDropShadowBlur(int)));
-        widget = new QWidget;
-        widget->setLayout(new QHBoxLayout);
-        widget->layout()->addWidget(new QLabel("Blur"));
-        widget->layout()->addWidget(dsbSlider);
-        layout->addWidget(widget);
+		QSlider* dsbSlider = optionsWidget->findChild<QSlider*>("horizontalSliderDropShadowBlurSize");
+		dsbSlider->setMinimum(0);
+		dsbSlider->setMaximum(30);
+		dsbSlider->setSingleStep(1);
+		dsbSlider->setPageStep(2);
+		dsbSlider->setValue(prefs.dropShadowBlurRadius * 10);
+		connect(dsbSlider, SIGNAL(valueChanged(int)), this, SLOT(setDropShadowBlur(int)));
 
-        QSlider* dsxSlider = new QSlider(Qt::Horizontal);
-        dsxSlider->setMinimum(0);
-        dsxSlider->setMaximum(10);
-        dsxSlider->setSingleStep(1);
-        dsxSlider->setPageStep(2);
-        dsxSlider->setValue(settings.value("drop_shadow_offset_x", QVariant(0.5f)).toFloat()*10);
-        connect(dsxSlider, SIGNAL(valueChanged(int)), this, SLOT(setDropShadowXOffset(int)));
-        widget = new QWidget;
-        widget->setLayout(new QHBoxLayout);
-        widget->layout()->addWidget(new QLabel("X"));
-        widget->layout()->addWidget(dsxSlider);
-        layout->addWidget(widget);
+		QSlider* dsxSlider = optionsWidget->findChild<QSlider*>("horizontalSliderDropShadowH");
+		dsxSlider->setMinimum(0);
+		dsxSlider->setMaximum(10);
+		dsxSlider->setSingleStep(1);
+		dsxSlider->setPageStep(2);
+		dsxSlider->setValue(prefs.dropShadowOffsetH * 10);
+		connect(dsxSlider, SIGNAL(valueChanged(int)), this, SLOT(setDropShadowXOffset(int)));
 
-        QSlider* dsySlider = new QSlider(Qt::Horizontal);
-        dsySlider->setMinimum(0);
-        dsySlider->setMaximum(10);
-        dsySlider->setSingleStep(1);
-        dsySlider->setPageStep(2);
-        dsySlider->setValue(settings.value("drop_shadow_offset_y", QVariant(0.5f)).toFloat()*10);
-        connect(dsySlider, SIGNAL(valueChanged(int)), this, SLOT(setDropShadowYOffset(int)));
-        widget = new QWidget;
-        widget->setLayout(new QHBoxLayout);
-        widget->layout()->addWidget(new QLabel("Y"));
-        widget->layout()->addWidget(dsySlider);
-        layout->addWidget(widget);
+		QSlider* dsySlider = optionsWidget->findChild<QSlider*>("horizontalSliderDropShadowV");
+		dsySlider->setMinimum(0);
+		dsySlider->setMaximum(10);
+		dsySlider->setSingleStep(1);
+		dsySlider->setPageStep(2);
+		dsySlider->setValue(prefs.dropShadowOffsetV * 10);
+		connect(dsySlider, SIGNAL(valueChanged(int)), this, SLOT(setDropShadowYOffset(int)));
 
-        QPushButton* changeColour = new QPushButton("Change Colour");
-        connect(changeColour, SIGNAL(clicked()), this, SLOT(changeDropShadowColour()));
-        layout->addWidget(changeColour);
-    }
+		
+		auto* changeColour = optionsWidget->findChild<QPushButton*>("pushButtonDropShadowColour");
+		connect(changeColour, SIGNAL(clicked()), this, SLOT(changeDropShadowColour()));
+	}
 
     {
-        layout->addWidget(new QLabel("Onion Skinning"));
-
-        QSlider* osTransparencySlider = new QSlider(Qt::Horizontal);
+		auto* groupBox = optionsWidget->findChild<QGroupBox*>("groupBoxOnionSkinning");
+		groupBox->setChecked(prefs.showOnionSkinning);
+		connect(groupBox, &QGroupBox::toggled, [&, groupBox]() {
+			GlobalPreferences().showOnionSkinning = groupBox->isChecked();
+			this->updatePreferences();
+		});
+		
+		auto* osTransparencySlider = optionsWidget->findChild<QSlider*>("hSliderOnionSkinningOpacity");
         osTransparencySlider->setMinimum(0);
         osTransparencySlider->setMaximum(10);
         osTransparencySlider->setSingleStep(1);
         osTransparencySlider->setPageStep(2);
-        osTransparencySlider->setValue(settings.value("onion_skinning_transparency", 0.0f).toFloat()*10);
-        connect(osTransparencySlider, SIGNAL(valueChanged(int)), this, SLOT(setOnionSkinningTransparency(int)));
-        QWidget* widget = new QWidget;
-        widget->setLayout(new QHBoxLayout);
-        widget->layout()->addWidget(new QLabel("Opacity"));
-        widget->layout()->addWidget(osTransparencySlider);
-        layout->addWidget(widget);
-
-        QCheckBox* osCheckBox = new QCheckBox("Enabled During Playback");
-        osCheckBox->setChecked(settings.value("onion_skinning_enabled_during_playback", false).toBool());
-        connect(osCheckBox, SIGNAL(toggled(bool)), this, SLOT(setOnionSkinningEnabledDuringPlayback(bool)));
-        layout->addWidget(osCheckBox);
+        osTransparencySlider->setValue(prefs.onionSkinningOpacity * 20);
+        connect(osTransparencySlider, SIGNAL(valueChanged(int)), this, SLOT(setOnionSkinningTransparency(int)));       
     }
-	
+
 	{
-		QPushButton* resetButton = new QPushButton("Reset Application");
+		auto* resetButton = optionsWidget->findChild<QPushButton*>("pushButtonReset");
 		connect(resetButton, SIGNAL(clicked()), this, SLOT(resetSettings()));
-		layout->addWidget(resetButton);
 	}
 
-    layout->addSpacerItem(new QSpacerItem(0,0,QSizePolicy::Expanding,QSizePolicy::Expanding));
-
-    // Finally show the dockwidget
-
-    // this->addDockWidget(Qt::LeftDockWidgetArea, mViewOptionsDockWidget);
     this->addDockWidget(Qt::NoDockWidgetArea, mViewOptionsDockWidget);
     mViewOptionsDockWidget->setFloating(true);
-    mViewOptionsDockWidget->resize(0,250);
+    // mViewOptionsDockWidget->resize(0,250);
     mViewOptionsDockWidget->show();
 }
 
-void MainWindow::createMenus()
-{
-    ///////////////////////////
-    // File
-    ///////////////////////////
-
+void MainWindow::createMenus(){
     mFileMenu = menuBar()->addMenu(tr("&File"));
 
     QAction* newProjectAction = mFileMenu->addAction("&New");
@@ -368,29 +321,26 @@ void MainWindow::createMenus()
 		}
 	});
 	mDuplicateAssetAction->setEnabled(false);
-
+	
 	mEditMenu->addSeparator();
-	mResizePartAction = mEditMenu->addAction("Resize Sprite...");
-	connect(mResizePartAction, SIGNAL(triggered()), mAnimationWidget, SLOT(resizeMode()));
-	mResizePartAction->setEnabled(false);
+    connect(mEditMenu->addAction("Options..."), SIGNAL(triggered()), this, SLOT(showViewOptionsDialog()));
 
-	mEditMenu->addSeparator();
-	auto* action = mEditMenu->addAction("New View");
-	connect(action, &QAction::triggered, [&](){
+	mViewMenu = menuBar()->addMenu(tr("&View"));
+	mViewMenu->addSeparator();
+	auto* action = mViewMenu->addAction("New Sprite View");
+	mViewMenu->addSeparator();
+	connect(action, &QAction::triggered, [&]() {
 		auto* pw = this->activePartWidget();
 		auto* cw = this->activeCompositeWidget();
 		if (pw) this->openPartWidget(pw->partRef());
 		if (cw) this->openCompositeWidget(cw->compRef());
 	});
+	mViewMenu->addSeparator();
 
-	mEditMenu->addSeparator();
-    connect(mEditMenu->addAction("Options..."), SIGNAL(triggered()), this, SLOT(showViewOptionsDialog()));
-
-	
-	mViewMenu = menuBar()->addMenu(tr("&View"));
-	
-	// TODO: Sprite Menu
-	menuBar()->addMenu(tr("&Sprite"));
+	auto* spriteMenu = menuBar()->addMenu(tr("&Sprite"));
+	mResizePartAction = spriteMenu->addAction("Resize...");
+	connect(mResizePartAction, SIGNAL(triggered()), mAnimationWidget, SLOT(resizeMode()));
+	mResizePartAction->setEnabled(false);
 
     mHelpMenu = menuBar()->addMenu(tr("Help"));
     mHelpMenu->addAction(mAboutAction);
@@ -405,6 +355,61 @@ void MainWindow::closeEvent(QCloseEvent*){
     QSettings settings;
     settings.setValue("main_window_geometry", saveGeometry());
     settings.setValue("main_window_state", saveState());
+}
+
+void MainWindow::loadPreferences() {
+	QSettings settings;
+
+	auto& prefs = GlobalPreferences();
+	prefs.backgroundColour = QColor(settings.value("prefs.backgroundColour", prefs.backgroundColour.name()).toString());
+	prefs.backgroundCheckerboard = settings.value("prefs.backgroundCheckerboard", prefs.backgroundCheckerboard).toBool();
+	prefs.showAnchors = settings.value("prefs.showAnchors", prefs.showAnchors).toBool();
+
+	prefs.showDropShadow = settings.value("prefs.showDropShadow", prefs.showDropShadow).toBool();
+	prefs.dropShadowColour = QColor(settings.value("prefs.dropShadowColour", prefs.dropShadowColour.name()).toString());
+	prefs.dropShadowOpacity = settings.value("prefs.dropShadowOpacity", prefs.dropShadowOpacity).toFloat();
+	prefs.dropShadowBlurRadius = settings.value("prefs.dropShadowBlurRadius", prefs.dropShadowBlurRadius).toFloat();
+	prefs.dropShadowOffsetH = settings.value("prefs.dropShadowOffsetH", prefs.dropShadowOffsetH).toFloat();
+	prefs.dropShadowOffsetV = settings.value("prefs.dropShadowOffsetV", prefs.dropShadowOffsetV).toFloat();
+
+	prefs.showOnionSkinning = settings.value("prefs.showOnionSkinning", prefs.showOnionSkinning).toBool();
+	prefs.onionSkinningOpacity = settings.value("prefs.onionSkinningOpacity", prefs.onionSkinningOpacity).toFloat();
+}
+
+void MainWindow::savePreferences() {
+	const auto& prefs = GlobalPreferences();
+
+	QSettings settings;
+
+	settings.setValue("prefs.backgroundColour", prefs.backgroundColour.name());
+	settings.setValue("prefs.backgroundCheckerboard", prefs.backgroundCheckerboard);
+	settings.setValue("prefs.showAnchors", prefs.showAnchors);
+
+	settings.setValue("prefs.showDropShadow", prefs.showDropShadow);
+	settings.setValue("prefs.dropShadowColour", prefs.dropShadowColour.name());
+	settings.setValue("prefs.dropShadowOpacity", prefs.dropShadowOpacity);
+	settings.setValue("prefs.dropShadowBlurRadius", prefs.dropShadowBlurRadius);
+	settings.setValue("prefs.dropShadowOffsetH", prefs.dropShadowOffsetH);
+	settings.setValue("prefs.dropShadowOffsetV", prefs.dropShadowOffsetV);
+
+	settings.setValue("prefs.showOnionSkinning", prefs.showOnionSkinning);
+	settings.setValue("prefs.onionSkinningOpacity", prefs.onionSkinningOpacity);
+}
+
+void MainWindow::updatePreferences() {
+	for (PartWidget* w : this->mPartWidgets.values()) {
+		w->updateBackgroundBrushes();
+		w->updatePartFrames();
+		w->updateDropShadow();
+		w->repaint();
+	}
+	for (CompositeWidget* w : this->mCompositeWidgets.values()) {
+		w->updateBackgroundBrushes();
+		w->updateCompFrames();
+		w->updateDropShadow();
+		w->repaint();
+	}
+	savePreferences();
 }
 
 void MainWindow::assetDoubleClicked(AssetRef ref){
@@ -764,179 +769,76 @@ void MainWindow::folderRenamed(AssetRef ref, const QString& newName){
     qDebug() << "TODO: Update the visual names/refs of parts and comps that are in this folder";
 }
 
-void MainWindow::changeBackgroundColour(){
-    QSettings settings;
-    // QColor backgroundColour = QColor(settings.value("background_colour", QColor(111,198,143).rgba()).toUInt());
-    QColor backgroundColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
-    QColor col = QColorDialog::getColor(backgroundColour, this, tr("Select Background Colour"));
+void MainWindow::changeBackgroundColour(){    
+    QColor col = QColorDialog::getColor(GlobalPreferences().backgroundColour, this, tr("Select Background Colour"));
     if (col.isValid()){
-
-        settings.setValue("background_colour", col.rgba());
-
-        // mMdiArea->setBackground(QBrush(col));
-
-        // Update all view
-        foreach (PartWidget* w, this->mPartWidgets.values()){
-            w->updateBackgroundBrushes();
-            w->updatePartFrames();
-            w->repaint();
-            // w->update();
-        }
-        foreach (CompositeWidget* w, this->mCompositeWidgets.values()){
-            w->updateBackgroundBrushes();
-            w->updateCompFrames();
-            w->repaint();
-        }
+		GlobalPreferences().backgroundColour = col;
+		updatePreferences();
     }
 }
 
 void MainWindow::setBackgroundGridPattern(bool b){
-    QSettings settings;
-    settings.setValue("background_grid_pattern", b);
-
-    // Update all view
-    foreach (PartWidget* w, this->mPartWidgets.values()){
-        w->updateBackgroundBrushes();
-        w->updatePartFrames();
-        w->repaint();
-    }
-    foreach (CompositeWidget* w, this->mCompositeWidgets.values()){
-        w->update();
-        w->repaint();
-    }
-}
-
-void MainWindow::changePivotColour(){
-    QSettings settings;
-    QColor colour = QColor(settings.value("pivot_colour", QColor(255,255,255).rgba()).toUInt());
-    QColor col = QColorDialog::getColor(colour, this, tr("Select Pivot Colour"));
-    if (col.isValid()){
-        settings.setValue("pivot_colour", col.rgba());
-        foreach (PartWidget* w, this->mPartWidgets.values()){
-            w->updatePivots();
-        }
-        // TODO: tell compwidgets
-    }
+	GlobalPreferences().backgroundCheckerboard = b;
+	updatePreferences();
 }
 
 void MainWindow::setPivotsEnabled(bool enabled){
-    QSettings settings;
-    settings.setValue("pivot_enabled", enabled);
-    foreach (PartWidget* pw, this->mPartWidgets.values()){
-        pw->updatePivots();
-    }
-    // TODO: tell compwidgets
+	GlobalPreferences().showAnchors = enabled;
+	updatePreferences();
 }
 
-void MainWindow::setPivotsEnabledDuringPlayback(bool enabled){
-    QSettings settings;
-    settings.setValue("pivot_enabled_during_playback", enabled);
-    foreach (PartWidget* pw, this->mPartWidgets.values()){
-        pw->updatePivots();
-    }
-    // TODO: tell compwidgets
+void MainWindow::setDropShadowOpacity(int sliderValue){
+	GlobalPreferences().dropShadowOpacity = sliderValue / 10.0f;;
+	updatePreferences();
 }
 
-void MainWindow::setDropShadowOpacity(int d){
-    QSettings settings;
-    settings.setValue("drop_shadow_opacity", d/10.f);
-    foreach (PartWidget* pw, this->mPartWidgets.values()){
-        pw->updateDropShadow();
-    }
-    foreach (CompositeWidget* pw, this->mCompositeWidgets.values()){
-        pw->updateDropShadow();
-    }
+void MainWindow::setDropShadowBlur(int sliderValue){
+	GlobalPreferences().dropShadowBlurRadius = sliderValue / 10.f;
+	updatePreferences();
 }
 
-void MainWindow::setDropShadowBlur(int val){
-    QSettings settings;
-    settings.setValue("drop_shadow_blur", val/10.f);
-    foreach (PartWidget* pw, this->mPartWidgets.values()){
-        pw->updateDropShadow();
-    }
-    foreach (CompositeWidget* pw, this->mCompositeWidgets.values()){
-        pw->updateDropShadow();
-    }
+void MainWindow::setDropShadowXOffset(int sliderValue){
+	GlobalPreferences().dropShadowOffsetH = sliderValue / 10.f;
+	updatePreferences();
 }
 
-void MainWindow::setDropShadowXOffset(int val){
-    QSettings settings;
-    settings.setValue("drop_shadow_offset_x", val/10.f);
-    foreach (PartWidget* pw, this->mPartWidgets.values()){
-        pw->updateDropShadow();
-    }
-    foreach (CompositeWidget* pw, this->mCompositeWidgets.values()){
-        pw->updateDropShadow();
-    }
-}
-
-void MainWindow::setDropShadowYOffset(int val){
-    QSettings settings;
-    settings.setValue("drop_shadow_offset_y", val/10.f);
-    foreach (PartWidget* pw, this->mPartWidgets.values()){
-        pw->updateDropShadow();
-    }
-    foreach (CompositeWidget* pw, this->mCompositeWidgets.values()){
-        pw->updateDropShadow();
-    }
+void MainWindow::setDropShadowYOffset(int sliderValue){
+	GlobalPreferences().dropShadowOffsetV = sliderValue / 10.f;
+	updatePreferences();
 }
 
 void MainWindow::changeDropShadowColour(){
-    QSettings settings;
-    QColor backgroundColour = QColor(settings.value("drop_shadow_colour", QColor(0,0,0).rgba()).toUInt());
-    QColor col = QColorDialog::getColor(backgroundColour, this, tr("Select Drop Shadow Colour"));
+    QColor col = QColorDialog::getColor(GlobalPreferences().dropShadowColour, this, tr("Select Drop Shadow Colour"));
     if (col.isValid()){
-        settings.setValue("drop_shadow_colour", col.rgba());
-        foreach (PartWidget* pw, this->mPartWidgets.values()){
-            pw->updateDropShadow();
-        }
-        foreach (CompositeWidget* pw, this->mCompositeWidgets.values()){
-            pw->updateDropShadow();
-        }
+		GlobalPreferences().dropShadowColour = col;
+		updatePreferences();
     }
 }
 
-void MainWindow::setOnionSkinningTransparency(int val){
-    QSettings settings;
-    settings.setValue("onion_skinning_transparency", val/10.f);
-    foreach (PartWidget* pw, this->mPartWidgets.values()){
-        pw->updateOnionSkinning();
-    }
-}
-
-void MainWindow::setOnionSkinningEnabledDuringPlayback(bool enabled){
-    // qDebug() << "setOnionSkinningEnabledDuringPlayback(" << enabled << ")";
-    QSettings settings;
-    settings.setValue("onion_skinning_enabled_during_playback", enabled);
-    foreach (PartWidget* pw, this->mPartWidgets.values()){
-        pw->updateOnionSkinning();
-    }
-
-    // TODO: tell compwidgets
+void MainWindow::setOnionSkinningTransparency(int sliderValue){
+	GlobalPreferences().onionSkinningOpacity = sliderValue / 20.f;
+	updatePreferences();
 }
 
 void MainWindow::showAbout(){
     QMessageBox::about(this, tr("About"), tr(
-                           "<p>Created by <a href=\"https://twitter.com/eigenbom\">@eigenbom</a>.</p>"
-						   "<p><a href=\"http://www.gentleface.com/free_icon_set.html\">Gentleface Icons</a> (CC BY-NC 3.0)</p>"
-						   "<p>Palette \"Matriax8c\" by <a href=\"https://twitter.com/DavitMasia/\">Davit Masia</a></p>"
-                           "<p>Help:<ul>"
-                           "<li>Right-click (on colour): Select pen and pick colour</li>"
-                           "<li>Right-click (on blank): Select eraser</li>"
-                           "<li>Ctrl + Wheel: Zoom</li>"
-                           "<li>Middle-press + drag: Move canvas</li>"
-                           "<li>Space: Toggle playback</li>"
-                           "<li>S/D: Change frame</li>"
-                           "<li>W/E: Change mode</li>"
-                           "<li>A: Move anchor</li>"
-                           "<li>1-4: Move pivot</li>"
-                           "</ul>"
-                           "</p>"
+"<p>Created by <a href=\"https://twitter.com/eigenbom\">@eigenbom</a>.</p>"
+"<p>Uses <a href=\"http://www.gentleface.com/free_icon_set.html\">Gentleface Icons</a> (CC BY-NC 3.0).</p>"
+"<p>Uses the \"Matriax8c\" palette by <a href=\"https://twitter.com/DavitMasia/\">Davit Masia</a>.</p>"
+"<p>Sprite Editting Shortcuts:<ul>"
+	"<li>Right-click: Select colour (or eraser)</li>"
+	"<li>Middle-click: Move canvas</li>"
+	"<li>Mouse wheel: Zoom canvas</li>"
+	"<li>Space: Toggle playback</li>"
+	"<li>S, D: Change frame</li>"
+	"<li>W, E: Change mode</li>"
+	"<li>A, 1, 2, 3, 4: Move anchor or pivots</li>"
+"</ul></p>"
                            ));
 }
 
 void MainWindow::resetSettings(){
-    QMessageBox::StandardButton res = QMessageBox::question(this, "Reset?", "This will reset your preferences. The program will shut down. Continue?");
+    QMessageBox::StandardButton res = QMessageBox::question(this, "Reset?", "This will clear your preferences and reset the program. The program will shut down. Continue?");
     if (res == QMessageBox::Yes){
         qInfo() << "Resetting preferences";
         QSettings settings;
@@ -970,8 +872,6 @@ void MainWindow::newProject(){
 }
 
 void MainWindow::loadProject(const QString& fileName){
-    QSettings settings; // TODO: What's this for?
-
     mCompositeToolsWidget->setTargetCompWidget(nullptr);
 	mDrawingTools->setTargetPartWidget(nullptr);
 	mAnimationWidget->setTargetPartWidget(nullptr);
@@ -998,7 +898,8 @@ void MainWindow::loadProject(const QString& fileName){
 
         // Update last loaded project location
         QDir lastOpenedPath = QFileInfo(fileName).absoluteDir();
-        settings.setValue("last_load_dir", lastOpenedPath.absolutePath());
+		QSettings settings;
+        settings.setValue("last_save_dir", lastOpenedPath.absolutePath());
 
         // Reload all things that depend on QSettings..
         if (mViewOptionsDockWidget){
@@ -1006,11 +907,6 @@ void MainWindow::loadProject(const QString& fileName){
             delete mViewOptionsDockWidget;
             mViewOptionsDockWidget = nullptr;
         }
-
-        QSettings settings;
-        // QColor backgroundColour = QColor(settings.value("background_colour", QColor(111,198,143).rgba()).toUInt());
-        // QColor backgroundColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
-        // mMdiArea->setBackground(QBrush(backgroundColour));
 
         mProjectModifiedSinceLastSave = false;
         setWindowTitle(makeWindowTitle(fileName, true));
@@ -1024,7 +920,7 @@ void MainWindow::loadProject(const QString& fileName){
 
 void MainWindow::loadProject(){
     QSettings settings;
-    QString dir = settings.value("last_load_dir", QDir::currentPath()).toString();
+    QString dir = settings.value("last_save_dir", QDir::currentPath()).toString();
 
     QString fileName = QFileDialog::getOpenFileName(this, "Open...", dir, "MoonQuest Sprite File (*.mqs)");
     if (fileName.isNull() || fileName.isEmpty() || !QFileInfo(fileName).isFile()){
@@ -1091,8 +987,4 @@ void MainWindow::saveProjectAs(){
 void MainWindow::undoStackIndexChanged(int){
     mProjectModifiedSinceLastSave = true;
 	setWindowTitle(makeWindowTitle(PM()->fileName, false));
-}
-
-void MainWindow::openEigenbom(){
-    QDesktopServices::openUrl(QUrl("https://twitter.com/eigenbom"));
 }

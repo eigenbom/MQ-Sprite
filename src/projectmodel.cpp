@@ -8,7 +8,7 @@
 #include <QJsonArray>
 #include <QFile>
 #include <QTextStream>
-#include <QSettings>
+// #include <QSettings>
 #include <QImageWriter>
 #include <QTemporaryFile>
 #include <QDir>
@@ -40,6 +40,11 @@ bool operator<(const AssetRef& a, const AssetRef& b){
 
 uint qHash(const AssetRef &key){
     return qHash(std::make_pair(key.id, (int) key.type));
+}
+
+Preferences& GlobalPreferences() {
+	static Preferences prefs;
+	return prefs;
 }
 
 static ProjectModel* sInstance = nullptr;

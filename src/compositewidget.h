@@ -12,6 +12,7 @@
 #include <QGraphicsRectItem>
 #include <QGraphicsSimpleTextItem>
 
+// TODO: This needs a big cleanup!!
 class CompositeWidget;
 class CompositeView: public QGraphicsView {
     Q_OBJECT
@@ -105,9 +106,6 @@ protected:
     void compViewWheelEvent(QWheelEvent *event);
     void compViewKeyPressEvent(QKeyEvent *event);
 
-
-
-
 protected:
     AssetRef mCompRef;
     QString mCompName;
@@ -182,6 +180,7 @@ protected:
     QVector<QGraphicsRectItem*> mRectItems;
 
     QBrush mBackgroundBrush;
+	QColor mBackgroundColour;
     QColor mBoundsColour;
 };
 

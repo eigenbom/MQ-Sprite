@@ -176,11 +176,10 @@ protected:
     bool mScribbling;
     bool mMovingCanvas;
     QImage* mOverlayImage; // TODO: resize this when change mode
-    float mOnionSkinningTransparency;
+    float mOnionSkinningOpacity;
     bool mOnionSkinningEnabled;
     bool mOnionSkinningEnabledDuringPlayback;
 
-    QColor mPivotColour;
     bool mPivotsEnabled;
     bool mPivotsEnabledDuringPlayback;
 

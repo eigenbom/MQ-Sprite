@@ -12,7 +12,6 @@
 #include <QRgb>
 #include <QMdiSubWindow>
 #include <QGraphicsDropShadowEffect>
-#include <QSettings>
 #include <QTimer>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -820,12 +819,12 @@ void CompositeWidget::updateAnimation(){
 }
 
 void CompositeWidget::updateDropShadow(){
-    QSettings settings;
-    float opacity = settings.value("drop_shadow_opacity", QVariant(0.f)).toFloat();
-    float blur = settings.value("drop_shadow_blur", QVariant(0.5f)).toFloat();
-    float dx = settings.value("drop_shadow_offset_x", QVariant(0.1f)).toFloat();
-    float dy = settings.value("drop_shadow_offset_y", QVariant(0.1f)).toFloat();
-    QColor dropShadowColour = QColor(settings.value("drop_shadow_colour", QColor(0,0,0).rgba()).toUInt());
+	const auto& prefs = GlobalPreferences();
+	float opacity = prefs.showDropShadow ? prefs.dropShadowOpacity : 0.0f;
+	float blur = prefs.dropShadowBlurRadius;
+	float dx = prefs.dropShadowOffsetH;
+	float dy = prefs.dropShadowOffsetV;
+	QColor dropShadowColour = prefs.dropShadowColour;
 
     if (mCompView){
         QMutableMapIterator<QString,ChildDriver> it(mChildrenMap);
@@ -838,7 +837,7 @@ void CompositeWidget::updateDropShadow(){
             while (mit.hasNext()){
                 mit.next();
                 ChildDriver::Mode& m = mit.value();
-                foreach(QGraphicsPixmapItem* it, m.pixmapItems){
+                for(auto* it: m.pixmapItems){
                     QGraphicsDropShadowEffect* effect = (QGraphicsDropShadowEffect*) it->graphicsEffect();
                     effect->setOffset(dx*2*mZoom/4.,dy*2*mZoom/2.);
                     effect->setColor(QColor(dropShadowColour.red(),dropShadowColour.green(),dropShadowColour.blue(),opacity*255));
@@ -851,80 +850,52 @@ void CompositeWidget::updateDropShadow(){
 
 void CompositeWidget::updateBackgroundBrushes(){
 
-    QSettings settings;
+	const auto& prefs = GlobalPreferences();
+	auto secondaryColor = [](QColor colour1) {
+		int h = colour1.hue();
+		int s = colour1.saturation();
+		int val = colour1.value();
+		if (val < 50) {
+			val += 10;
+		}
+		else if (val < 255 / 2) {
+			val *= 1.05;
+		}
+		else if (val < (255 / 2 - 50)) {
+			val /= 1.05;
+		}
+		else {
+			val -= 10;
+		}
+		QColor colour2;
+		colour2.setHsv(h, s, val);
+		return colour2;
+	};
 
-    bool useGridPattern =  settings.value("background_grid_pattern", false).toBool();
+	if (!prefs.backgroundCheckerboard) {
+		mBackgroundColour = prefs.backgroundColour;
+		mBackgroundBrush = QBrush(mBackgroundColour);
+	}
+	else {
+		mBackgroundColour = prefs.backgroundColour;
+		QColor backgroundColour2 = secondaryColor(mBackgroundColour);
 
-    QColor boundsColour;
-    if (!useGridPattern){
-         QColor backgroundColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
-         // QColor backgroundColour = QColor(settings.value("background_colour", QColor(111,198,143).rgba()).toUInt());
-         mBackgroundBrush = QBrush(backgroundColour);
-         boundsColour = backgroundColour;
-    }
-    else {
-        QColor backgroundColour = QColor(settings.value("background_colour", QColor(255,255,255).rgba()).toUInt());
+		int w = 2;
+		QImage img(w, w, QImage::Format_RGB32);
+		for (int i = 0; i < w; i++) {
+			for (int j = 0; j < w; j++) {
+				bool d = (i / (w / 2) + j / (w / 2)) % 2 == 0;
+				if (d) img.setPixel(i, j, mBackgroundColour.rgb());
+				else img.setPixel(i, j, backgroundColour2.rgb());
+			}
+		}
+		mBackgroundBrush = QBrush(img);
+		mBackgroundBrush.setTransform(QTransform::fromScale(0.5, 0.5));
+	}
 
-        QColor backgroundColour2 = backgroundColour;
-        boundsColour = backgroundColour2;
-
-        // Calculate good colour for grid
-        int h = backgroundColour2.hue();
-        int s = backgroundColour2.saturation();
-        int val = backgroundColour2.value();
-
-        if (val < 50){
-            val += 10;
-        }
-        else if (val < 255/2){
-            val *= 1.05;
-        }
-        else if (val < (255/2 - 50)){
-            val /= 1.05;
-        }
-        else {
-            val -= 10;
-        }
-        backgroundColour2.setHsv(h,s,val);
-
-        // QColor backgroundColour1 = QColor(settings.value("background_grid_colour_1", QColor(150,150,150).rgba()).toUInt());
-        // QColor backgroundColour2 = QColor(settings.value("background_grid_colour_2", QColor(140,140,140).rgba()).toUInt());
-
-        int w = 2;
-        QImage img(w, w, QImage::Format_RGB32);
-        for(int i=0;i<w;i++){
-         for(int j=0;j<w;j++){
-            bool d = (i/(w/2) + j/(w/2))%2==0;
-            if (d) img.setPixel(i, j, backgroundColour.rgb());
-            else img.setPixel(i, j, backgroundColour2.rgb());
-         }
-        }
-
-        mBackgroundBrush = QBrush(img);
-        mBackgroundBrush.setTransform(QTransform::fromScale(0.5,0.5));
-
-        boundsColour = QColor(0,0,0);
-
-    }
-
-    // Calculate good colour for bounds rect
-    int h = boundsColour.hue();
-    int s = boundsColour.saturation();
-    int val = boundsColour.value();
-
-    if (val < 50){
-        val += 30;
-    }
-    else if (val < 255/2){
-        val *= 1.2;
-    }
-    else if (val < (255/2 - 50)){
-        val /= 1.2;
-    }
-    else {
-        val -= 30;
-    }
-    boundsColour.setHsv(h,s,val);
+	// mOutOfBoundsColour = QColor(160, 160, 160, 255); // Colour of mdi window
+	// TODO: Compute properties colour?
+	// mPropertiesColour = QColor(255, 0, 255, 255);
 }
 
 
