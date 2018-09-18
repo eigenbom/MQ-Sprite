@@ -171,9 +171,9 @@ bool ProjectModel::load(const QString& fileName, QString& reason) {
 	}
 
 	auto& dataRec = fileMap["data.json"];
-	qDebug() << "data.json: " << dataRec;
+	// qDebug() << "data.json: " << dataRec;
 	removeAdditionalNullChars(dataRec);
-	qDebug() << "data.json: " << dataRec;
+	// qDebug() << "data.json: " << dataRec;
 
 	QJsonParseError error;
 	QJsonDocument dataDoc = QJsonDocument::fromJson(dataRec, &error);
@@ -220,51 +220,51 @@ bool ProjectModel::load(const QString& fileName, QString& reason) {
 		if (assetName.endsWith(".png")) {
 			auto img = QSharedPointer<QImage>::create();
 			bool res = img->loadFromData(it.value(), "PNG");
-			Q_ASSERT(res);
+			if (!res) {
+				reason = "Couldn't load " + it.value();
+				return false;
+			}
 			imageMap.insert(assetName, img);
 		}
 	}
 
-	// Load data.json, connecting the Images* too
-	{
-		auto folders = dataObj.value("folders").toArray();
-		auto parts = dataObj.value("parts").toArray();
-		auto comps = dataObj.value("comps").toArray();
+	auto folders = dataObj.value("folders").toArray();
+	auto parts = dataObj.value("parts").toArray();
+	auto comps = dataObj.value("comps").toArray();
 
-		if (!folders.isEmpty()) {
-			for (auto it = folders.begin(); it != folders.end(); it++) {
-				const auto& obj = it->toObject();
-				auto folder = QSharedPointer<Folder>::create();
-				folder->ref.id = obj["id"].toInt();
-				folder->ref.type = AssetType::Folder;
-				mNextId = std::max(mNextId, folder->ref.id + 1);
-				JsonToFolder(obj, folder.get());
-				this->folders.insert(folder->ref, folder);
-			}
+	if (!folders.isEmpty()) {
+		for (auto it = folders.begin(); it != folders.end(); it++) {
+			const auto& obj = it->toObject();
+			auto folder = QSharedPointer<Folder>::create();
+			folder->ref.id = obj["id"].toInt();
+			folder->ref.type = AssetType::Folder;
+			mNextId = std::max(mNextId, folder->ref.id + 1);
+			JsonToFolder(obj, folder.get());
+			this->folders.insert(folder->ref, folder);
 		}
+	}
 
-		if (!parts.isEmpty()) {
-			for (auto it = parts.begin(); it != parts.end(); it++) {
-				const auto& partObj = it->toObject();
-				auto part = QSharedPointer<Part>::create();
-				part->ref.id = partObj["id"].toInt();
-				part->ref.type = AssetType::Part;
-				mNextId = std::max(mNextId, part->ref.id + 1);
-				JsonToPart(partObj, imageMap, part.get());
-				this->parts.insert(part->ref, part);
-			}
+	if (!parts.isEmpty()) {
+		for (auto it = parts.begin(); it != parts.end(); it++) {
+			const auto& partObj = it->toObject();
+			auto part = QSharedPointer<Part>::create();
+			part->ref.id = partObj["id"].toInt();
+			part->ref.type = AssetType::Part;
+			mNextId = std::max(mNextId, part->ref.id + 1);
+			JsonToPart(partObj, imageMap, part.get());
+			this->parts.insert(part->ref, part);
 		}
+	}
 
-		if (!comps.isEmpty()) {
-			for (auto it = comps.begin(); it != comps.end(); it++) {
-				const auto& compObj = it->toObject();
-				auto composite = QSharedPointer<Composite>::create();
-				composite->ref.id = compObj["id"].toInt();
-				composite->ref.type = AssetType::Composite;
-				mNextId = std::max(mNextId, composite->ref.id + 1);
-				JsonToComposite(compObj, composite.get());
-				this->composites.insert(composite->ref, composite);
-			}
+	if (!comps.isEmpty()) {
+		for (auto it = comps.begin(); it != comps.end(); it++) {
+			const auto& compObj = it->toObject();
+			auto composite = QSharedPointer<Composite>::create();
+			composite->ref.id = compObj["id"].toInt();
+			composite->ref.type = AssetType::Composite;
+			mNextId = std::max(mNextId, composite->ref.id + 1);
+			JsonToComposite(compObj, composite.get());
+			this->composites.insert(composite->ref, composite);
 		}
 	}
 
@@ -397,6 +397,112 @@ bool ProjectModel::load(const QString& fileName, QString& reason) {
     return true;
 }
 */
+
+
+bool ProjectModel::save(const QString& fileName) {
+	QMap<QString, QSharedPointer<QImage>> imageMap;
+	QMap<QString, QString> fileMap;
+
+	QList<QString> tempFiles;
+
+	{
+		QJsonObject data;
+		data.insert("version", PROJECT_SAVE_FILE_VERSION);
+
+		QJsonArray foldersArray;
+		for (auto folder : folders) {
+			QJsonObject folderObject;
+			folderObject.insert("id", folder->ref.id);
+			FolderToJson(folder->name, *folder, &folderObject);
+			foldersArray.append(folderObject);
+		}
+		data.insert("folders", foldersArray);
+
+		QJsonArray partsArray;
+		for (auto part : parts) {
+			QJsonObject partObject;
+			partObject.insert("id", part->ref.id);
+			PartToJson(part->name, *part, &partObject, &imageMap);
+			partsArray.append(partObject);
+		}
+		data.insert("parts", partsArray);
+
+		QJsonArray compArray;
+		for (auto comp: composites) {
+			QJsonObject compObject;
+			compObject.insert("id", comp->ref.id);
+			CompositeToJson(comp->name, *comp, &compObject);
+			compArray.append(compObject);
+		}
+		data.insert("comps", compArray);
+
+		QString pathTemplate = QDir(QDir::tempPath()).absoluteFilePath("data.XXXXXX.json");
+		QTemporaryFile file(pathTemplate);
+		if (!file.open()){
+			exportLog.append("Couldn't create temporary file " + pathTemplate);
+			return false;
+		}
+		file.setAutoRemove(false);
+		tempFiles.append(file.fileName());
+
+		QTextStream out(&file);
+		QJsonDocument doc(data);
+		out << doc.toJson();
+		fileMap.insert("data.json", file.fileName());
+	}
+
+	{
+		for (auto it = imageMap.begin(); it != imageMap.end(); ++it) {
+			auto img = it.value();
+			if (img) {
+				auto imageName = it.key();
+				imageName.replace(' ', '_');
+
+				QString pathTemplate = QDir(QDir::tempPath()).absoluteFilePath(imageName + "-XXXXXX.png");
+				QTemporaryFile file(pathTemplate);				
+				if (!file.open()) {
+					exportLog.append("Couldn't create temporary file: " + pathTemplate);
+					return false;
+				}
+
+				file.setAutoRemove(false);
+				tempFiles.append(file.fileName());
+				bool res = img->save(&file, "PNG");
+				if (res) {
+					fileMap.insert(it.key(), file.fileName());
+				}
+				else {
+					exportLog.append("Couldn't save image " + it.key());
+				}
+			}
+		}
+	}
+
+	{
+		QDir tempPath = QDir(QDir::tempPath());
+		QString tempFileName = tempPath.absoluteFilePath("tmp.mqs");
+		bool success = WriteZip(tempFileName, fileMap);
+		if (!success) {
+			exportLog.append("Couldn't write zip!");
+			return false;
+		}
+
+		// Copy tempFileName to fileName
+		if (QFile::exists(fileName)){
+			QFile::remove(fileName);
+		}
+		QFile::copy(tempFileName, fileName);	
+	}
+
+	for (auto file : tempFiles) {
+		QFile::remove(file);
+	}	
+	
+	this->fileName = fileName;
+	return true;
+}
+
+/*
 bool ProjectModel::save(const QString& fileName){
     std::ofstream out(fileName.toStdString().c_str(), std::ios::out | std::ios::binary);
     if(!out.is_open()){
@@ -432,7 +538,7 @@ bool ProjectModel::save(const QString& fileName){
         }
         data.insert("parts", partsArray);
 
-		/*
+		/ *
         // comps
         QJsonObject compsObject;
         {
@@ -450,7 +556,7 @@ bool ProjectModel::save(const QString& fileName){
             }
         }
         data.insert("comps", compsObject);
-		*/
+		* /
 
         // Send it out
         QString dataStr;
@@ -488,6 +594,7 @@ bool ProjectModel::save(const QString& fileName){
     this->fileName = fileName;
     return true;
 }
+*/
 
 void ProjectModel::JsonToFolder(const QJsonObject& obj, Folder* folder){
     folder->name = obj["name"].toString();
@@ -586,7 +693,7 @@ void ProjectModel::PartToJson(const QString& name, const Part& part, QJsonObject
     }
 
     QString imageNamePrefix = name;
-	imageNamePrefix.append(" " + part.ref.id); // Append id to ensure uniqueness
+	imageNamePrefix.append(" " + QString::number(part.ref.id)); // Append id to ensure uniqueness
 	if (!part.parent.isNull()) {
 		Q_ASSERT(getFolder(part.parent) != nullptr);
 		QStringList list;
@@ -639,42 +746,38 @@ void ProjectModel::PartToJson(const QString& name, const Part& part, QJsonObject
 }
 
 void ProjectModel::CompositeToJson(const QString& name, const Composite& comp, QJsonObject* obj){
-	/*
     obj->insert("root", comp.root);
     obj->insert("name", name);
 
-	// TODO: Reformat the properties
-	qWarning() << "TODO: Reformat comp properties";
-    obj->insert("properties", comp.properties);
+	auto properties = comp.properties.trimmed();
+	if (!properties.isEmpty()) {
+		obj->insert("properties", "{ " + properties + " }");
+	}
 
     if (!comp.parent.isNull()){
-        obj->insert("parent", comp.parent.idAsString());
+        obj->insert("parent", comp.parent.id);
     }
 
     QJsonArray compChildren;
-    foreach(const QString& childName, comp.children){
-        QString fixedChildName = childName;
-        fixedChildName.replace(' ','_');
-
-        const Composite::Child& child = comp.childrenMap.value(childName);
+	int index = 0;
+    for(const auto& childName: comp.children){
+        const auto& child = comp.childrenMap.value(childName);
         QJsonObject childObject;
-        childObject.insert("name", fixedChildName);
+		childObject.insert("id", child.id); // Unused
+        childObject.insert("name", childName);
         childObject.insert("parent", child.parent);
         childObject.insert("parentPivot", child.parentPivot);
         childObject.insert("z", child.z);
-        childObject.insert("part", child.part.idAsString());
-
+		childObject.insert("index", index++);
+        childObject.insert("part", child.part.id);
         QJsonArray children;
-        foreach(int ci, child.children){
+        for(int ci: child.children){
             children.append(ci);
         }
         childObject.insert("children", children);
-
         compChildren.push_back(childObject);
-        // compChildren.insert(fixedChildName, childObject);
     }
     obj->insert("parts", compChildren);
-	*/
 }
 
 void ProjectModel::JsonToComposite(const QJsonObject& obj, Composite* comp){
@@ -704,15 +807,19 @@ void ProjectModel::JsonToComposite(const QJsonObject& obj, Composite* comp){
         child.z = childObject.value("z").toInt();
 		child.part.id = childObject.value("part").toInt();
         child.part.type = AssetType::Part;
-        child.index = index;
-
+        child.index = index++;
         QJsonArray childrenOfChild = childObject.value("children").toArray();
         for(const auto& ci: childrenOfChild){
             child.children.push_back(ci.toInt());
         }
         comp->childrenMap.insert(name, child);
 
-        index++;
+		if (childObject.contains("index")) {
+			int childIndex = childObject.value("index").toInt();
+			if (childIndex != child.index) {
+				importLog.append("Index of child of " + name + " is incorrect!");
+			}
+		}		
     }
 }
 

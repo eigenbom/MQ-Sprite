@@ -116,7 +116,7 @@ def process(filename, outputfilename):
         json.dump(data_obj, out, indent = 1)
 
     print("Writing to %s" % outputfilename)
-    with zipfile.ZipFile(outputfilename, "w") as file:
+    with zipfile.ZipFile(outputfilename, "w", zipfile.ZIP_DEFLATED) as file:
         for root, dirs, files in os.walk(temp_dir):
             for name in files:
                 relative_dir = os.path.relpath(root, temp_dir)

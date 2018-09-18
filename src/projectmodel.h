@@ -158,7 +158,7 @@ struct Composite: public Asset {
     };
 
     int root = -1;
-    QMap<QString,Child> childrenMap;
+    QMap<QString, Child> childrenMap;
     QList<QString> children;
 	QString properties{};
 };
