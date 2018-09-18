@@ -923,10 +923,11 @@ void MainWindow::loadProject(const QString& fileName){
 	QString reason;
     bool result = ProjectModel::Instance()->load(fileName, reason);
     if (!result){
-		// qWarning() << "Error while loading " << fileName << "! Reason: " << reason;
+		qDebug() << "Error while loading " << fileName << "! Reason: " << reason;
 		QMessageBox::warning(this, "Error during load", tr("Couldn't load ") + fileName + tr("\nReason: ") + reason);
 		if (!mProjectModel->importLog.isEmpty()) {
 			QMessageBox::warning(this, "Import issues", mProjectModel->importLog.join("\n"));
+			qDebug() << "Import issues:\n" << mProjectModel->importLog.join("\n");
 		}
 		mProjectModel->clear();
         mPartList->updateList();

@@ -24,20 +24,23 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext& context, const QS
 		}
 	};
 
-	auto logInfo = [](const QString& message) {
-		std::cout << "[Info] " << message.toStdString() << "\n";
+	auto logInfo = [](const char* type, const QString& message) {
+		std::cout << "[" << type << "] " << message.toStdString() << "\n";
 		if (sLogFile) {
 			QTextStream out(sLogFile);
-			out << "[Info] " << message << "\n";
+			out << "[" << type << "] " << message << "\n";
 		}
 	};
 
     switch (type) {
 	default: {
-		logInfo(msg);
+		logInfo("Info", msg);
 		break;
 	}	
-	case QtDebugMsg: logError("Debug", msg); break;
+	case QtDebugMsg: {
+		logInfo("Debug", msg);
+		break;
+	}
 	case QtWarningMsg: logError("Warning", msg); break;
 	case QtCriticalMsg: logError("Critical", msg); break;
 	case QtFatalMsg: {

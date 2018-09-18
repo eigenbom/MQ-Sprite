@@ -5,6 +5,7 @@ import shutil
 import sys
 import tarfile
 import tempfile
+import zipfile
 
 # This script converts a Version 1 MoonQuest Sprite Project (*.tar) into a Version 2 file (*.mqs)
 next_id = 0
@@ -15,17 +16,15 @@ def get_next_id():
 
 
 def process(filename, outputfilename):
-     
-    
-    tar_output_dir = tempfile.mkdtemp()
+    temp_dir = tempfile.mkdtemp()
 
     with tarfile.open(filename, "r") as tar:        
-        print("Extracting tar to: %s" % tar_output_dir)
-        tar.extractall(path=tar_output_dir, members=None)
-        data_json_path = os.path.join(tar_output_dir, "data.json")
+        print("Extracting tar to: %s" % temp_dir)
+        tar.extractall(path=temp_dir, members=None)
+        data_json_path = os.path.join(temp_dir, "data.json")
         data_obj = json.load(open(data_json_path))
 
-        os.remove(os.path.join(tar_output_dir, "prefs.json"))
+        os.remove(os.path.join(temp_dir, "prefs.json"))
 
     assert data_obj is not None
 
@@ -117,14 +116,14 @@ def process(filename, outputfilename):
         json.dump(data_obj, out, indent = 1)
 
     print("Writing to %s" % outputfilename)
-    with tarfile.open(outputfilename, "w") as tar:
-        for root, dirs, files in os.walk(tar_output_dir):
+    with zipfile.ZipFile(outputfilename, "w") as file:
+        for root, dirs, files in os.walk(temp_dir):
             for name in files:
-                relative_dir = os.path.relpath(root, tar_output_dir)
+                relative_dir = os.path.relpath(root, temp_dir)
                 if relative_dir == ".":
-                    tar.add(os.path.join(root, name), arcname=name)
+                    file.write(os.path.join(root, name), arcname=name)
                 else:
-                    tar.add(
+                    file.write(
                         os.path.join(
                             root, name), arcname=os.path.join(
                             relative_dir, name))

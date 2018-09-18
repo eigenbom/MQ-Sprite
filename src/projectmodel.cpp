@@ -1,5 +1,7 @@
 #include "projectmodel.h"
 
+#include "tarball.h"
+#include "zip.h"
 #include <QColor>
 #include <QDebug>
 #include <QPainter>
@@ -12,7 +14,7 @@
 #include <QTemporaryFile>
 #include <QDir>
 #include <QtZlib/zlib.h>
-
+#include <algorithm>
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
@@ -20,7 +22,6 @@
 #include <iomanip>
 #include <iostream>
 #include <ios>
-#include "tarball.h"
 
 static const int PROJECT_SAVE_FILE_VERSION = 2;
 
@@ -51,99 +52,228 @@ ProjectModel* PM(){return ProjectModel::Instance();}
 
 ProjectModel::ProjectModel()
 {
-    sInstance = this;
+	sInstance = this;
 }
 
-ProjectModel::~ProjectModel(){    
-    clear();
+ProjectModel::~ProjectModel() {
+	clear();
 }
 
-ProjectModel* ProjectModel::Instance(){
-    return sInstance;
+ProjectModel* ProjectModel::Instance() {
+	return sInstance;
 }
 
-AssetRef ProjectModel::createAssetRef(AssetType type){
-    AssetRef ref;
+AssetRef ProjectModel::createAssetRef(AssetType type) {
+	AssetRef ref;
 	ref.id = mNextId++;
 	ref.type = type;
-    return ref;
+	return ref;
 }
 
-Asset* ProjectModel::getAsset(const AssetRef& ref){
-    switch (ref.type){
-        case AssetType::Part: return getPart(ref);
-        case AssetType::Composite: return getComposite(ref);
-        case AssetType::Folder: return getFolder(ref);
-    }
-    return nullptr;
+Asset* ProjectModel::getAsset(const AssetRef& ref) {
+	switch (ref.type) {
+	case AssetType::Part: return getPart(ref);
+	case AssetType::Composite: return getComposite(ref);
+	case AssetType::Folder: return getFolder(ref);
+	}
+	return nullptr;
 }
 
-bool ProjectModel::hasAsset(const AssetRef& ref){
-    return getAsset(ref)!=nullptr;
+bool ProjectModel::hasAsset(const AssetRef& ref) {
+	return getAsset(ref) != nullptr;
 }
 
-Part* ProjectModel::getPart(const AssetRef& uuid){
-    return parts.value(uuid).data();
-}
-
-
-bool ProjectModel::hasPart(const AssetRef& uuid){
-    return getPart(uuid)!=nullptr;
-}
-
-Composite* ProjectModel::getComposite(const AssetRef& uuid){
-    return composites.value(uuid).data();
-}
-
-bool ProjectModel::hasComposite(const AssetRef& uuid){
-    return getComposite(uuid)!=nullptr;
-}
-
-Folder* ProjectModel::getFolder(const AssetRef& uuid){
-    return folders.value(uuid).data();
-}
-
-bool ProjectModel::hasFolder(const AssetRef& uuid){
-    return getFolder(uuid)!=nullptr;
+Part* ProjectModel::getPart(const AssetRef& uuid) {
+	return parts.value(uuid).data();
 }
 
 
-Part* ProjectModel::findPartByName(const QString& name){
-    for(auto p: parts.values()){
-        if (p->name==name){
-            return p.data();
-        }
-    }
-    return nullptr;
+bool ProjectModel::hasPart(const AssetRef& uuid) {
+	return getPart(uuid) != nullptr;
 }
 
-Composite* ProjectModel::findCompositeByName(const QString& name){
-    for(auto p: composites.values()){
-        if (p->name==name){
-            return p.data();
-        }
-    }
-    return nullptr;
+Composite* ProjectModel::getComposite(const AssetRef& uuid) {
+	return composites.value(uuid).data();
 }
 
-Folder* ProjectModel::findFolderByName(const QString& name){
-    for(auto f: folders.values()){
-        if (f->name==name){
-            return f.data();
-        }
-    }
-    return nullptr;
+bool ProjectModel::hasComposite(const AssetRef& uuid) {
+	return getComposite(uuid) != nullptr;
 }
 
-void ProjectModel::clear(){
-    parts.clear();
-    composites.clear();
-    folders.clear();
-    fileName = QString();
+Folder* ProjectModel::getFolder(const AssetRef& uuid) {
+	return folders.value(uuid).data();
+}
+
+bool ProjectModel::hasFolder(const AssetRef& uuid) {
+	return getFolder(uuid) != nullptr;
+}
+
+
+Part* ProjectModel::findPartByName(const QString& name) {
+	for (auto p : parts.values()) {
+		if (p->name == name) {
+			return p.data();
+		}
+	}
+	return nullptr;
+}
+
+Composite* ProjectModel::findCompositeByName(const QString& name) {
+	for (auto p : composites.values()) {
+		if (p->name == name) {
+			return p.data();
+		}
+	}
+	return nullptr;
+}
+
+Folder* ProjectModel::findFolderByName(const QString& name) {
+	for (auto f : folders.values()) {
+		if (f->name == name) {
+			return f.data();
+		}
+	}
+	return nullptr;
+}
+
+void ProjectModel::clear() {
+	parts.clear();
+	composites.clear();
+	folders.clear();
+	fileName = QString();
 	mNextId = 0;
 }
 
-bool ProjectModel::load(const QString& fileName, QString& reason){	
+static void removeAdditionalNullChars(QByteArray& arr) {
+	int length = 0;
+	for (int i = 0; i < arr.length(); ++i) {
+		if (arr[i] == '\0') {
+			length = i;
+			break;
+		}
+	}
+	if (length != 0) arr.resize(length);
+}
+
+bool ProjectModel::load(const QString& fileName, QString& reason) {
+	importLog.clear();
+	mNextId = 0;
+
+	auto fileMap = LoadZip(fileName);
+	if (fileMap.isEmpty()) {
+		reason = "Cannot open file!";
+		return false;
+	}
+
+	if (fileMap.count("data.json") == 0) {
+		reason = "Internal data.json is missing";
+		return false;
+	}
+
+	auto& dataRec = fileMap["data.json"];
+	qDebug() << "data.json: " << dataRec;
+	removeAdditionalNullChars(dataRec);
+	qDebug() << "data.json: " << dataRec;
+
+	QJsonParseError error;
+	QJsonDocument dataDoc = QJsonDocument::fromJson(dataRec, &error);
+
+	auto buildErrorString = [&](QString reason) -> QString {
+		QStringList list { reason + ": " + error.errorString() };
+		if (error.offset >= 0 && error.offset < dataRec.length()) {
+			auto start = std::next(dataRec.data() + std::max(0, error.offset - 20));
+			auto end = std::next(dataRec.data() + std::min(dataRec.length() - 1, error.offset + 20));
+			if (start < end) {
+				list.append("Context: ");
+				list.append(QString::fromUtf8(start, std::distance(start, end)));
+			}
+		}
+		return list.join("\n");
+	};
+
+	if (error.error != QJsonParseError::NoError) {
+		reason = buildErrorString("Internal data.json parse error");
+		return false;
+	}
+	else if (dataDoc.isNull() || dataDoc.isEmpty() || !dataDoc.isObject()) {
+		reason = buildErrorString("Internal data.json is not a valid json object");
+		return false;
+	}
+
+	QJsonObject dataObj = dataDoc.object();
+	if (!dataObj.contains("version")) {
+		reason = buildErrorString("Internal data.json has no version field");
+		return false;
+	}
+
+	if (dataObj.value("version").toInt(0) != PROJECT_SAVE_FILE_VERSION) {
+		reason = buildErrorString("Internal data.json has an invalid version");
+		return false;
+	}
+
+	// Load all the images (and store them in an image map)
+	// The ownership of these are taken by the sprites when they're loaded
+	QMap<QString, QSharedPointer<QImage>> imageMap;
+	
+	for (auto it = fileMap.begin(); it != fileMap.end(); it++) {
+		QString assetName = it.key();
+		if (assetName.endsWith(".png")) {
+			auto img = QSharedPointer<QImage>::create();
+			bool res = img->loadFromData(it.value(), "PNG");
+			Q_ASSERT(res);
+			imageMap.insert(assetName, img);
+		}
+	}
+
+	// Load data.json, connecting the Images* too
+	{
+		auto folders = dataObj.value("folders").toArray();
+		auto parts = dataObj.value("parts").toArray();
+		auto comps = dataObj.value("comps").toArray();
+
+		if (!folders.isEmpty()) {
+			for (auto it = folders.begin(); it != folders.end(); it++) {
+				const auto& obj = it->toObject();
+				auto folder = QSharedPointer<Folder>::create();
+				folder->ref.id = obj["id"].toInt();
+				folder->ref.type = AssetType::Folder;
+				mNextId = std::max(mNextId, folder->ref.id + 1);
+				JsonToFolder(obj, folder.get());
+				this->folders.insert(folder->ref, folder);
+			}
+		}
+
+		if (!parts.isEmpty()) {
+			for (auto it = parts.begin(); it != parts.end(); it++) {
+				const auto& partObj = it->toObject();
+				auto part = QSharedPointer<Part>::create();
+				part->ref.id = partObj["id"].toInt();
+				part->ref.type = AssetType::Part;
+				mNextId = std::max(mNextId, part->ref.id + 1);
+				JsonToPart(partObj, imageMap, part.get());
+				this->parts.insert(part->ref, part);
+			}
+		}
+
+		if (!comps.isEmpty()) {
+			for (auto it = comps.begin(); it != comps.end(); it++) {
+				const auto& compObj = it->toObject();
+				auto composite = QSharedPointer<Composite>::create();
+				composite->ref.id = compObj["id"].toInt();
+				composite->ref.type = AssetType::Composite;
+				mNextId = std::max(mNextId, composite->ref.id + 1);
+				JsonToComposite(compObj, composite.get());
+				this->composites.insert(composite->ref, composite);
+			}
+		}
+	}
+
+	this->fileName = fileName;
+	return true;
+}
+
+/*
+bool ProjectModel::load(const QString& fileName, QString& reason) {
 	importLog.clear();
 	mNextId = 0;
 
@@ -204,47 +334,6 @@ bool ProjectModel::load(const QString& fileName, QString& reason){
 		reason = "Internal data.json has an invalid version";
         return false;
     }
-
-	qDebug() << "TODO: Serialise preferences";
-
-	/*
-    if (fileMap.count("prefs.json")>0){
-        auto& prefsRec = fileMap["prefs.json"];
-		int presLength = 0;
-
-		for (int i = 0; i < prefsRec.length; ++i) {
-			if (prefsRec.buffer[i] == '\0') {
-				presLength = i;
-				break;
-			}
-		}
-
-        QJsonParseError error;
-        QJsonDocument prefsDoc = QJsonDocument::fromJson(QByteArray(prefsRec.buffer, presLength), &error);
-
-        if (error.error!=QJsonParseError::NoError){
-            qWarning() << "Internal prefs.json parse error: " << error.errorString();
-        }
-        else if (prefsDoc.isNull() || prefsDoc.isEmpty() || !prefsDoc.isObject()){
-			qWarning() << "Internal prefs.json is not a vaid json object";
-        }
-        else {
-            QSettings settings;
-            QJsonObject settingsObj = prefsDoc.object();
-            for(QJsonObject::iterator it = settingsObj.begin(); it!=settingsObj.end(); it++){
-                const QJsonValue& val = it.value();
-
-                if (it.key()=="background_colour"){
-                    uint col = val.toString().toUInt();
-                    settings.setValue(it.key(), col);
-                }
-                else {
-                    settings.setValue(it.key(), val.toVariant());
-                }
-            }
-        }
-    }
-	*/
 
     // Load all the images (and store them in an image map)
 	// The ownership of these are taken by the sprites when they're loaded
@@ -307,7 +396,7 @@ bool ProjectModel::load(const QString& fileName, QString& reason){
     this->fileName = fileName;
     return true;
 }
-
+*/
 bool ProjectModel::save(const QString& fileName){
     std::ofstream out(fileName.toStdString().c_str(), std::ios::out | std::ios::binary);
     if(!out.is_open()){

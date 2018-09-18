@@ -21,7 +21,8 @@ HEADERS += \
     src/propertieswidget.h \
     src/animationwidget.h \
     src/spritezoomwidget.h \
-    src/optionswidget.h
+    src/optionswidget.h \
+    src/zip.h
 
 FORMS += \
     src/compositetoolswidget.ui \
@@ -52,7 +53,8 @@ SOURCES += \
     src/propertieswidget.cpp \
     src/animationwidget.cpp \
     src/spritezoomwidget.cpp \
-    src/optionswidget.cpp
+    src/optionswidget.cpp \
+    src/zip.cpp
 
 RESOURCES += \
     icons.qrc
