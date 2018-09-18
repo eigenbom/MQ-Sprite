@@ -131,12 +131,28 @@ Folder* ProjectModel::findFolderByName(const QString& name) {
 	return nullptr;
 }
 
+void ProjectModel::resetImageCache(QImage* img) {
+	auto it = mImageCache.find(img);
+	if (it != mImageCache.end()) {
+		if (QFile::exists(it.value())) {
+			QFile::remove(it.value());
+		}
+		mImageCache.erase(it);
+	}
+}
+
 void ProjectModel::clear() {
 	parts.clear();
 	composites.clear();
 	folders.clear();
 	fileName = QString();
+	clearImageCache();
 	mNextId = 0;
+
+	for (auto file : mJunkFiles) {
+		QFile::remove(file);
+	}
+	mJunkFiles.clear();
 }
 
 static void removeAdditionalNullChars(QByteArray& arr) {
@@ -151,10 +167,11 @@ static void removeAdditionalNullChars(QByteArray& arr) {
 }
 
 bool ProjectModel::load(const QString& fileName, QString& reason) {
+	clearImageCache();
 	importLog.clear();
 	mNextId = 0;
-
-	auto fileMap = LoadZip(fileName);
+	
+	auto fileMap = LoadZipToFiles(fileName);
 	if (fileMap.isEmpty()) {
 		reason = "Cannot open file!";
 		return false;
@@ -165,10 +182,13 @@ bool ProjectModel::load(const QString& fileName, QString& reason) {
 		return false;
 	}
 
-	auto& dataRec = fileMap["data.json"];
-	// qDebug() << "data.json: " << dataRec;
+	QFile dataJson(fileMap["data.json"]);
+	if (!dataJson.open(QIODevice::ReadOnly)) {
+		reason = "Couldn't load data.json";
+		return false;
+	}
+	auto dataRec = dataJson.readAll();
 	removeAdditionalNullChars(dataRec);
-	// qDebug() << "data.json: " << dataRec;
 
 	QJsonParseError error;
 	QJsonDocument dataDoc = QJsonDocument::fromJson(dataRec, &error);
@@ -214,12 +234,13 @@ bool ProjectModel::load(const QString& fileName, QString& reason) {
 		QString assetName = it.key();
 		if (assetName.endsWith(".png")) {
 			auto img = QSharedPointer<QImage>::create();
-			bool res = img->loadFromData(it.value(), "PNG");
+			bool res = img->load(it.value(), "PNG");
 			if (!res) {
 				reason = "Couldn't load " + it.value();
 				return false;
 			}
 			imageMap.insert(assetName, img);
+			mImageCache.insert(img.get(), it.value());
 		}
 	}
 
@@ -268,10 +289,10 @@ bool ProjectModel::load(const QString& fileName, QString& reason) {
 }
 
 bool ProjectModel::save(const QString& fileName) {
+	const QDir tempDir { QDir::tempPath() }; // tempPath() takes some time so do it once
+
 	QMap<QString, QSharedPointer<QImage>> imageMap;
 	QMap<QString, QString> fileMap;
-
-	QList<QString> tempFiles;
 
 	{
 		QJsonObject data;
@@ -304,14 +325,14 @@ bool ProjectModel::save(const QString& fileName) {
 		}
 		data.insert("comps", compArray);
 
-		QString pathTemplate = QDir(QDir::tempPath()).absoluteFilePath("data.XXXXXX.json");
+		QString pathTemplate = tempDir.absoluteFilePath("data.XXXXXX.json");
 		QTemporaryFile file(pathTemplate);
 		if (!file.open()){
 			exportLog.append("Couldn't create temporary file " + pathTemplate);
 			return false;
 		}
 		file.setAutoRemove(false);
-		tempFiles.append(file.fileName());
+		mJunkFiles.append(file.fileName());
 
 		QTextStream out(&file);
 		QJsonDocument doc(data);
@@ -323,21 +344,35 @@ bool ProjectModel::save(const QString& fileName) {
 		for (auto it = imageMap.begin(); it != imageMap.end(); ++it) {
 			auto img = it.value();
 			if (img) {
-				auto imageName = it.key();
-				imageName.replace(' ', '_');
+				
+				bool res = false;
 
-				QString pathTemplate = QDir(QDir::tempPath()).absoluteFilePath(imageName + "-XXXXXX.png");
-				QTemporaryFile file(pathTemplate);				
-				if (!file.open()) {
-					exportLog.append("Couldn't create temporary file: " + pathTemplate);
-					return false;
+				QString fileName;
+				auto cacheIt = mImageCache.find(img.get());
+				if (cacheIt != mImageCache.end()) {
+					res = true;
+					fileName = cacheIt.value();
 				}
 
-				file.setAutoRemove(false);
-				tempFiles.append(file.fileName());
-				bool res = img->save(&file, "PNG");
+				if (!res){
+					auto imageName = it.key();
+					imageName.replace(' ', '_');
+					imageName.replace('/', '-');
+
+					QString pathTemplate = tempDir.absoluteFilePath(imageName + "-XXXXXX.png");
+					QTemporaryFile file(pathTemplate);
+					if (!file.open()) {
+						exportLog.append("Couldn't create temporary file: " + pathTemplate);
+						return false;
+					}
+					file.setAutoRemove(false);
+					mJunkFiles.append(file.fileName());
+					fileName = file.fileName();
+					res = img->save(&file, "PNG");
+				}
+
 				if (res) {
-					fileMap.insert(it.key(), file.fileName());
+					fileMap.insert(it.key(), fileName);
 				}
 				else {
 					exportLog.append("Couldn't save image " + it.key());
@@ -354,18 +389,12 @@ bool ProjectModel::save(const QString& fileName) {
 			exportLog.append("Couldn't write zip!");
 			return false;
 		}
-
-		// Copy tempFileName to fileName
 		if (QFile::exists(fileName)){
 			QFile::remove(fileName);
 		}
 		QFile::copy(tempFileName, fileName);	
 	}
 
-	for (auto file : tempFiles) {
-		QFile::remove(file);
-	}	
-	
 	this->fileName = fileName;
 	return true;
 }
@@ -450,7 +479,7 @@ void ProjectModel::jsonToPart(const QJsonObject& obj, const QMap<QString,QShared
     }
 }
 
-void BuildFolderList(ProjectModel* pm, Folder& folder, QStringList& list) {
+static void BuildFolderList(ProjectModel* pm, Folder& folder, QStringList& list) {
 	if (!folder.parent.isNull()) {
 		Q_ASSERT(pm->getFolder(folder.parent) != nullptr);
 		BuildFolderList(pm, *pm->getFolder(folder.parent), list);
@@ -501,7 +530,7 @@ void ProjectModel::partToJson(const QString& name, const Part& part, QJsonObject
 			frameObject.insert("ax", m.anchor.at(frame).x());
 			frameObject.insert("ay", m.anchor.at(frame).y());
 			QString frameNum = QString("%1").arg(frame, 3, 10, QChar('0')).toUpper();
-			QString imageName = QString("%1_%2_%3.png").arg(imageNamePrefix, modeNameFixed, frameNum);
+			QString imageName = QString("images/%1_%2_%3.png").arg(imageNamePrefix, modeNameFixed, frameNum);
 			imageMap->insert(imageName, m.frames.at(frame));
 			frameObject.insert("image", imageName);
 			for (int p = 0; p < m.numPivots; p++) {
@@ -622,4 +651,13 @@ QString ProjectModel::importAndFormatProperties(const QString& assetName, const 
 		}
 	}
 	return properties;
+}
+
+void ProjectModel::clearImageCache() {
+	for (auto it = mImageCache.begin(); it != mImageCache.end(); ++it) {
+		if (QFile::exists(it.value())) {
+			QFile::remove(it.value());
+		}
+	}
+	mImageCache.clear();
 }

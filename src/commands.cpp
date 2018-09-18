@@ -608,6 +608,7 @@ void CDrawOnPart::undo(){
     // *img = mOldFrame;
 
     // tell everyone that the part has been updated
+	PM()->resetImageCache(img.get());
     MainWindow::Instance()->partFrameUpdated(mPart, mMode, mFrame);
 }
 
@@ -621,6 +622,7 @@ void CDrawOnPart::redo(){
     painter.drawImage(mOffset.x(), mOffset.y(), mData);
 
     // tell everyone that the part has been updated
+	PM()->resetImageCache(img.get());
     MainWindow::Instance()->partFrameUpdated(mPart, mMode, mFrame);
 }
 
@@ -641,6 +643,7 @@ void CEraseOnPart::undo(){
     // *img = mOldFrame;
 
     // tell everyone that the part has been updated
+	PM()->resetImageCache(img.get());
     MainWindow::Instance()->partFrameUpdated(mPart, mMode, mFrame);
 }
 
@@ -654,6 +657,7 @@ void CEraseOnPart::redo(){
     painter.drawImage(mOffset.x(), mOffset.y(), mData);
 
     // tell everyone that the part has been updated
+	PM()->resetImageCache(img.get());
     MainWindow::Instance()->partFrameUpdated(mPart, mMode, mFrame);
 }
 

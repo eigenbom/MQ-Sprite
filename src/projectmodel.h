@@ -87,6 +87,9 @@ public:
     Composite* findCompositeByName(const QString& name);
     Folder* findFolderByName(const QString& name);
 
+	// Call this if a qimage changes
+	void resetImageCache(QImage*);
+
     // Direct access (be careful!)
     QMap<AssetRef, QSharedPointer<Part>> parts;
     QMap<AssetRef, QSharedPointer<Composite>> composites;
@@ -105,6 +108,10 @@ public:
 private:
 	int mNextId = 1;
 
+	// Cache the pngs to avoid having to rewrite them unless necessary
+	QMap<QImage*, QString> mImageCache; 
+	QList<QString> mJunkFiles;
+
 protected:
     void jsonToFolder(const QJsonObject& obj, Folder* folder);
     void folderToJson(const QString& name, const Folder& folder, QJsonObject* obj);
@@ -113,6 +120,7 @@ protected:
     void compositeToJson(const QString& name, const Composite& comp, QJsonObject* obj);
     void jsonToComposite(const QJsonObject& obj, Composite* comp);
 	QString importAndFormatProperties(const QString& assetName, const QString& properties);
+	void clearImageCache();
 };
 
 struct Asset {

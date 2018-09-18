@@ -296,7 +296,7 @@
          </size>
         </property>
         <property name="text">
-         <string>Pivots</string>
+         <string>Pivot count</string>
         </property>
        </widget>
       </item>
@@ -310,7 +310,7 @@
       <item row="1" column="0">
        <widget class="QLabel" name="label_5">
         <property name="text">
-         <string>Frames</string>
+         <string>Frame count</string>
         </property>
        </widget>
       </item>
@@ -323,7 +323,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>Framerate</string>
+         <string>Frame rate</string>
         </property>
        </widget>
       </item>

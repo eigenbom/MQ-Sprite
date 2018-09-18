@@ -113,7 +113,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	}
 
 	{
-		auto* dock = new QDockWidget("Animation", this);
+		auto* dock = new QDockWidget("Animations", this);
 		dock->setLayout(new QVBoxLayout());
 		dock->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
 		mAnimationWidget = new AnimationWidget(dock);
@@ -314,6 +314,9 @@ void MainWindow::createMenus(){
     connect(loadProjectAction, SIGNAL(triggered()), this, SLOT(loadProject()));
 
     QAction* reloadProjectAction = mFileMenu->addAction("Revert");
+	connect(reloadProjectAction, &QAction::triggered, this, [this]() {
+		mMdiArea->closeAllSubWindows();
+	});
     connect(reloadProjectAction, SIGNAL(triggered()), this, SLOT(reloadProject()));
 
     QAction* saveProjectAction = mFileMenu->addAction("&Save");
@@ -857,10 +860,11 @@ void MainWindow::setOnionSkinningTransparency(int sliderValue){
 
 void MainWindow::showAbout(){
     QMessageBox::about(this, tr("About"), tr(
-"<p>Created by <a href=\"https://twitter.com/eigenbom\">@eigenbom</a>.</p>"
+		"<h1>MoonQuest Sprite Editor</h1>"
+"<p>Created by <a href=\"https://twitter.com/eigenbom\">Ben Porter</a> for <a href=\"https://playmoonquest.com\">MoonQuest</a>.</p>"
 "<p>Uses <a href=\"http://www.gentleface.com/free_icon_set.html\">Gentleface Icons</a> (CC BY-NC 3.0).</p>"
 "<p>Uses the \"Matriax8c\" palette by <a href=\"https://twitter.com/DavitMasia/\">Davit Masia</a>.</p>"
-"<p>Sprite Editting Shortcuts:<ul>"
+"<p>Shortcuts:<ul>"
 	"<li>Right-click: Select colour (or eraser)</li>"
 	"<li>Middle-click: Move canvas</li>"
 	"<li>Mouse wheel: Zoom canvas</li>"
@@ -869,7 +873,7 @@ void MainWindow::showAbout(){
 	"<li>W, E: Change mode</li>"
 	"<li>A, 1, 2, 3, 4: Move anchor or pivots</li>"
 "</ul></p>"
-                           ));
+     ));
 }
 
 void MainWindow::resetSettings(){
@@ -989,7 +993,9 @@ void MainWindow::saveProject(){
     else {
         bool result = ProjectModel::Instance()->save(fileName);
         if (!result){
-            QMessageBox::warning(this, "Error during save", tr("Couldn't save ") + fileName + "!\n" + mProjectModel->exportLog.join("\n"));			
+			qWarning() << "Error during save";
+			qWarning() << mProjectModel->exportLog.join("\n");
+            QMessageBox::warning(this, "Error during save", tr("Couldn't save ") + fileName + "!\n" + mProjectModel->exportLog.mid(0, 10).join("\n"));
         }
         else {
             mProjectModifiedSinceLastSave = false;
@@ -997,7 +1003,9 @@ void MainWindow::saveProject(){
             MainWindow::Instance()->showMessage("Successfully saved");
 
 			if (!mProjectModel->exportLog.isEmpty()) {
-				QMessageBox::warning(this, "Export issues", mProjectModel->exportLog.join("\n"));
+				qWarning() << "Error during save";
+				qWarning() << mProjectModel->exportLog.join("\n");
+				QMessageBox::warning(this, "Export issues", mProjectModel->exportLog.mid(0, 10).join("\n"));
 			}
         }
     }
@@ -1011,7 +1019,9 @@ void MainWindow::saveProjectAs(){
     if (!fileName.isNull()){
         bool result = ProjectModel::Instance()->save(fileName);
         if (!result){
-			QMessageBox::warning(this, "Error during save", tr("Couldn't save ") + fileName + "!\n" + mProjectModel->exportLog.join("\n"));
+			qWarning() << "Error during save";
+			qWarning() << mProjectModel->exportLog.join("\n");
+			QMessageBox::warning(this, "Error during save", tr("Couldn't save ") + fileName + "!\n" + mProjectModel->exportLog.mid(0, 10).join("\n"));
         }
         else {
             // Update last saved project location
@@ -1023,7 +1033,9 @@ void MainWindow::saveProjectAs(){
             MainWindow::Instance()->showMessage("Successfully saved");
 
 			if (!mProjectModel->exportLog.isEmpty()) {
-				QMessageBox::warning(this, "Export issues", mProjectModel->exportLog.join("\n"));
+				qWarning() << "Error during save";
+				qWarning() << mProjectModel->exportLog.join("\n");
+				QMessageBox::warning(this, "Export issues", mProjectModel->exportLog.mid(0, 10).join("\n"));
 			}
         }
     }
