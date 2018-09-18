@@ -1,6 +1,5 @@
 #include "projectmodel.h"
 
-#include "tarball.h"
 #include "zip.h"
 #include <QColor>
 #include <QDebug>
@@ -10,10 +9,8 @@
 #include <QJsonArray>
 #include <QFile>
 #include <QTextStream>
-#include <QImageWriter>
 #include <QTemporaryFile>
 #include <QDir>
-#include <QtZlib/zlib.h>
 #include <algorithm>
 #include <cstdlib>
 #include <ctime>
@@ -23,7 +20,7 @@
 #include <iostream>
 #include <ios>
 
-static const int PROJECT_SAVE_FILE_VERSION = 2;
+static const int ProjectFileVersion = 2;
 
 bool operator==(const AssetRef& a, const AssetRef& b){
     return (a.type == AssetType::None && b.type == AssetType::None) ||  (a.id == b.id && a.type == b.type);
@@ -87,7 +84,6 @@ Part* ProjectModel::getPart(const AssetRef& uuid) {
 	return parts.value(uuid).data();
 }
 
-
 bool ProjectModel::hasPart(const AssetRef& uuid) {
 	return getPart(uuid) != nullptr;
 }
@@ -107,7 +103,6 @@ Folder* ProjectModel::getFolder(const AssetRef& uuid) {
 bool ProjectModel::hasFolder(const AssetRef& uuid) {
 	return getFolder(uuid) != nullptr;
 }
-
 
 Part* ProjectModel::findPartByName(const QString& name) {
 	for (auto p : parts.values()) {
@@ -206,7 +201,7 @@ bool ProjectModel::load(const QString& fileName, QString& reason) {
 		return false;
 	}
 
-	if (dataObj.value("version").toInt(0) != PROJECT_SAVE_FILE_VERSION) {
+	if (dataObj.value("version").toInt(0) != ProjectFileVersion) {
 		reason = buildErrorString("Internal data.json has an invalid version");
 		return false;
 	}
@@ -239,7 +234,7 @@ bool ProjectModel::load(const QString& fileName, QString& reason) {
 			folder->ref.id = obj["id"].toInt();
 			folder->ref.type = AssetType::Folder;
 			mNextId = std::max(mNextId, folder->ref.id + 1);
-			JsonToFolder(obj, folder.get());
+			jsonToFolder(obj, folder.get());
 			this->folders.insert(folder->ref, folder);
 		}
 	}
@@ -251,7 +246,7 @@ bool ProjectModel::load(const QString& fileName, QString& reason) {
 			part->ref.id = partObj["id"].toInt();
 			part->ref.type = AssetType::Part;
 			mNextId = std::max(mNextId, part->ref.id + 1);
-			JsonToPart(partObj, imageMap, part.get());
+			jsonToPart(partObj, imageMap, part.get());
 			this->parts.insert(part->ref, part);
 		}
 	}
@@ -263,7 +258,7 @@ bool ProjectModel::load(const QString& fileName, QString& reason) {
 			composite->ref.id = compObj["id"].toInt();
 			composite->ref.type = AssetType::Composite;
 			mNextId = std::max(mNextId, composite->ref.id + 1);
-			JsonToComposite(compObj, composite.get());
+			jsonToComposite(compObj, composite.get());
 			this->composites.insert(composite->ref, composite);
 		}
 	}
@@ -271,133 +266,6 @@ bool ProjectModel::load(const QString& fileName, QString& reason) {
 	this->fileName = fileName;
 	return true;
 }
-
-/*
-bool ProjectModel::load(const QString& fileName, QString& reason) {
-	importLog.clear();
-	mNextId = 0;
-
-    std::fstream in(fileName.toStdString().c_str(), std::ios::in | std::ios::binary);
-	if (!in.is_open()) {
-		reason = "Cannot open file";
-		return false;
-	}
-
-    lindenb::io::TarIn tarball(in);
-    tarball.read();
-    if (!tarball.ok()){
-		reason = "Cannot read project file";
-        return false;
-    }
-
-    auto& fileMap = tarball.fileMap();
-
-    if (fileMap.count("data.json") == 0){
-		reason = "Internal data.json is missing";
-        return false;
-    }
-
-    auto& dataRec = fileMap["data.json"];
-
-	int dataLength = 0;
-	for (int i = 0; i < dataRec.length; ++i) {
-		if (dataRec.buffer[i] == '\0') {
-			dataLength = i;
-			break;
-		}
-	}
-
-	if (dataLength == 0) {
-		reason = "Internal data.json is empty";
-		return false;
-	}
-
-    QJsonParseError error;
-    QJsonDocument dataDoc = QJsonDocument::fromJson(QByteArray(dataRec.buffer, dataLength), &error);
-	
-    if (error.error != QJsonParseError::NoError){		
-		reason = "Internal data.json parse error: " + error.errorString();		
-        return false;
-    }
-    else if (dataDoc.isNull() || dataDoc.isEmpty() || !dataDoc.isObject()){
-		reason = "Internal data.json is not a valid json object";
-        return false;
-    }
-
-    QJsonObject dataObj = dataDoc.object();
-    if (!dataObj.contains("version")){
-		reason = "Internal data.json has no version field";
-        return false;
-    }
-
-    if (dataObj.value("version").toInt(0) != PROJECT_SAVE_FILE_VERSION){
-		reason = "Internal data.json has an invalid version";
-        return false;
-    }
-
-    // Load all the images (and store them in an image map)
-	// The ownership of these are taken by the sprites when they're loaded
-    QMap<QString, QSharedPointer<QImage>> imageMap;   
-    for(auto it = tarball.fileMap().begin(); it!=tarball.fileMap().end(); it++){
-        QString assetName = QString::fromStdString(it->first);
-        if (assetName.endsWith(".png")){
-            const auto& record = it->second;
-            auto img = QSharedPointer<QImage>::create();
-            bool res = img->loadFromData(QByteArray(record.buffer, record.length), "PNG");
-			// qDebug() << "Loaded: " << assetName << " " << img->width() << " x " << img->height();
-            Q_ASSERT(res);
-            imageMap.insert(assetName, img);
-        }
-    }
-
-    // Load data.json, connecting the Images* too
-    {
-		auto folders = dataObj.value("folders").toArray();
-		auto parts = dataObj.value("parts").toArray();
-		auto comps = dataObj.value("comps").toArray();
-		
-        if (!folders.isEmpty()){
-            for(auto it = folders.begin(); it!=folders.end(); it++){
-                const auto& obj = it->toObject();
-                auto folder = QSharedPointer<Folder>::create();
-                folder->ref.id = obj["id"].toInt();
-                folder->ref.type = AssetType::Folder;
-				mNextId = std::max(mNextId, folder->ref.id + 1);
-                JsonToFolder(obj, folder.get());
-                this->folders.insert(folder->ref, folder);
-            }
-        }
-
-        if (!parts.isEmpty()){
-            for(auto it = parts.begin(); it!=parts.end(); it++){
-                const auto& partObj = it->toObject();
-				auto part = QSharedPointer<Part>::create();
-				part->ref.id = partObj["id"].toInt();
-                part->ref.type = AssetType::Part;
-				mNextId = std::max(mNextId, part->ref.id + 1);
-                JsonToPart(partObj, imageMap, part.get());
-                this->parts.insert(part->ref, part);
-            }
-        }
-
-        if (!comps.isEmpty()){
-            for(auto it = comps.begin(); it!=comps.end(); it++){
-                const auto& compObj = it->toObject();
-				auto composite = QSharedPointer<Composite>::create();
-				composite->ref.id = compObj["id"].toInt();
-                composite->ref.type = AssetType::Composite;
-				mNextId = std::max(mNextId, composite->ref.id + 1);
-                JsonToComposite(compObj, composite.get());
-                this->composites.insert(composite->ref, composite);
-            }
-        }
-    }
-
-    this->fileName = fileName;
-    return true;
-}
-*/
-
 
 bool ProjectModel::save(const QString& fileName) {
 	QMap<QString, QSharedPointer<QImage>> imageMap;
@@ -407,13 +275,13 @@ bool ProjectModel::save(const QString& fileName) {
 
 	{
 		QJsonObject data;
-		data.insert("version", PROJECT_SAVE_FILE_VERSION);
+		data.insert("version", ProjectFileVersion);
 
 		QJsonArray foldersArray;
 		for (auto folder : folders) {
 			QJsonObject folderObject;
 			folderObject.insert("id", folder->ref.id);
-			FolderToJson(folder->name, *folder, &folderObject);
+			folderToJson(folder->name, *folder, &folderObject);
 			foldersArray.append(folderObject);
 		}
 		data.insert("folders", foldersArray);
@@ -422,7 +290,7 @@ bool ProjectModel::save(const QString& fileName) {
 		for (auto part : parts) {
 			QJsonObject partObject;
 			partObject.insert("id", part->ref.id);
-			PartToJson(part->name, *part, &partObject, &imageMap);
+			partToJson(part->name, *part, &partObject, &imageMap);
 			partsArray.append(partObject);
 		}
 		data.insert("parts", partsArray);
@@ -431,7 +299,7 @@ bool ProjectModel::save(const QString& fileName) {
 		for (auto comp: composites) {
 			QJsonObject compObject;
 			compObject.insert("id", comp->ref.id);
-			CompositeToJson(comp->name, *comp, &compObject);
+			compositeToJson(comp->name, *comp, &compObject);
 			compArray.append(compObject);
 		}
 		data.insert("comps", compArray);
@@ -502,101 +370,7 @@ bool ProjectModel::save(const QString& fileName) {
 	return true;
 }
 
-/*
-bool ProjectModel::save(const QString& fileName){
-    std::ofstream out(fileName.toStdString().c_str(), std::ios::out | std::ios::binary);
-    if(!out.is_open()){
-		exportLog.push_back("Cannot open " + fileName);
-        return false;
-    }
-
-    QMap<QString, QSharedPointer<QImage>> imageMap;
-
-    lindenb::io::TarOut tarball(out);
-	
-    {
-        QJsonObject data;
-        data.insert("version", PROJECT_SAVE_FILE_VERSION);
-
-        // folder
-        QJsonArray foldersArray;
-        for (auto folder: folders){
-            QJsonObject folderObject;
-			folderObject.insert("id", folder->ref.id);			
-            FolderToJson(folder->name, *folder, &folderObject);
-            foldersArray.append(folderObject);
-        }
-        data.insert("folders", foldersArray);
-
-        // parts
-		QJsonArray partsArray;
-		for (auto part: parts) {
-            QJsonObject partObject;
-			partObject.insert("id", part->ref.id);
-            PartToJson(part->name, *part, &partObject, &imageMap);
-			partsArray.append(partObject);
-        }
-        data.insert("parts", partsArray);
-
-		/ *
-        // comps
-        QJsonObject compsObject;
-        {
-            QMapIterator<AssetRef, Composite*> it(this->composites);
-            while (it.hasNext()){
-                it.next();
-                const Composite* comp = it.value();
-                QString compNameFixed = comp->name;
-                compNameFixed.replace(' ','_');
-                QJsonObject compObject;
-                CompositeToJson(compNameFixed, *comp, &compObject);
-
-                QString uuid = comp->ref.uuid.toString();
-                compsObject.insert(uuid, compObject);
-            }
-        }
-        data.insert("comps", compsObject);
-		* /
-
-        // Send it out
-        QString dataStr;
-        QTextStream out(&dataStr);
-        QJsonDocument doc(data);
-        out << doc.toJson();
-        tarball.put("data.json", dataStr.toStdString().c_str());
-    }
-
-    ////////////////
-    // images.json
-    ////////////////
-
-    {
-        QDir tempPath = QDir(QDir::tempPath());
-        QString tempFileName = tempPath.absoluteFilePath("tmp.png");
-
-		for (auto it = imageMap.begin(); it != imageMap.end(); ++it){
-            auto img = it.value();
-            if (img){
-                bool res = img->save(tempFileName, "PNG");
-                if (res){
-                    tarball.putFile(tempFileName.toStdString().c_str(), it.key().toStdString().c_str());
-                }
-                else {
-					exportLog.append("Couldn't save image " + it.key());
-                }
-            }
-        }
-    }
-
-    tarball.finish();
-    out.close();
-
-    this->fileName = fileName;
-    return true;
-}
-*/
-
-void ProjectModel::JsonToFolder(const QJsonObject& obj, Folder* folder){
+void ProjectModel::jsonToFolder(const QJsonObject& obj, Folder* folder){
     folder->name = obj["name"].toString();
     if (obj.contains("parent")){
 		folder->parent.id = obj["parent"].toInt();
@@ -604,7 +378,7 @@ void ProjectModel::JsonToFolder(const QJsonObject& obj, Folder* folder){
     }
 }
 
-void ProjectModel::FolderToJson(const QString& name, const Folder& folder, QJsonObject* obj){
+void ProjectModel::folderToJson(const QString& name, const Folder& folder, QJsonObject* obj){
 
     obj->insert("name", name);
     if (!folder.parent.isNull()){
@@ -612,8 +386,7 @@ void ProjectModel::FolderToJson(const QString& name, const Folder& folder, QJson
     }
 }
 
-
-void ProjectModel::JsonToPart(const QJsonObject& obj, const QMap<QString,QSharedPointer<QImage>>& imageMap, Part* part){
+void ProjectModel::jsonToPart(const QJsonObject& obj, const QMap<QString,QSharedPointer<QImage>>& imageMap, Part* part){
 	part->name = obj["name"].toString();
 
     if (obj.contains("parent")){
@@ -686,7 +459,7 @@ void BuildFolderList(ProjectModel* pm, Folder& folder, QStringList& list) {
 	list.append(folder.name);
 }
 
-void ProjectModel::PartToJson(const QString& name, const Part& part, QJsonObject* obj, QMap<QString, QSharedPointer<QImage>>* imageMap){
+void ProjectModel::partToJson(const QString& name, const Part& part, QJsonObject* obj, QMap<QString, QSharedPointer<QImage>>* imageMap){
     auto properties = part.properties.trimmed();
     if (!properties.isEmpty()){
         obj->insert("properties", "{ " + properties + " }");
@@ -698,8 +471,7 @@ void ProjectModel::PartToJson(const QString& name, const Part& part, QJsonObject
 		Q_ASSERT(getFolder(part.parent) != nullptr);
 		QStringList list;
 		BuildFolderList(this, *getFolder(part.parent), list);		
-		imageNamePrefix.prepend(list.join("_"));
-		imageNamePrefix.append("_");
+		imageNamePrefix.prepend(list.join("_").append("_"));
 	}
 	imageNamePrefix.replace(' ', '_');
 
@@ -745,7 +517,7 @@ void ProjectModel::PartToJson(const QString& name, const Part& part, QJsonObject
 	obj->insert("modes", modeArray);
 }
 
-void ProjectModel::CompositeToJson(const QString& name, const Composite& comp, QJsonObject* obj){
+void ProjectModel::compositeToJson(const QString& name, const Composite& comp, QJsonObject* obj){
     obj->insert("root", comp.root);
     obj->insert("name", name);
 
@@ -780,7 +552,7 @@ void ProjectModel::CompositeToJson(const QString& name, const Composite& comp, Q
     obj->insert("parts", compChildren);
 }
 
-void ProjectModel::JsonToComposite(const QJsonObject& obj, Composite* comp){
+void ProjectModel::jsonToComposite(const QJsonObject& obj, Composite* comp){
     comp->root = obj.value("root").toInt();    
     comp->name = obj["name"].toString();
 

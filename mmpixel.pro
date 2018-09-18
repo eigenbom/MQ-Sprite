@@ -14,7 +14,6 @@ HEADERS += \
     src/partwidget.h \
     src/projectmodel.h \
     src/resizemodedialog.h \
-    src/tarball.h \
     src/assettreewidget.h \
     src/modelistwidget.h \
     src/drawingtools.h \
@@ -46,7 +45,6 @@ SOURCES += \
     src/partwidget.cpp \
     src/projectmodel.cpp \
     src/resizemodedialog.cpp \
-    src/tarball.cpp \
     src/assettreewidget.cpp \
     src/modelistwidget.cpp \
     src/drawingtools.cpp \

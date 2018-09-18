@@ -106,12 +106,12 @@ private:
 	int mNextId = 1;
 
 protected:
-    void JsonToFolder(const QJsonObject& obj, Folder* folder);
-    void FolderToJson(const QString& name, const Folder& folder, QJsonObject* obj);
-    void JsonToPart(const QJsonObject& obj, const QMap<QString, QSharedPointer<QImage>>& imageMap, Part* part);
-    void PartToJson(const QString& name, const Part& part, QJsonObject* obj, QMap<QString,QSharedPointer<QImage>>* imageMap);
-    void CompositeToJson(const QString& name, const Composite& comp, QJsonObject* obj);
-    void JsonToComposite(const QJsonObject& obj, Composite* comp);
+    void jsonToFolder(const QJsonObject& obj, Folder* folder);
+    void folderToJson(const QString& name, const Folder& folder, QJsonObject* obj);
+    void jsonToPart(const QJsonObject& obj, const QMap<QString, QSharedPointer<QImage>>& imageMap, Part* part);
+    void partToJson(const QString& name, const Part& part, QJsonObject* obj, QMap<QString,QSharedPointer<QImage>>* imageMap);
+    void compositeToJson(const QString& name, const Composite& comp, QJsonObject* obj);
+    void jsonToComposite(const QJsonObject& obj, Composite* comp);
 	QString importAndFormatProperties(const QString& assetName, const QString& properties);
 };
 
