@@ -570,7 +570,10 @@ void ProjectModel::compositeToJson(const QString& name, const Composite& comp, Q
         childObject.insert("parentPivot", child.parentPivot);
         childObject.insert("z", child.z);
 		childObject.insert("index", index++);
-        childObject.insert("part", child.part.id);
+		if (!child.part.isNull()) {
+			Q_ASSERT(child.part.type == AssetType::Part);
+			childObject.insert("part", child.part.id);
+		}
         QJsonArray children;
         for(int ci: child.children){
             children.append(ci);
@@ -606,8 +609,13 @@ void ProjectModel::jsonToComposite(const QJsonObject& obj, Composite* comp){
         child.parent = childObject.value("parent").toInt();
         child.parentPivot = childObject.value("parentPivot").toInt();
         child.z = childObject.value("z").toInt();
-		child.part.id = childObject.value("part").toInt();
-        child.part.type = AssetType::Part;
+		if (childObject.contains("part")) {
+			child.part.id = childObject.value("part").toInt();
+			child.part.type = AssetType::Part;
+		}
+		else {
+			child.part.type = AssetType::None;
+		}
         child.index = index++;
         QJsonArray childrenOfChild = childObject.value("children").toArray();
         for(const auto& ci: childrenOfChild){
