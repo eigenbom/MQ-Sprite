@@ -66,6 +66,7 @@ int main(int argc, char *argv[])
 
 		QTextStream out(sLogFile);
 		out << "MoonQuest Sprite Editor Log\n";
+		out << "Library Paths: " << QCoreApplication::libraryPaths().join(", ") << "\n";
 	}
     MainWindow w;
     w.show();
