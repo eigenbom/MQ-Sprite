@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include <QApplication>
+#include <QSettings>
 #include <QStyleFactory>
 #include <QStatusBar>
 #include <QFile>
@@ -54,6 +55,8 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext& context, const QS
 int main(int argc, char *argv[])
 {
     qInstallMessageHandler(myMessageOutput);
+
+
     // QApplication::setStyle(QStyleFactory::create("fusion"));
     QCoreApplication::setOrganizationName("Wizard Mode");
     QCoreApplication::setOrganizationDomain("playmoonquest.com");
@@ -70,6 +73,16 @@ int main(int argc, char *argv[])
 		QTextStream out(sLogFile);
 		out << "MoonQuest Sprite Editor Log\n";
 		out << "Library Paths: " << QCoreApplication::libraryPaths().join(", ") << "\n";
+
+		{
+			QSettings settings;
+			auto theme = settings.value("theme", "windowsvista").toString();
+			const QStringList styles = QStyleFactory::keys();
+			out << "Styles: " << styles.join(", ") << "\n";
+			if (styles.contains(theme)) {
+				a.setStyle(theme);
+			}
+		}
 	}
     MainWindow w;
     w.show();

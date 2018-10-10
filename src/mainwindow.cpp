@@ -391,6 +391,32 @@ void MainWindow::createMenus(){
 	connect(mResizePartAction, SIGNAL(triggered()), mAnimationWidget, SLOT(resizeMode()));
 	mResizePartAction->setEnabled(false);
 
+	
+	auto toCamelCase = [](const QString& s) -> QString {
+		QStringList parts = s.split(' ', QString::SkipEmptyParts);
+		for (int i = 0; i < parts.size(); ++i)
+			parts[i].replace(0, 1, parts[i][0].toUpper());
+
+		return parts.join(" ");
+	};
+
+	{
+		QSettings settings;
+		auto theme = settings.value("theme", "windowsvista").toString();
+		auto* styleMenu = menuBar()->addMenu(tr("Theme"));
+		QActionGroup* ag = new QActionGroup(styleMenu);
+		for (auto style : QStyleFactory::keys()) {
+			auto* action  = ag->addAction(toCamelCase(style));
+			action->setCheckable(true);
+			if (style == theme) action->setChecked(true);
+			connect(action, &QAction::triggered, [&, style, action]() {
+				QApplication::setStyle(style);
+				QSettings().setValue("theme", style);
+			});
+		}
+		styleMenu->addActions(ag->actions());
+	}
+
     mHelpMenu = menuBar()->addMenu(tr("Help"));
     mHelpMenu->addAction(mAboutAction);
 }
