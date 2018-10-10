@@ -29,11 +29,7 @@ COMING SOON
 
 ![Screenshot](https://github.com/eigenbom/moonquest-sprite-editor/raw/origin/master/screenshots/screenshot_kyrise.png "Screenshot")
 
-## Credits And License
-
-COMING SOON
-
-This software is licensed under the MIT License.
+## Credits
 
 [Gentleface Icons](http://www.gentleface.com/free_icon_set.html) are licensed under Creative Commons Attribution-NonCommercial.
 
