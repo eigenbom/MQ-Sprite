@@ -1,5 +1,3 @@
-* UNDER CONSTRUCTION *
-
 ## Synopsis
 
 The MoonQuest Sprite Editor is a tool for managing and editing game sprites. It was built during the development of [MoonQuest](https://www.playmoonquest.com) and has been recently updated with a cleaner UI, new features, and supporting scripts. 
@@ -19,10 +17,18 @@ The editor is most suitable for games that use low resolution pixel art (in the 
 
 ## Download
 
+COMING SOON
+
 ## Build Instructions
+
+COMING SOON
 
 ## Basic Concepts
 
+COMING SOON
+
 ## Credits And License
+
+COMING SOON
 
 The software is licensed under the MIT License.
