@@ -1255,11 +1255,6 @@
         <file>icons/duplicate_16.png</file>
         <file>icons/eraser_16.png</file>
     </qresource>
-    <qresource prefix="/palette">
-        <file>24bit.png</file>
-        <file>EGA.png</file>
-        <file>NES.png</file>
-        <file>db16.png</file>
-    </qresource>
+    <qresource prefix="/palette"/>
     <qresource prefix="/"/>
 </RCC>

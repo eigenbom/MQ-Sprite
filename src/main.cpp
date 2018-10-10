@@ -60,10 +60,13 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationName("MoonQuest Sprite Editor");
     QApplication a(argc, argv);
 	
+	auto paths = QCoreApplication::libraryPaths();
+	paths.append("plugins");
+	QCoreApplication::setLibraryPaths(paths);
+
 	QFile file("log.txt");
 	if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
 		sLogFile = &file;
-
 		QTextStream out(sLogFile);
 		out << "MoonQuest Sprite Editor Log\n";
 		out << "Library Paths: " << QCoreApplication::libraryPaths().join(", ") << "\n";
