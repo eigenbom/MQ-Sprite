@@ -315,22 +315,30 @@ void MainWindow::createMenus(){
 	});
     connect(loadProjectAction, SIGNAL(triggered()), this, SLOT(loadProject()));
 
-    QAction* reloadProjectAction = mFileMenu->addAction("Revert");
+	mFileMenu->addSeparator();
+
+    QAction* reloadProjectAction = mFileMenu->addAction("Reopen");
 	connect(reloadProjectAction, &QAction::triggered, this, [this]() {
 		mMdiArea->closeAllSubWindows();
 	});
     connect(reloadProjectAction, SIGNAL(triggered()), this, SLOT(reloadProject()));
+		
+	mFileMenu->addSeparator();
 
     QAction* saveProjectAction = mFileMenu->addAction("&Save");
     saveProjectAction->setShortcut(QKeySequence::Save);
     connect(saveProjectAction, SIGNAL(triggered()), this, SLOT(saveProject()));
 
-    QAction* saveProjectActionAs = mFileMenu->addAction("Save...");
+    QAction* saveProjectActionAs = mFileMenu->addAction("Save As...");
     saveProjectActionAs->setShortcut(QKeySequence::SaveAs);
     connect(saveProjectActionAs, SIGNAL(triggered()), this, SLOT(saveProjectAs()));
 
-	QAction* exportProjectActionAs = mFileMenu->addAction("Export...");	
+	mFileMenu->addSeparator();
+
+	QAction* exportProjectActionAs = mFileMenu->addAction("Export As...");	
 	connect(exportProjectActionAs, SIGNAL(triggered()), this, SLOT(exportProjectAs()));
+
+	mFileMenu->addSeparator();
 
     QAction* quitAction = mFileMenu->addAction("&Quit");
     quitAction->setShortcut(QKeySequence::Close);
