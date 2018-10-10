@@ -15,12 +15,13 @@ The editor is most suitable for games that use low resolution pixel art (in the 
 * Bundled Python scripts for manipulating the save files in your toolchain; and
 * A general properties window for adding arbitrary meta-data (in JSON format);
 
-The editor is most suitable for games that use low resolution pixel art (in the order of 50x50 pixels in dimensions)
+![Screenshot](https://github.com/eigenbom/moonquest-sprite-editor/raw/origin/master/screenshots/screenshot.png "Screenshot")
 
-![Screenshot](https://github.com/eigenbom/moonquest-sprite-editor/raw/master/screenshots/screenshot.png "Screenshot")
+## Download
 
-## Basic Usage
+## Build Instructions
 
+## Basic Concepts
 
 ## Credits And License
 
