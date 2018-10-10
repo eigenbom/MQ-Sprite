@@ -32,5 +32,6 @@ COMING SOON
 COMING SOON
 
 This software is licensed under the MIT License.
-Gentleface icons licensed under the Creative Commons Attribution-NonCommercial license. [Link](http://www.gentleface.com/free_icon_set.html)
+
+[Gentleface Icons](http://www.gentleface.com/free_icon_set.html) are licensed under Creative Commons Attribution-NonCommercial.
 
