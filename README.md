@@ -35,3 +35,4 @@ COMING SOON
 
 Sprites in example project: [Kyrise's Free 16x16 RPG Icon Pack | Graphics made by Kyrise](https://kyrise.itch.io/)
 
+Paint tool palette courtesy of Davit Masia.
