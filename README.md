@@ -15,8 +15,6 @@ The editor is most suitable for games that use low resolution pixel art (in the 
 
 ![Screenshot](https://github.com/eigenbom/moonquest-sprite-editor/raw/origin/master/screenshots/screenshot.png "Screenshot")
 
-![Screenshot](https://github.com/eigenbom/moonquest-sprite-editor/raw/origin/master/screenshots/screenshot_kyrise.png "Screenshot")
-
 ## Download
 
 COMING SOON
@@ -28,6 +26,8 @@ The sprite editor requires Qt 5 to build and can be built directly from within Q
 ## Basic Concepts
 
 COMING SOON
+
+![Screenshot](https://github.com/eigenbom/moonquest-sprite-editor/raw/origin/master/screenshots/screenshot_kyrise.png "Screenshot")
 
 ## Credits And License
 
