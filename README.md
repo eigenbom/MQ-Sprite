@@ -15,6 +15,8 @@ The editor is most suitable for games that use low resolution pixel art (in the 
 
 ![Screenshot](https://github.com/eigenbom/moonquest-sprite-editor/raw/origin/master/screenshots/screenshot.png "Screenshot")
 
+![Screenshot](https://github.com/eigenbom/moonquest-sprite-editor/raw/origin/master/screenshots/screenshot_kyrise.png "Screenshot")
+
 ## Download
 
 COMING SOON
@@ -34,4 +36,6 @@ COMING SOON
 This software is licensed under the MIT License.
 
 [Gentleface Icons](http://www.gentleface.com/free_icon_set.html) are licensed under Creative Commons Attribution-NonCommercial.
+
+Sprites in example project: [Kyrise's Free 16x16 RPG Icon Pack | Graphics made by Kyrise](https://kyrise.itch.io/)
 
