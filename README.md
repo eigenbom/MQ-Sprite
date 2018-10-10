@@ -17,7 +17,7 @@ The editor is most suitable for games that use low resolution pixel art (in the 
 
 ## Download
 
-COMING SOON
+Windows builds are available [here](https://github.com/eigenbom/moonquest-sprite-editor/releases).
 
 ## Build Instructions
 
