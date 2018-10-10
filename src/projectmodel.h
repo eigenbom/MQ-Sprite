@@ -63,9 +63,16 @@ ProjectModel* PM();
 class ProjectModel
 {
 public:
+    static ProjectModel* Instance();
+
+public:
     explicit ProjectModel();
     ~ProjectModel();
-    static ProjectModel* Instance();
+
+	void clear();
+	bool load(const QString& fileName, QString& reason);
+	bool save(const QString& fileName);
+	bool exportSimple(const QString& directoryName);
 
     AssetRef createAssetRef(AssetType type = AssetType::None);
 
@@ -95,10 +102,7 @@ public:
     QMap<AssetRef, QSharedPointer<Composite>> composites;
     QMap<AssetRef, QSharedPointer<Folder>> folders;
 
-    // Change the project model
-    void clear();	
-    bool load(const QString& fileName, QString& reason);
-    bool save(const QString& fileName);
+    
 
 public:
 	QString fileName {};

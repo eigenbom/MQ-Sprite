@@ -399,6 +399,78 @@ bool ProjectModel::save(const QString& fileName) {
 	return true;
 }
 
+bool ProjectModel::exportSimple(const QString& directoryName) {
+	
+	const QDir exportDir { directoryName };
+	if (!exportDir.exists()) {
+		exportLog.append("Export requires a directory!");
+		return false;
+	}
+	exportDir.mkdir("images");
+	
+	QMap<QString, QSharedPointer<QImage>> imageMap;
+	QMap<QString, QString> fileMap;
+
+	{
+		QJsonObject data;
+		data.insert("version", ProjectFileVersion);
+
+		QJsonArray foldersArray;
+		for (auto folder : folders) {
+			QJsonObject folderObject;
+			folderObject.insert("id", folder->ref.id);
+			folderToJson(folder->name, *folder, &folderObject);
+			foldersArray.append(folderObject);
+		}
+		data.insert("folders", foldersArray);
+
+		QJsonArray partsArray;
+		for (auto part : parts) {
+			QJsonObject partObject;
+			partObject.insert("id", part->ref.id);
+			partToJson(part->name, *part, &partObject, &imageMap);
+			partsArray.append(partObject);
+		}
+		data.insert("parts", partsArray);
+
+		if (composites.size() > 0) {
+			exportLog.append("Simple export doesn't export composites.");
+		}
+
+		QString dataJsonFilename = exportDir.absoluteFilePath("data.json");
+		QFile file(dataJsonFilename);
+		if (!file.open(QFile::OpenModeFlag::WriteOnly)) {
+			exportLog.append("Couldn't create file " + dataJsonFilename);
+			return false;
+		}
+		QTextStream out(&file);
+		QJsonDocument doc(data);
+		out << doc.toJson();
+	}
+
+	{
+		for (auto it = imageMap.begin(); it != imageMap.end(); ++it) {
+			auto img = it.value();
+			if (img) {
+				bool res = false;
+				auto imageName = it.key();
+				imageName.replace(' ', '_');
+				// imageName.replace('/', '-');
+				QString imageFilename = exportDir.absoluteFilePath(imageName + ".png");
+				QFile file(imageFilename);
+				if (!file.open(QFile::OpenModeFlag::WriteOnly)) {
+					exportLog.append("Couldn't create file: " + imageFilename);
+					return false;
+				}
+				if (!img->save(&file, "PNG")) {
+					exportLog.append("Couldn't save image " + it.key());
+				}
+			}
+		}
+	}
+	return true;
+}
+
 void ProjectModel::jsonToFolder(const QJsonObject& obj, Folder* folder){
     folder->name = obj["name"].toString();
     if (obj.contains("parent")){

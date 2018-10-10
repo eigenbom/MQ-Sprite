@@ -95,6 +95,7 @@ public slots:
     void reloadProject();
     void saveProject();
     void saveProjectAs();
+	void exportProjectAs();
 
     void undoStackIndexChanged(int);
 

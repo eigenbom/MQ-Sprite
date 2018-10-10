@@ -329,6 +329,9 @@ void MainWindow::createMenus(){
     saveProjectActionAs->setShortcut(QKeySequence::SaveAs);
     connect(saveProjectActionAs, SIGNAL(triggered()), this, SLOT(saveProjectAs()));
 
+	QAction* exportProjectActionAs = mFileMenu->addAction("Export...");	
+	connect(exportProjectActionAs, SIGNAL(triggered()), this, SLOT(exportProjectAs()));
+
     QAction* quitAction = mFileMenu->addAction("&Quit");
     quitAction->setShortcut(QKeySequence::Close);
     connect(quitAction, SIGNAL(triggered()), this, SLOT(close()));
@@ -1058,6 +1061,29 @@ void MainWindow::saveProjectAs(){
 			}
         }
     }
+}
+
+void MainWindow::exportProjectAs() {
+	QSettings settings;
+	QString dir = settings.value("last_export_dir", QDir::currentPath()).toString();
+	QString dirName = QFileDialog::getExistingDirectory(this, "Export To...", dir);
+	if (!dirName.isNull()) {
+		bool result = ProjectModel::Instance()->exportSimple(dirName);
+		if (!result) {
+			qWarning() << "Error during export";
+			qWarning() << mProjectModel->exportLog.join("\n");
+			QMessageBox::warning(this, "Error during export", tr("Couldn't export to ") + dirName + "!\n" + mProjectModel->exportLog.mid(0, 10).join("\n"));
+		}
+		else {
+			settings.setValue("last_export_dir", QDir(dirName).absolutePath());
+			MainWindow::Instance()->showMessage("Successfully exported");
+			if (!mProjectModel->exportLog.isEmpty()) {
+				qWarning() << "Error during export";
+				qWarning() << mProjectModel->exportLog.join("\n");
+				QMessageBox::warning(this, "Export issues", mProjectModel->exportLog.mid(0, 10).join("\n"));
+			}
+		}
+	}
 }
 
 void MainWindow::undoStackIndexChanged(int){
