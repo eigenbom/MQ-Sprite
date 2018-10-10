@@ -21,7 +21,7 @@ COMING SOON
 
 ## Build Instructions
 
-COMING SOON
+The sprite editor requires Qt 5 to build and can be built directly from within QtCreator.
 
 ## Basic Concepts
 
@@ -31,4 +31,6 @@ COMING SOON
 
 COMING SOON
 
-The software is licensed under the MIT License.
+This software is licensed under the MIT License.
+Gentleface icons licensed under the Creative Commons Attribution-NonCommercial license. [Link](http://www.gentleface.com/free_icon_set.html)
+
