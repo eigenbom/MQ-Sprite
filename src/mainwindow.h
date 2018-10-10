@@ -123,6 +123,8 @@ private:
     QAction* mRedoAction = nullptr;
     QAction* mAboutAction = nullptr;
 
+	QAction* mCompositeToolsWindowAction = nullptr;
+
 	QAction* mResizePartAction = nullptr;
 	QAction* mDuplicateAssetAction = nullptr;
 

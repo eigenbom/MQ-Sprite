@@ -19,7 +19,7 @@ PropertiesWidget::PropertiesWidget(QWidget *parent) :
 	mDefaultTextEditColour = mTextEditProperties->textColor();
 
 	mLabelParseStatus = findChild<QLabel*>("labelParseStatus");
-	mLabelParseStatus->setText("Status: Valid");
+	mLabelParseStatus->setText("");
 
 	this->setEnabled(false);
 }
@@ -37,7 +37,7 @@ void PropertiesWidget::setTargetPartWidget(PartWidget* p) {
 	if (mTarget) {
 		mTarget = nullptr;
 		mCurrentMode.clear();
-		mLabelParseStatus->setText("Status: Valid");		
+		mLabelParseStatus->setText("");		
 	}
 
 	if (p) {
@@ -76,16 +76,16 @@ void PropertiesWidget::setProperties(const QString& properties) {
 	QJsonParseError error;
 	auto doc = QJsonDocument::fromJson(("{" + properties + "}").toUtf8(), &error);
 	if (doc.isNull()) {
-		mTextEditProperties->setTextColor(QColor("red"));
-		mLabelParseStatus->setText("Status: " + error.errorString());
+		mTextEditProperties->setTextColor(QColor("red"));		
+		mLabelParseStatus->setText("Error: " + error.errorString());
 	}
 	else if (!doc.isObject()) {
 		mTextEditProperties->setTextColor(QColor("red"));
-		mLabelParseStatus->setText("Status: " + error.errorString());
+		mLabelParseStatus->setText("Error: " + error.errorString());
 	}
 	else {
 		mTextEditProperties->setTextColor(mDefaultTextEditColour);
-		mLabelParseStatus->setText("Status: Valid");
+		mLabelParseStatus->setText("");
 	}
 
 	mTextEditProperties->blockSignals(true);

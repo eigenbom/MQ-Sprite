@@ -157,7 +157,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	{
 		auto* action = dynamic_cast<QDockWidget*>(mCompositeToolsWidget->parentWidget())->toggleViewAction();
 		action->setText("Composite Tools Window");
-		mViewMenu->addAction(action);
+		mCompositeToolsWindowAction = action;
+
+		// mViewMenu->addAction(action);
 	}
 
 	setWindowTitle(makeWindowTitle());
@@ -922,10 +924,22 @@ void MainWindow::loadProject(const QString& fileName){
     mUndoStack->clear();
     ProjectModel::Instance()->clear();
     mPartList->updateList();
-
-    // Try to load project
+	
+	/*
+	QMessageBox* loadingMessage = new QMessageBox(this);
+	loadingMessage->setMinimumWidth(400);
+	loadingMessage->setWindowTitle("Loading project");
+	loadingMessage->setText("Please wait...");
+	loadingMessage->setStandardButtons(QMessageBox::NoButton);
+	loadingMessage->setAttribute(Qt::WA_DeleteOnClose);
+	loadingMessage->setModal(false);
+	loadingMessage->open();
+	*/
+	
 	QString reason;
     bool result = ProjectModel::Instance()->load(fileName, reason);
+
+	// loadingMessage->done(QDialog::Accepted);
     if (!result){
 		qDebug() << "Error while loading " << fileName << "! Reason: " << reason;
 		QMessageBox::warning(this, "Error during load", tr("Couldn't load ") + fileName + tr("\nReason: ") + reason);
@@ -954,6 +968,11 @@ void MainWindow::loadProject(const QString& fileName){
         mProjectModifiedSinceLastSave = false;
         setWindowTitle(makeWindowTitle(fileName, true));
         qInfo() << "Loaded " << fileName;
+
+		if (PM()->composites.size() > 0 && !mViewMenu->actions().contains(mCompositeToolsWindowAction)) {
+			// Only add composite tools window if loading a legacy project that contains composites
+			mViewMenu->addAction(mCompositeToolsWindowAction);
+		}
 
 		if (!mProjectModel->importLog.isEmpty()) {
 			QMessageBox::warning(this, "Import issues", mProjectModel->importLog.join("\n"));
