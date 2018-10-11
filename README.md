@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="64" height="64" src="https://github.com/eigenbom/moonquest-sprite-editor/raw/origin/master/icons/application_icon_64.png">
+  <img width="64" height="64" src="https://github.com/eigenbom/MQ-Sprite/raw/origin/master/icons/application_icon_64.png">
 </p>
 
 ## Synopsis
@@ -16,11 +16,11 @@ MQ Sprite is a tool for editing and managing game sprites. It was built during t
 * Bundled Python scripts for manipulating the save files in your toolchain; and
 * A general properties window for adding arbitrary meta-data (in JSON format);
 
-![Screenshot](https://github.com/eigenbom/moonquest-sprite-editor/raw/origin/master/screenshots/screenshot_kyrise.png "Screenshot")
+![Screenshot](https://github.com/eigenbom/MQ-Sprite/raw/origin/master/screenshots/screenshot_kyrise.png "Screenshot")
 
 ## Download
 
-You can download a Windows beta build from the [Releases](https://github.com/eigenbom/moonquest-sprite-editor/releases) page. 
+You can download a Windows beta build from the [Releases](https://github.com/eigenbom/MQ-Sprite/releases) page. 
 
 For other platforms you will have to build it yourself. It required Qt5 and can be built directly from within QtCreator.
 
