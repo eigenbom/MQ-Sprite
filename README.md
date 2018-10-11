@@ -1,10 +1,10 @@
+<p align="center">
+  <img width="64" height="64" src="https://github.com/eigenbom/moonquest-sprite-editor/raw/origin/master/icons/application_icon_64.png">
+</p>
+
 ## Synopsis
 
-(https://github.com/eigenbom/moonquest-sprite-editor/raw/origin/master/icons/application_icon_64.png "MQ Sprite Icon")
-
-MQ Sprite is a tool for editing and managing game sprites.
-
-It was built during the development of [MoonQuest](https://www.playmoonquest.com) and has been recently updated with a cleaner UI, new features, and supporting scripts. The editor has been designed for games that use low resolution pixel art. It features:
+MQ Sprite is a tool for editing and managing game sprites. It was built during the development of [MoonQuest](https://www.playmoonquest.com) and has been recently updated with a cleaner UI, new features, and supporting scripts. The editor has been designed for games that use low resolution pixel art. It features:
 
 * A listing of all the sprites in the project with icon previews;
 * Folders for organising sprites into groups;
@@ -26,7 +26,7 @@ For other platforms you will have to build it yourself. It required Qt5 and can 
 
 ## Credits
 
-MQ Sprite was built by (Benjamin Porter)[https://twitter.com/eigenbom].
+MQ Sprite was built by [Benjamin Porter](https://twitter.com/eigenbom).
 
 [Gentleface Icons](http://www.gentleface.com/free_icon_set.html) are licensed under Creative Commons Attribution-NonCommercial.
 
