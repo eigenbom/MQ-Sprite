@@ -22,7 +22,7 @@ static MainWindow* sWindow = nullptr;
 
 
 static QString makeWindowTitle(QString filename = {}, bool saved = true) {
-	static const QString appName { "MoonQuest Sprite Editor" };
+	static const QString appName { "MQ Sprite" };
 	if (filename.isEmpty()) {
 		filename = "untitled project";
 		saved = false;
@@ -191,10 +191,12 @@ void MainWindow::createActions(){
     mRedoAction = mUndoStack->createRedoAction(this, tr("&Redo"));
     mRedoAction->setShortcuts(QKeySequence::Redo);
 	mRedoAction->setIcon(QIcon(":/icon/icons/gentleface/redo_icon&16.png"));
-	
-	findChild<QToolBar*>("toolBar")->addAction(mUndoAction);
-	findChild<QToolBar*>("toolBar")->addAction(mRedoAction);
-	
+		
+	// findChild<QToolBar*>("toolBar")->hide();
+	// findChild<QToolBar*>("toolBar")->addAction(mUndoAction);
+	// findChild<QToolBar*>("toolBar")->addAction(mRedoAction);
+	removeToolBar(findChild<QToolBar*>("toolBar"));
+
     mAboutAction = new QAction(tr("About"), this);
     mAboutAction->setShortcut(QKeySequence::HelpContents);
     connect(mAboutAction, SIGNAL(triggered()), this, SLOT(showAbout()));
@@ -899,7 +901,7 @@ void MainWindow::setOnionSkinningTransparency(int sliderValue){
 
 void MainWindow::showAbout(){
     QMessageBox::about(this, tr("About"), tr(
-		"<h1>MoonQuest Sprite Editor</h1>"
+		"<h1>MQ Sprite</h1>"
 "<p>Created by <a href=\"https://twitter.com/eigenbom\">Ben Porter</a> for <a href=\"https://playmoonquest.com\">MoonQuest</a>.</p>"
 "<p>Uses <a href=\"http://www.gentleface.com/free_icon_set.html\">Gentleface Icons</a> (CC BY-NC 3.0).</p>"
 "<p>Uses the \"Matriax8c\" palette by <a href=\"https://twitter.com/DavitMasia/\">Davit Masia</a>.</p>"
@@ -1021,7 +1023,7 @@ void MainWindow::loadProject(){
     QSettings settings;
     QString dir = settings.value("last_save_dir", QDir::currentPath()).toString();
 
-    QString fileName = QFileDialog::getOpenFileName(this, "Open...", dir, "MoonQuest Sprite File (*.mqs)");
+    QString fileName = QFileDialog::getOpenFileName(this, "Open...", dir, "MQ Sprite File (*.mqs)");
     if (fileName.isNull() || fileName.isEmpty() || !QFileInfo(fileName).isFile()){
         QMessageBox::warning(this, "Error during load", tr("Couldn't load ") + fileName);
     }
@@ -1071,7 +1073,7 @@ void MainWindow::saveProjectAs(){
     QSettings settings;
     QString dir = settings.value("last_save_dir", QDir::currentPath()).toString();
 
-    QString fileName = QFileDialog::getSaveFileName(this, "Save As...", dir, "MoonQuest Sprite File (*.mqs)");
+    QString fileName = QFileDialog::getSaveFileName(this, "Save As...", dir, "MQ Sprite File (*.mqs)");
     if (!fileName.isNull()){
         bool result = ProjectModel::Instance()->save(fileName);
         if (!result){

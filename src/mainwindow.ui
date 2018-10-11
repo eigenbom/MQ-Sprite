@@ -20,8 +20,8 @@
    <string>Moon Pixel</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>../icon.ico</normaloff>../icon.ico</iconset>
+   <iconset resource="../icons.qrc">
+    <normaloff>:/icons/application_icon_512.ico</normaloff>:/icons/application_icon_512.ico</iconset>
   </property>
   <property name="toolButtonStyle">
    <enum>Qt::ToolButtonIconOnly</enum>
@@ -160,7 +160,6 @@
    </attribute>
   </widget>
   <zorder>dockWidgetAssets</zorder>
-  <zorder>dockWidgetTools</zorder>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
@@ -171,7 +170,9 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../icons.qrc"/>
+ </resources>
  <connections/>
  <slots>
   <slot>assetListSelectionChanged()</slot>

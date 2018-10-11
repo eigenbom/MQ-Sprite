@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     // QApplication::setStyle(QStyleFactory::create("fusion"));
     QCoreApplication::setOrganizationName("Wizard Mode");
     QCoreApplication::setOrganizationDomain("playmoonquest.com");
-    QCoreApplication::setApplicationName("MoonQuest Sprite Editor");
+    QCoreApplication::setApplicationName("MQ Sprite");
     QApplication a(argc, argv);
 	
 	auto paths = QCoreApplication::libraryPaths();
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 	if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
 		sLogFile = &file;
 		QTextStream out(sLogFile);
-		out << "MoonQuest Sprite Editor Log\n";
+		out << "MQ Sprite Log\n";
 		out << "Library Paths: " << QCoreApplication::libraryPaths().join(", ") << "\n";
 
 		{

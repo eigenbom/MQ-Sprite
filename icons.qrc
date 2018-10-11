@@ -1256,5 +1256,8 @@
         <file>icons/eraser_16.png</file>
     </qresource>
     <qresource prefix="/palette"/>
-    <qresource prefix="/"/>
+    <qresource prefix="/">
+        <file>icons/application_icon_512.png</file>
+        <file>icons/application_icon_512.ico</file>
+    </qresource>
 </RCC>

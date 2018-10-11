@@ -1,5 +1,5 @@
 TEMPLATE = app
-TARGET = SpriteEditor
+TARGET = MQSprite
 INCLUDEPATH += . src
 QT += core gui widgets
 CONFIG += c++11

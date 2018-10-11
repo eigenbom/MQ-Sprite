@@ -1,7 +1,10 @@
 ## Synopsis
 
-The MoonQuest Sprite Editor is a tool for managing and editing game sprites. It was built during the development of [MoonQuest](https://www.playmoonquest.com) and has been recently updated with a cleaner UI, new features, and supporting scripts. 
-The editor is most suitable for games that use low resolution pixel art (in the order of 50x50 pixels in dimensions). It features:
+(https://github.com/eigenbom/moonquest-sprite-editor/raw/origin/master/icons/application_icon_64.png "MQ Sprite Icon")
+
+MQ Sprite is a tool for editing and managing game sprites.
+
+It was built during the development of [MoonQuest](https://www.playmoonquest.com) and has been recently updated with a cleaner UI, new features, and supporting scripts. The editor has been designed for games that use low resolution pixel art. It features:
 
 * A listing of all the sprites in the project with icon previews;
 * Folders for organising sprites into groups;
@@ -13,26 +16,22 @@ The editor is most suitable for games that use low resolution pixel art (in the 
 * Bundled Python scripts for manipulating the save files in your toolchain; and
 * A general properties window for adding arbitrary meta-data (in JSON format);
 
-![Screenshot](https://github.com/eigenbom/moonquest-sprite-editor/raw/origin/master/screenshots/screenshot.png "Screenshot")
+![Screenshot](https://github.com/eigenbom/moonquest-sprite-editor/raw/origin/master/screenshots/screenshot_kyrise.png "Screenshot")
 
 ## Download
 
-Windows builds are available [here](https://github.com/eigenbom/moonquest-sprite-editor/releases).
+You can download a Windows beta build from the [Releases](https://github.com/eigenbom/moonquest-sprite-editor/releases) page. 
 
-## Build Instructions
-
-The sprite editor requires Qt 5 to build and can be built directly from within QtCreator.
-
-## Basic Concepts
-
-COMING SOON
-
-![Screenshot](https://github.com/eigenbom/moonquest-sprite-editor/raw/origin/master/screenshots/screenshot_kyrise.png "Screenshot")
+For other platforms you will have to build it yourself. It required Qt5 and can be built directly from within QtCreator.
 
 ## Credits
+
+MQ Sprite was built by (Benjamin Porter)[https://twitter.com/eigenbom].
 
 [Gentleface Icons](http://www.gentleface.com/free_icon_set.html) are licensed under Creative Commons Attribution-NonCommercial.
 
 Sprites in example project: [Kyrise's Free 16x16 RPG Icon Pack | Graphics made by Kyrise](https://kyrise.itch.io/)
 
 Paint tool palette courtesy of Davit Masia.
+
+Icon adapted from Moon Phase Outline icon by [Dave Gandy](https://www.flaticon.com/authors/dave-gandy) from [flaticon.com](www.flaticon.com) is licensed by Creative Commons BY 3.0.
