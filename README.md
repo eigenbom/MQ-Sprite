@@ -4,13 +4,21 @@
 
 ## Synopsis
 
-MQ Sprite is a tool for editing and managing game sprites. It was built during the development of [MoonQuest](https://www.playmoonquest.com) and has been recently updated with a cleaner UI, new features, and supporting scripts. The editor has been designed for games that use low resolution pixel art. It features:
+MQ Sprite is a tool for editing and managing game sprites. It was built during the development of [MoonQuest](https://www.playmoonquest.com) and has been recently updated with a cleaner UI and new features. The editor has been designed for games that use low resolution pixel art.
 
-* A listing of all the sprites in the project with icon previews;
-* Folders for organising sprites into groups;
+Download the beta: [MQSprite.zip (Windows, 32-bit)](https://github.com/eigenbom/MQ-Sprite/releases/download/beta/MQSprite.zip)
+
+## Features
+
+MQ Sprite is primarily aimed at managing sprites and adding metadata (such as anchors, pivots, and arbitrary JSON). MQ Sprite is best suited for custom game engines or engines without these tools.
+
+The main features of MQ Sprite are:
+
+* Previews of all sprites in a project;
+* Folders for organising sprites;
 * Basic pixel art tools (pencil, eraser, colour pick, flood fill, copy-paste, undo-redo);
-* An animation editor, that supports multiple animations per sprite;
-* Anchors and pivots for defining attachment points in a sprite (such as a sword handle);
+* An animation editor supporting multiple animations per sprite;
+* Anchors and pivots for defining attachment points in a sprite (such as the handle of a sword);
 * Drop-shadow and onion-skinning;
 * A simple save format (A single JSON file + PNG images for all frames);
 * Bundled Python scripts for manipulating the save files in your toolchain; and
@@ -18,11 +26,19 @@ MQ Sprite is a tool for editing and managing game sprites. It was built during t
 
 ![Screenshot](https://github.com/eigenbom/MQ-Sprite/raw/origin/master/screenshots/screenshot_kyrise.png "Screenshot")
 
-## Download
+## What MQ Sprite Isn't
 
-You can download a Windows beta build from the [Releases](https://github.com/eigenbom/MQ-Sprite/releases) page. 
+MQ Sprite isn't a full-fledged sprite editor and only supports basic sprite editing. For more complex sprites a tool like [ASEprite](https://www.aseprite.org/) will do a much better task. (A script for importing .ase files into MQ Sprite is coming soon.)
 
-For other platforms you will have to build it yourself. It required Qt5 and can be built directly from within QtCreator.
+MQ Sprite is primarily a sprite browser and metadata editor. If you are using a game engine like Unity, Game Maker, or Godot, then you *won't need this tool*, as those systems already offer similar functionality.
+
+## Build Instructions
+
+MQ Sprite requires Qt5 and can be built directly from within QtCreator. It has no other dependencies.
+
+## Toolchain
+
+(This section will document the Python scripts.)
 
 ## Credits
 
