@@ -225,9 +225,13 @@ void MainWindow::showViewOptionsDialog(){
 		checkBox->setChecked(prefs.backgroundCheckerboard);
 		connect(checkBox, SIGNAL(toggled(bool)), this, SLOT(setBackgroundGridPattern(bool)));
 	    
-		checkBox = optionsWidget->findChild<QCheckBox*>("checkBoxShowAnchors");
+        checkBox = optionsWidget->findChild<QCheckBox*>("checkBoxShowAnchors");
         checkBox->setChecked(prefs.showAnchors);
         connect(checkBox, SIGNAL(toggled(bool)), this, SLOT(setPivotsEnabled(bool)));
+
+        auto* spinBox = optionsWidget->findChild<QSpinBox*>("spinBoxMaxZoom");
+        spinBox->setValue(prefs.maxZoom * 100);
+        connect(spinBox, SIGNAL(valueChanged(int)), this, SLOT(changeMaxZoom(int)));
     }
 
 	{
@@ -386,7 +390,7 @@ void MainWindow::createMenus(){
 		if (pw) this->openPartWidget(pw->partRef());
 		if (cw) this->openCompositeWidget(cw->compRef());
 	});
-	mViewMenu->addSeparator();
+    mViewMenu->addSeparator();
 
 	auto* spriteMenu = menuBar()->addMenu(tr("&Sprite"));
 	mResizePartAction = spriteMenu->addAction("Resize...");
@@ -440,7 +444,8 @@ void MainWindow::loadPreferences() {
 	auto& prefs = GlobalPreferences();
 	prefs.backgroundColour = QColor(settings.value("prefs.backgroundColour", prefs.backgroundColour.name()).toString());
 	prefs.backgroundCheckerboard = settings.value("prefs.backgroundCheckerboard", prefs.backgroundCheckerboard).toBool();
-	prefs.showAnchors = settings.value("prefs.showAnchors", prefs.showAnchors).toBool();
+    prefs.showAnchors = settings.value("prefs.showAnchors", prefs.showAnchors).toBool();
+    prefs.maxZoom = settings.value("prefs.maxZoom", prefs.maxZoom).toInt();
 
 	prefs.showDropShadow = settings.value("prefs.showDropShadow", prefs.showDropShadow).toBool();
 	prefs.dropShadowColour = QColor(settings.value("prefs.dropShadowColour", prefs.dropShadowColour.name()).toString());
@@ -460,7 +465,8 @@ void MainWindow::savePreferences() {
 
 	settings.setValue("prefs.backgroundColour", prefs.backgroundColour.name());
 	settings.setValue("prefs.backgroundCheckerboard", prefs.backgroundCheckerboard);
-	settings.setValue("prefs.showAnchors", prefs.showAnchors);
+    settings.setValue("prefs.showAnchors", prefs.showAnchors);
+    settings.setValue("prefs.maxZoom", prefs.maxZoom);
 
 	settings.setValue("prefs.showDropShadow", prefs.showDropShadow);
 	settings.setValue("prefs.dropShadowColour", prefs.dropShadowColour.name());
@@ -848,12 +854,17 @@ void MainWindow::folderRenamed(AssetRef ref, const QString& newName){
     qDebug() << "TODO: Update the visual names/refs of parts and comps that are in this folder";
 }
 
-void MainWindow::changeBackgroundColour(){    
+void MainWindow::changeBackgroundColour(){
     QColor col = QColorDialog::getColor(GlobalPreferences().backgroundColour, this, tr("Select Background Colour"));
     if (col.isValid()){
-		GlobalPreferences().backgroundColour = col;
-		updatePreferences();
+        GlobalPreferences().backgroundColour = col;
+        updatePreferences();
     }
+}
+
+void MainWindow::changeMaxZoom(int zoom){
+    GlobalPreferences().maxZoom = zoom / 100;
+    updatePreferences();
 }
 
 void MainWindow::setBackgroundGridPattern(bool b){
