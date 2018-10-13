@@ -74,8 +74,9 @@ PartWidget::PartWidget(AssetRef ref, QWidget *parent) :
 	connect(spriteZoomWidget->findChild<QSlider*>("hSliderZoom"), SIGNAL(valueChanged(int)), this, SLOT(setZoom(int)));
 	connect(spriteZoomWidget->findChild<QToolButton*>("toolButtonFitToWindow"), SIGNAL(clicked()), this, SLOT(fitToWindow()));
 	connect(this, &PartWidget::zoomChanged, [this, spriteZoomWidget]() {
-		spriteZoomWidget->findChild<QSlider*>("hSliderZoom")->setValue(this->zoom());
-	});
+        spriteZoomWidget->findChild<QSlider*>("hSliderZoom")->setValue(this->zoom());
+        spriteZoomWidget->findChild<QLabel*>("labelZoom")->setText(QString::number(this->zoom() * 100) + "%");
+    });
 
     updateBackgroundBrushes();
     updatePartFrames();
