@@ -386,7 +386,16 @@ void MainWindow::createMenus(){
 		if (pw) this->openPartWidget(pw->partRef());
 		if (cw) this->openCompositeWidget(cw->compRef());
 	});
-	mViewMenu->addSeparator();
+    mViewMenu->addSeparator();
+    action = mViewMenu->addAction("Tabbed View");
+    action->setCheckable(true);
+    connect(action, &QAction::toggled, [&](bool checked) {
+        this->ui->mdiArea->setViewMode(checked ? QMdiArea::ViewMode::TabbedView : QMdiArea::ViewMode::SubWindowView);
+        GlobalPreferences().tabbedView = checked;
+        this->updatePreferences();
+    });
+    action->setChecked(GlobalPreferences().tabbedView);
+    mViewMenu->addSeparator();
 
 	auto* spriteMenu = menuBar()->addMenu(tr("&Sprite"));
 	mResizePartAction = spriteMenu->addAction("Resize...");
@@ -440,7 +449,8 @@ void MainWindow::loadPreferences() {
 	auto& prefs = GlobalPreferences();
 	prefs.backgroundColour = QColor(settings.value("prefs.backgroundColour", prefs.backgroundColour.name()).toString());
 	prefs.backgroundCheckerboard = settings.value("prefs.backgroundCheckerboard", prefs.backgroundCheckerboard).toBool();
-	prefs.showAnchors = settings.value("prefs.showAnchors", prefs.showAnchors).toBool();
+    prefs.showAnchors = settings.value("prefs.showAnchors", prefs.showAnchors).toBool();
+    prefs.tabbedView = settings.value("prefs.tabbedView", prefs.tabbedView).toBool();
 
 	prefs.showDropShadow = settings.value("prefs.showDropShadow", prefs.showDropShadow).toBool();
 	prefs.dropShadowColour = QColor(settings.value("prefs.dropShadowColour", prefs.dropShadowColour.name()).toString());
@@ -460,7 +470,8 @@ void MainWindow::savePreferences() {
 
 	settings.setValue("prefs.backgroundColour", prefs.backgroundColour.name());
 	settings.setValue("prefs.backgroundCheckerboard", prefs.backgroundCheckerboard);
-	settings.setValue("prefs.showAnchors", prefs.showAnchors);
+    settings.setValue("prefs.showAnchors", prefs.showAnchors);
+    settings.setValue("prefs.tabbedView", prefs.tabbedView);
 
 	settings.setValue("prefs.showDropShadow", prefs.showDropShadow);
 	settings.setValue("prefs.dropShadowColour", prefs.dropShadowColour.name());
