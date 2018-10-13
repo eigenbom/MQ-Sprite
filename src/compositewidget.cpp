@@ -716,9 +716,9 @@ void CompositeWidget::compViewWheelEvent(QWheelEvent *event){
         QPoint pt = event->angleDelta();
         if (pt.y()>0){
             // zoom in
-            if (zoom()<48){
+            if (zoom()<GlobalPreferences().maxZoom){
                 // zoom in proportional to current zoom..
-                int nz = std::min(48,zoom()*2);
+                int nz = std::min(GlobalPreferences().maxZoom,zoom()*2);
                 setZoom(nz);
                 emit(zoomChanged());
             }
