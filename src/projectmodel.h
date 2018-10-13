@@ -21,6 +21,8 @@ struct Preferences {
 	QColor backgroundColour { 255, 255, 255, 255 };
 	bool backgroundCheckerboard = true;
 	bool showAnchors = false;
+    int maxZoom = 48;
+    bool tabbedView = false;
 
 	bool showDropShadow = true;
 	QColor dropShadowColour { 0, 0, 0, 255 };

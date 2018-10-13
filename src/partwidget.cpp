@@ -74,8 +74,9 @@ PartWidget::PartWidget(AssetRef ref, QWidget *parent) :
 	connect(spriteZoomWidget->findChild<QSlider*>("hSliderZoom"), SIGNAL(valueChanged(int)), this, SLOT(setZoom(int)));
 	connect(spriteZoomWidget->findChild<QToolButton*>("toolButtonFitToWindow"), SIGNAL(clicked()), this, SLOT(fitToWindow()));
 	connect(this, &PartWidget::zoomChanged, [this, spriteZoomWidget]() {
-		spriteZoomWidget->findChild<QSlider*>("hSliderZoom")->setValue(this->zoom());
-	});
+        spriteZoomWidget->findChild<QSlider*>("hSliderZoom")->setValue(this->zoom());
+        spriteZoomWidget->findChild<QLabel*>("labelZoom")->setText(QString::number(this->zoom() * 100) + "%");
+    });
 
     updateBackgroundBrushes();
     updatePartFrames();
@@ -872,9 +873,9 @@ void PartWidget::partViewWheelEvent(QWheelEvent *event){
     {
         QPoint pt = event->angleDelta();
         if (pt.y()>0){
-            if (zoom()<48){
+            if (zoom()<GlobalPreferences().maxZoom){
                 // zoom in proportional to current zoom..
-                int nz = std::min(48, zoom()*2);
+                int nz = std::min(GlobalPreferences().maxZoom, zoom()*2);
                 setZoom(nz);
                 emit(zoomChanged());
             }

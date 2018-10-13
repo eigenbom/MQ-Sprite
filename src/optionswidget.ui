@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>237</width>
-    <height>390</height>
+    <height>490</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -37,7 +37,7 @@
         <property name="frameShadow">
          <enum>QFrame::Raised</enum>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_5">
+        <layout class="QGridLayout" name="gridLayout">
          <property name="leftMargin">
           <number>0</number>
          </property>
@@ -50,24 +50,47 @@
          <property name="bottomMargin">
           <number>0</number>
          </property>
-         <item>
-          <widget class="QPushButton" name="pushButtonBackgroundColour">
+         <item row="3" column="0">
+          <widget class="QLabel" name="label">
            <property name="text">
-            <string>Set Background Colour...</string>
+            <string>Max. zoom</string>
            </property>
           </widget>
          </item>
-         <item>
+         <item row="3" column="1">
+          <widget class="QSpinBox" name="spinBoxMaxZoom">
+           <property name="suffix">
+            <string>%</string>
+           </property>
+           <property name="minimum">
+            <number>100</number>
+           </property>
+           <property name="maximum">
+            <number>25600</number>
+           </property>
+           <property name="singleStep">
+            <number>100</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0" colspan="2">
+          <widget class="QCheckBox" name="checkBoxShowAnchors">
+           <property name="text">
+            <string>Show Anchors</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0" colspan="2">
           <widget class="QCheckBox" name="checkBoxCheckerboard">
            <property name="text">
             <string>Checkerboard</string>
            </property>
           </widget>
          </item>
-         <item>
-          <widget class="QCheckBox" name="checkBoxShowAnchors">
+         <item row="0" column="0" colspan="2">
+          <widget class="QPushButton" name="pushButtonBackgroundColour">
            <property name="text">
-            <string>Show Anchors</string>
+            <string>Set Background Colour...</string>
            </property>
           </widget>
          </item>
