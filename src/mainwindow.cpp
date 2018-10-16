@@ -1073,7 +1073,13 @@ void MainWindow::saveProjectAs(){
     QSettings settings;
     QString dir = settings.value("last_save_dir", QDir::currentPath()).toString();
 
-    QString fileName = QFileDialog::getSaveFileName(this, "Save As...", dir, "MQ Sprite File (*.mqs)");
+    QFileDialog saveDialog(this, "Save As...", dir, "MQ Sprite File (*.mqs)");
+    saveDialog.setAcceptMode(QFileDialog::AcceptSave);
+    saveDialog.setDefaultSuffix(".mqs");
+    QString fileName;
+    if (saveDialog.exec()) {
+        fileName = saveDialog.selectedFiles().first();
+    }
     if (!fileName.isNull()){
         bool result = ProjectModel::Instance()->save(fileName);
         if (!result){
