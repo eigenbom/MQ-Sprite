@@ -77,6 +77,7 @@ public slots:
 
     // Misc actions
     void changeBackgroundColour();
+    void changeMaxZoom(int);
     void setBackgroundGridPattern(bool);
     void setPivotsEnabled(bool);
     void setDropShadowOpacity(int);
