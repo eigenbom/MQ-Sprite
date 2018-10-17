@@ -836,7 +836,7 @@ void CompositeWidget::updateDropShadow(){
             QMutableMapIterator<QString,ChildDriver::Mode> mit(cd.modes);
             while (mit.hasNext()){
                 mit.next();
-                ChildDriver::Mode& m = mit.value();
+               auto& m = mit.value();
                 for(auto* it: m.pixmapItems){
                     QGraphicsDropShadowEffect* effect = (QGraphicsDropShadowEffect*) it->graphicsEffect();
                     effect->setOffset(dx*2*mZoom/4.,dy*2*mZoom/2.);

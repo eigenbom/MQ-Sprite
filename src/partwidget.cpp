@@ -1075,11 +1075,18 @@ void PartWidget::showFrame(int f){
     bool onion = mOnionSkinningEnabled && ((mIsPlaying&&mOnionSkinningEnabledDuringPlayback) || !mIsPlaying);
     bool pivots = mPivotsEnabled && ((mIsPlaying&&mPivotsEnabledDuringPlayback) || !mIsPlaying);
 
-	// Drop shadow kills perf when zoomed in too much
-	const bool disableDropShadow = (mIsPlaying && mZoom > 10) || (!mIsPlaying && mZoom > 50);
+	// Drop shadow kills perf when:
+	// - zoomed in too much
+	// - sprites are too large
+	bool zoomedInTooMuch = (mIsPlaying && mZoom > 10) || (!mIsPlaying && mZoom > 50);
+	const int maxSizeForDropShadow = 512;
 
     for(int i=0;i<mPixmapItems.size();i++){
         QGraphicsPixmapItem* pi = mPixmapItems.at(i);
+		auto size = pi->pixmap().size();
+
+		const bool disableDropShadow = zoomedInTooMuch || ((size.width() * mZoom) > maxSizeForDropShadow || (size.height() * mZoom) > maxSizeForDropShadow);
+
 		auto* effect = pi->graphicsEffect();		
         if (effect) effect->setEnabled(false);        
 		for (auto* it : mAnchorItems.at(i)) {

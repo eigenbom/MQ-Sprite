@@ -20,17 +20,16 @@ struct Folder;
 struct Preferences {
 	QColor backgroundColour { 255, 255, 255, 255 };
 	bool backgroundCheckerboard = true;
-	bool showAnchors = false;
-  bool tabbedView = false;
-  int maxZoom = 48;
-	bool showDropShadow = true;
+	bool showAnchors		= false;
+	bool tabbedView			= false;
+	int maxZoom				= 48;
+	bool showDropShadow		= true;
 	QColor dropShadowColour { 0, 0, 0, 255 };
-	float dropShadowOpacity = 0.2f;
+	float dropShadowOpacity	= 0.2f;
 	float dropShadowBlurRadius = 1.6f;
 	float dropShadowOffsetH = 0.2f;
 	float dropShadowOffsetV = 0.3f;
-
-	bool showOnionSkinning = false;
+	bool showOnionSkinning	= false;
 	float onionSkinningOpacity = 0.2f;
 };
 
