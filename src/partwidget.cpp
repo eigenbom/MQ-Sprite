@@ -377,11 +377,26 @@ void PartWidget::setDrawToolType(DrawToolType type){
     }
 }
 
-void PartWidget::setMode(const QString& mode){
-	if (mModeName != mode) {
+void PartWidget::setMode(const QString& mode){	
+	
+	if (mModeName != mode){
 		mModeName = mode;
 		updatePartFrames();
 	}
+
+	/*
+	mViewportCenter = QPointF(0, 0);
+	mPartView->centerOn(mViewportCenter);
+	mPartView->update();
+	*/
+
+
+	// mPartView->scene()->setSceneRect();
+	// recenterViewport();
+}
+
+void PartWidget::recenterViewport() {
+	// mViewportCenter = mPartView->mapToScene(mPartView->viewport()->rect().center());
 }
 
 void PartWidget::partNameChanged(const QString& newPartName){
@@ -583,10 +598,7 @@ void PartWidget::setPenColour(QColor colour){
 }
 
 void PartWidget::fitToWindow(){
-    // use graphicsview fit to window
     if (mPartView){
-        // mPartView->centerOn();
-		// TODO: Compute a tighter bounds item
 		if (mPart && !mModeName.isEmpty() && mPart->modes.contains(mModeName) && mPart->modes[mModeName].bounds.isValid()) {
 			mPartView->fitInView(mPart->modes[mModeName].bounds.adjusted(-2, -2, 2, 2), Qt::KeepAspectRatio);
 		}
@@ -596,7 +608,7 @@ void PartWidget::fitToWindow(){
         QTransform transform = mPartView->transform();
         QPoint scale = transform.map(QPoint(1,1));
         mZoom = std::min((float) GlobalPreferences().maxZoom, (float) floor(scale.x()));
-        setZoom(mZoom);		
+        setZoom(mZoom);
 		mViewportCenter = mPartView->mapToScene(mPartView->viewport()->rect().center());
         zoomChanged();
     }

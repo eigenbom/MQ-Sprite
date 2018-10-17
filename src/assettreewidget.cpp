@@ -241,6 +241,11 @@ void AssetTreeWidget::addAssetsWithParent(const QList<AssetRef>& assets, AssetRe
     */
 }
 
+void AssetTreeWidget::resetIcons() {
+	mAssetIcons.clear();
+	updateList();
+}
+
 void AssetTreeWidget::updateList(){
     mAssetRefs.clear();
     mAssetNames.clear();
@@ -270,7 +275,6 @@ void AssetTreeWidget::updateList(){
     addAssetsWithParent(assets, AssetRef(), this->invisibleRootItem(), index);
 	connect(this, SIGNAL(itemChanged(QTreeWidgetItem*, int)), this, SLOT(changeItem(QTreeWidgetItem*, int)));
 }
-
 
 void AssetTreeWidget::updateIcon(AssetRef ref) {
 	if (ref.type == AssetType::Part) {
@@ -464,19 +468,19 @@ void AssetTreeWidget::keyPressEvent(QKeyEvent* event){
 QTreeWidgetItem* AssetTreeWidget::findItem(std::function<bool(QTreeWidgetItem*)> searchQuery, QTreeWidgetItem* parent) {
 	if (parent == nullptr) {
 		for (int i = 0; i < topLevelItemCount(); ++i) {
-			auto* item = topLevelItem(i);
-			if (searchQuery(item)) return item;
+			auto* item = topLevelItem(i);			
+			auto* foundItem = findItem(searchQuery, item);
+			if (foundItem) return foundItem;
 		}
-
 		return nullptr;
 	}
 	else {
 		if (searchQuery(parent)) return parent;
 		for (int i = 0; i < parent->childCount(); ++i) {
 			auto* item = parent->child(i);
-			if (searchQuery(item)) return item;
+			auto* foundItem = findItem(searchQuery, item);
+			if (foundItem) return foundItem;
 		}
-
 		return nullptr;
 	}
 }

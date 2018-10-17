@@ -99,6 +99,8 @@ protected:
 
     void drawLineTo(const QPoint &endPoint);
     void eraseLineTo(const QPoint &endPoint);
+
+	void recenterViewport();
 	
 signals:
     void penChanged();

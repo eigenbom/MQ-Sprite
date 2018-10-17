@@ -16,6 +16,7 @@ public:
     explicit PartList(QWidget *parent = nullptr);
     ~PartList();
 
+	void resetIcons();
 	void updateList();
 	void deselectAsset();
 	void selectAsset(AssetRef ref);

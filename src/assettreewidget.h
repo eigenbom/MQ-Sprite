@@ -18,6 +18,7 @@ public:
 	bool selectAsset(AssetRef, QTreeWidgetItem* fromNode = nullptr);
 
 public slots:
+	void resetIcons();
     void updateList();
 	void updateIcon(AssetRef ref);
     // void addAsset(AssetRef ref);

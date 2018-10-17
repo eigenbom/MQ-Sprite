@@ -391,16 +391,16 @@ void MainWindow::createMenus(){
 		if (cw) this->openCompositeWidget(cw->compRef());
 	});
   
-  mViewMenu->addSeparator();
-  action = mViewMenu->addAction("Tabbed View");
-  action->setCheckable(true);
-  connect(action, &QAction::toggled, [&](bool checked) {
-      this->ui->mdiArea->setViewMode(checked ? QMdiArea::ViewMode::TabbedView : QMdiArea::ViewMode::SubWindowView);
-      GlobalPreferences().tabbedView = checked;
-      this->updatePreferences();
-  });
-  action->setChecked(GlobalPreferences().tabbedView);
-  mViewMenu->addSeparator();
+	mViewMenu->addSeparator();
+	action = mViewMenu->addAction("Tabbed View");
+	action->setCheckable(true);
+	connect(action, &QAction::toggled, [&](bool checked) {
+		this->ui->mdiArea->setViewMode(checked ? QMdiArea::ViewMode::TabbedView : QMdiArea::ViewMode::SubWindowView);
+		GlobalPreferences().tabbedView = checked;
+		this->updatePreferences();
+	});
+	action->setChecked(GlobalPreferences().tabbedView);
+	mViewMenu->addSeparator();
 
 	auto* spriteMenu = menuBar()->addMenu(tr("&Sprite"));
 	mResizePartAction = spriteMenu->addAction("Resize...");
@@ -966,6 +966,7 @@ void MainWindow::newProject(){
 
         // Clear current project model
         ProjectModel::Instance()->clear();
+		mPartList->resetIcons();
         mPartList->updateList();
 
         setWindowTitle(makeWindowTitle());
@@ -984,6 +985,7 @@ void MainWindow::loadProject(const QString& fileName){
 
     mUndoStack->clear();
     ProjectModel::Instance()->clear();
+	mPartList->resetIcons();
     mPartList->updateList();
 	
 	/*
@@ -1009,9 +1011,11 @@ void MainWindow::loadProject(const QString& fileName){
 			qDebug() << "Import issues:\n" << mProjectModel->importLog.join("\n");
 		}
 		mProjectModel->clear();
+		mPartList->resetIcons();
         mPartList->updateList();
     }
     else {
+		mPartList->resetIcons();
         mPartList->updateList();
 
         // Update last loaded project location

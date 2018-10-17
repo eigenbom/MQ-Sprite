@@ -24,6 +24,10 @@ PartList::~PartList()
     delete ui;
 }
 
+void PartList::resetIcons() {
+	mAssetTreeWidget->resetIcons();
+}
+
 void PartList::updateList(){
     mAssetTreeWidget->updateList();
 }
