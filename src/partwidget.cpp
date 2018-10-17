@@ -71,7 +71,12 @@ PartWidget::PartWidget(AssetRef ref, QWidget *parent) :
 	vbox->addWidget(spriteZoomWidget);
 	frame->setLayout(vbox);
 	setWidget(frame);
-	connect(spriteZoomWidget->findChild<QSlider*>("hSliderZoom"), SIGNAL(valueChanged(int)), this, SLOT(setZoom(int)));
+	// connect(spriteZoomWidget->findChild<QSlider*>("hSliderZoom"), SIGNAL(valueChanged(int)), this, SLOT(setZoom(int)));
+	connect(spriteZoomWidget->findChild<QSlider*>("hSliderZoom"), &QSlider::valueChanged, [this, spriteZoomWidget](int value) {
+		setZoom(value);
+		spriteZoomWidget->findChild<QLabel*>("labelZoom")->setText(QString::number(this->zoom() * 100) + "%");
+	});
+
 	connect(spriteZoomWidget->findChild<QToolButton*>("toolButtonFitToWindow"), SIGNAL(clicked()), this, SLOT(fitToWindow()));
 	connect(this, &PartWidget::zoomChanged, [this, spriteZoomWidget]() {
         spriteZoomWidget->findChild<QSlider*>("hSliderZoom")->setValue(this->zoom());
@@ -561,10 +566,8 @@ void PartWidget::updateOverlay(){
 
 void PartWidget::setZoom(int z){
     mZoom = z;
-	// TODO: Zoom in on mouse position
 	QTransform tr = QTransform::fromScale(mZoom, mZoom);
     mPartView->setTransform(tr);
-	// mPartView->setSceneRect(mPartView->scene()->sceneRect().translated(mPosition.x()/mZoom, mPosition.y()/mZoom));
     updateDropShadow();
     mPartView->update();
 }
@@ -592,7 +595,7 @@ void PartWidget::fitToWindow(){
 		}
         QTransform transform = mPartView->transform();
         QPoint scale = transform.map(QPoint(1,1));
-        mZoom = floor(scale.x());
+        mZoom = std::min((float) GlobalPreferences().maxZoom, (float) floor(scale.x()));
         setZoom(mZoom);		
 		mViewportCenter = mPartView->mapToScene(mPartView->viewport()->rect().center());
         zoomChanged();

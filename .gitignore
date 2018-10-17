@@ -1,19 +1,4 @@
 .vs/*
-
-# C++ objects and libs
-
-*.slo
-*.lo
-*.o
-*.a
-*.la
-*.lai
-*.so
-*.dll
-*.dylib
-
-# Qt-es
-
 /.qmake.cache
 /.qmake.stash
 *.pro.user
@@ -25,7 +10,4 @@ ui_*.h
 Makefile*
 *-build-*
 build/*
-
-# QtCreator
-
 *.autosave
