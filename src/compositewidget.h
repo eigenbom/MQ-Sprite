@@ -130,7 +130,7 @@ protected:
             int numFrames;
             int numPivots;
             QVector<QPoint> anchors;
-            QVector<QPoint> pivots[MAX_PIVOTS];
+            QVector<QPoint> pivots[Part::MaxPivots];
             QVector<QGraphicsPixmapItem*> pixmapItems;
             int fps;
             float spf;

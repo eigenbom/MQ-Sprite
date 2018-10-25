@@ -9,8 +9,7 @@
 #include <QJsonObject>
 #include <QSharedPointer>
 
-static const int MAX_PIVOTS = 4;
-static const int MAX_CHILDREN = 4;
+
 
 struct Asset;
 struct Part;
@@ -138,6 +137,8 @@ struct Folder: public Asset {
 };
 
 struct Part: public Asset {
+	static const int MaxPivots = 4;
+
     struct Mode {
 		int width;
 		int height;
@@ -148,7 +149,7 @@ struct Part: public Asset {
 		// Each of these are numFrames long
 		QList<QSharedPointer<QImage>> frames;
         QList<QPoint> anchor;
-        QList<QPoint> pivots[MAX_PIVOTS];
+        QList<QPoint> pivots[Part::MaxPivots];
 
 		// Derived and cached properties
 		QRect bounds {};

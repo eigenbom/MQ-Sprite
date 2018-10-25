@@ -63,7 +63,7 @@ public:
     // updaters
     void updatePropertiesOverlays();
     void updateOverlay();
-    void updatePartFrames();
+    void buildScene();
     void updateBackgroundBrushes();
 
     // setters
@@ -99,8 +99,6 @@ protected:
 
     void drawLineTo(const QPoint &endPoint);
     void eraseLineTo(const QPoint &endPoint);
-
-	void recenterViewport();
 	
 signals:
     void penChanged();
@@ -159,11 +157,11 @@ protected:
 
     // Frames
     QVector< QList<QAbstractGraphicsShapeItem*>> mAnchorItems;
-    QVector<QList<QAbstractGraphicsShapeItem*>> mPivotItems[MAX_PIVOTS];
+    QVector<QList<QAbstractGraphicsShapeItem*>> mPivotItems[Part::MaxPivots];
 
     QVector<QGraphicsItem*> mPropertyItems;
     QVector<QPoint> mAnchors;
-    QVector<QPoint> mPivots[MAX_PIVOTS];
+    QVector<QPoint> mPivots[Part::MaxPivots];
     int mNumPivots;
     QString mProperties;
     int mFPS;

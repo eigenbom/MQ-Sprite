@@ -56,10 +56,10 @@ void CompositeWidget::updateCompFrames(){
     setWindowTitle(mCompName);
 
     // Delete all existing graphics items
-    foreach(const ChildDriver& cd, mChildrenMap.values()){
+    for(const ChildDriver& cd: mChildrenMap.values()){
         if (!cd.valid) continue;
-        foreach(const ChildDriver::Mode& mode, cd.modes.values()){
-            foreach(QGraphicsPixmapItem* pi, mode.pixmapItems){
+        for(const ChildDriver::Mode& mode: cd.modes.values()){
+            for(QGraphicsPixmapItem* pi: mode.pixmapItems){
                 mCompView->scene()->removeItem(pi);
                 delete pi;
             }
@@ -68,7 +68,7 @@ void CompositeWidget::updateCompFrames(){
     mChildrenMap.clear();
     mChildren.clear();
 
-    foreach(QGraphicsRectItem* pi, mRectItems){
+    for(QGraphicsRectItem* pi: mRectItems){
         mCompView->scene()->removeItem(pi);
         delete pi;
     }
@@ -87,7 +87,7 @@ void CompositeWidget::updateCompFrames(){
         mRoot = comp->root;
         mProperties = comp->properties;
 
-        foreach(const QString& childName, mChildren){
+        for(const QString& childName: mChildren){
             ChildDriver cd;
             const Composite::Child& child = comp->childrenMap.value(childName);
 
@@ -114,7 +114,7 @@ void CompositeWidget::updateCompFrames(){
                 // qDebug() << "partName: " << cd.part;
 
                 // Load all modes...
-                foreach(QString modeName, part->modes.keys()){
+                for(QString modeName: part->modes.keys()){
                     cd.valid = true; // must have one mode to be valid
 
                     // qDebug() << "modeName: " << modeName;
@@ -200,7 +200,7 @@ void CompositeWidget::updateCompFramesMinorChanges(){
     // Update all frames of all modes of all parts, assume no new children have been added etc
     //////////////////////
 
-    foreach(QGraphicsRectItem* pi, mRectItems){
+    for(QGraphicsRectItem* pi: mRectItems){
         mCompView->scene()->removeItem(pi);
         delete pi;
     }
@@ -213,7 +213,7 @@ void CompositeWidget::updateCompFramesMinorChanges(){
         mRoot = comp->root;
         mProperties = comp->properties;
 
-        foreach(const QString& childName, mChildren){
+        for(const QString& childName: mChildren){
             ChildDriver& cd = mChildrenMap[childName];
             const Composite::Child& child = comp->childrenMap.value(childName);
 
@@ -251,7 +251,7 @@ void CompositeWidget::updateCompFramesMinorChanges(){
                 // qDebug() << "partName: " << cd.part;
 
                 // Load all modes...
-                foreach(QString modeName, part->modes.keys()){
+                for(QString modeName: part->modes.keys()){
                     cd.valid = true; // must have one mode to be valid
 
                     // qDebug() << "modeName: " << modeName;
@@ -428,8 +428,8 @@ void CompositeWidget::updateChildRecursively(int index, const QPointF& parentPiv
         cd.parentPivotOffset = parentPivotPos;
         cd.updated = true;
         if (cd.modes.contains(cd.mode)){
-            ChildDriver::Mode& mode = cd.modes[cd.mode];
-            foreach(int childIndex, cd.children){
+            auto& mode = cd.modes[cd.mode];
+            for(int childIndex: cd.children){
                 const QString& childName = mChildren.at(childIndex);
                 ChildDriver& child = mChildrenMap[childName];
                 if (child.modes.contains(child.mode) && child.valid){
@@ -448,7 +448,7 @@ void CompositeWidget::updateChildRecursively(int index, const QPointF& parentPiv
 void CompositeWidget::updatePropertiesOverlays(){
     // Parse the properties
     // trying to extra any info that we can draw into the scene
-    foreach(QGraphicsRectItem* pi, mRectItems){
+    for(QGraphicsRectItem* pi: mRectItems){
         mCompView->scene()->removeItem(pi);
         delete pi;
     }

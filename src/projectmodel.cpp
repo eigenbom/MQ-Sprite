@@ -541,7 +541,7 @@ void ProjectModel::jsonToPart(const QJsonObject& obj, const QMap<QString,QShared
                     int py = frameObject.value(QString("p%1y").arg(p)).toInt();
                     m.pivots[p].push_back(QPoint(px,py));
                 }
-                for(int p=m.numPivots;p<MAX_PIVOTS;p++){
+                for(int p=m.numPivots;p<Part::MaxPivots;p++){
                     m.pivots[p].push_back(QPoint(0,0));
                 }
             }

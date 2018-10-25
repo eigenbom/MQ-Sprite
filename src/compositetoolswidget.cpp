@@ -114,7 +114,7 @@ void CompositeToolsWidget::updateTable(){
     if (comp){
         int root = comp->root;
         int index = 0;
-        foreach(QString childName, comp->children){
+        for(QString childName: comp->children){
             Q_ASSERT(comp->childrenMap.contains(childName));
             const Composite::Child& ch = comp->childrenMap.value(childName);
 
@@ -178,7 +178,7 @@ void CompositeToolsWidget::updateSet(){
         mLoopSignalMapper = new QSignalMapper(this);
         mVisibleSignalMapper = new QSignalMapper(this);
 
-        foreach(QString childName, comp->children){
+        for(QString childName: comp->children){
             Q_ASSERT(comp->childrenMap.contains(childName));
             const Composite::Child& ch = comp->childrenMap.value(childName);
 
@@ -192,7 +192,7 @@ void CompositeToolsWidget::updateSet(){
             comboBoxModes->setToolTip("Change mode");
             if (PM()->hasPart(ch.part)){
                 const Part* part = PM()->getPart(ch.part);
-                foreach(const QString& mode, part->modes.keys()){
+                for(const QString& mode: part->modes.keys()){
                     comboBoxModes->addItem(mode);
                 }
             }

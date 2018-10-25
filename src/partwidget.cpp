@@ -27,8 +27,6 @@
 #include <QToolButton>
 
 PartWidget::PartWidget(AssetRef ref, QWidget *parent) :
-    // Qt::FramelessWindowHint
-    // QMdiSubWindow(parent, Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint),
 	QMdiSubWindow(parent, Qt::SubWindow),
     mPartRef(ref),
     mPartName(),
@@ -71,7 +69,6 @@ PartWidget::PartWidget(AssetRef ref, QWidget *parent) :
 	vbox->addWidget(spriteZoomWidget);
 	frame->setLayout(vbox);
 	setWidget(frame);
-	// connect(spriteZoomWidget->findChild<QSlider*>("hSliderZoom"), SIGNAL(valueChanged(int)), this, SLOT(setZoom(int)));
 	connect(spriteZoomWidget->findChild<QSlider*>("hSliderZoom"), &QSlider::valueChanged, [this, spriteZoomWidget](int value) {
 		setZoom(value);
 		spriteZoomWidget->findChild<QLabel*>("labelZoom")->setText(QString::number(this->zoom() * 100) + "%");
@@ -84,19 +81,19 @@ PartWidget::PartWidget(AssetRef ref, QWidget *parent) :
     });
 
     updateBackgroundBrushes();
-    updatePartFrames();
+    buildScene();
 }
 
-void PartWidget::updatePartFrames(){
+void PartWidget::buildScene(){
     if (!mPixmapItems.isEmpty()){
-        foreach(QGraphicsPixmapItem* pi, mPixmapItems){
+        for(QGraphicsPixmapItem* pi: mPixmapItems){
             mPartView->scene()->removeItem(pi);
             delete pi;
         }
         mPixmapItems.clear();
     }
 
-    if (mOverlayPixmapItem!=nullptr){
+    if (mOverlayPixmapItem != nullptr){
         mPartView->scene()->removeItem(mOverlayPixmapItem);
         delete mOverlayPixmapItem;
         mOverlayPixmapItem = nullptr;
@@ -105,7 +102,7 @@ void PartWidget::updatePartFrames(){
     // get rid of any remaining text etc
     mAnchorItems.clear();
     mAnchors.clear();
-    for(int i=0;i<MAX_PIVOTS;i++){
+    for(int i=0;i<Part::MaxPivots;i++){
         mPivotItems[i].clear();
         mPivots[i].clear();
     }
@@ -128,7 +125,9 @@ void PartWidget::updatePartFrames(){
         mCopyRectItem = nullptr;
     }
 
-    mPartView->scene()->clear();
+    mPartView->scene()->clear();	
+	mPartView->resetCachedContent();
+
     mBoundsItem = nullptr;
 	bool triggerFitToWindow = false;
 
@@ -142,36 +141,32 @@ void PartWidget::updatePartFrames(){
                 mModeName = mPart->modes.begin().key();
             }
             const auto& m = mPart->modes.value(mModeName);
+            Q_ASSERT(m.numFrames>0);
+
             mNumPivots = m.numPivots;            
             mFPS = m.framesPerSecond;
             mSPF = 1./mFPS;
 
             const int w = mPart->modes.value(mModeName).width;
 			const int h = mPart->modes.value(mModeName).height;
-            setWindowTitle(mPartName + tr(": ") + mModeName + tr(""));
+            setWindowTitle(mPartName + tr(": ") + mModeName);
 
 			const int strokeAlpha = 255;
 			mBoundsColour = mBackgroundColour.lightnessF() > 0.5 ? QColor(0, 0, 0, strokeAlpha) : QColor(255, 255, 255, strokeAlpha);
-            const float boundsWidth = 0.05f;
-            mBoundsItem = mPartView->scene()->addRect(-boundsWidth/2,-boundsWidth/2,w+boundsWidth,h+boundsWidth, QPen(mBoundsColour, boundsWidth, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin), QBrush(QColor(0,0,0,0)));
+            const float boundsPenWidth = 0.05f;
+			mBoundsItem = mPartView->scene()->addRect(-boundsPenWidth/2, -boundsPenWidth/2, w+boundsPenWidth, h+boundsPenWidth, QPen(mBoundsColour, boundsPenWidth, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin), Qt::NoBrush);
 			
-            Q_ASSERT(m.numFrames>0);
-
-            for(int i=0;i<m.numFrames;i++){
+			for(int i=0;i<m.numFrames;i++){
                 auto pImg = m.frames.at(i);
                 if (pImg){
-                    QGraphicsPixmapItem* pi = mPartView->scene()->addPixmap(QPixmap::fromImage(*pImg));
-                    QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect();
-                    pi->setGraphicsEffect(effect);
+                    auto* pi = mPartView->scene()->addPixmap(QPixmap::fromImage(*pImg));					
+                    pi->setGraphicsEffect(new QGraphicsDropShadowEffect());
                     mPixmapItems.push_back(pi);
-                }
-                else {
-                    mPartView->scene()->addSimpleText(tr("!"));
-                }
+                }      
             }
 
             if (mOverlayImage!=nullptr) delete mOverlayImage;
-            mOverlayImage = new QImage(w,h,QImage::Format_ARGB32);
+            mOverlayImage = new QImage(w, h, QImage::Format_ARGB32);
             mOverlayImage->fill(0x00FFFFFF);
             mOverlayPixmapItem = mPartView->scene()->addPixmap(QPixmap::fromImage(*mOverlayImage));
 			
@@ -186,23 +181,16 @@ void PartWidget::updatePartFrames(){
 
 					QList<QAbstractGraphicsShapeItem*> list;
 
-					/*
-					auto* it = mPartView->scene()->addRect(QRectF(0.25, 0.25, 0.5, 0.5));
-					it->setPen(QPen(QColor("#000000"), 0.125 / 2, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin));
-					it->setBrush(QBrush(QColor("#ffffff")));
-					it->setPos(ap.x(), ap.y());
-					mAnchorItems.push_back(it);
-					*/
-
-					// QPolygonF polygon({ QPointF(0.25, 0.5), QPointF(0.5,0.25), QPointF(0.75,0.5),  QPointF(0.5,0.75), });
-					QPolygonF polygon({ QPointF(0.75,0.75),  QPointF(0.5,0.5), QPointF(0.25, 0.75) });
-					
-					auto* it = mPartView->scene()->addPolygon(polygon);
-					it->setPen(Qt::NoPen); //  QPen(QColor(0, 0, 0, 128), 0.125 / 2, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin));
-					it->setBrush(mPropertiesColour);
-					it->setPos(ap.x(), ap.y());
-					it->setZValue(anchorZ);
-					list.push_back(it);
+					{
+						// Triangle
+						QPolygonF polygon({ QPointF(0.75,0.75),  QPointF(0.5,0.5), QPointF(0.25, 0.75) });
+						auto* it = mPartView->scene()->addPolygon(polygon);
+						it->setPen(Qt::NoPen);
+						it->setBrush(mPropertiesColour);
+						it->setPos(ap.x(), ap.y());
+						it->setZValue(anchorZ);
+						list.push_back(it);
+					}
 									   
 					{
 						auto* it = mPartView->scene()->addRect(QRectF(0.25, 0.75, 0.5, 0.5));
@@ -214,7 +202,7 @@ void PartWidget::updatePartFrames(){
 					}
 
 					{
-						QGraphicsSimpleTextItem* label = mPartView->scene()->addSimpleText("A", font);
+						auto* label = mPartView->scene()->addSimpleText("A", font);
 						label->setPen(Qt::NoPen);
 						label->setBrush(QColor(255, 255, 255));
 						label->setScale(0.05 / 2);
@@ -226,7 +214,7 @@ void PartWidget::updatePartFrames(){
 					mAnchorItems.push_back(list);
                 }
 
-                for(int p=0;p<MAX_PIVOTS;p++){			
+                for(int p=0;p<Part::MaxPivots;p++){			
 					QList<QAbstractGraphicsShapeItem*> list;
 
                     QPoint pp = m.pivots[p].at(i);
@@ -252,7 +240,7 @@ void PartWidget::updatePartFrames(){
 					}
 
 					{
-						QGraphicsSimpleTextItem* label = mPartView->scene()->addSimpleText(QString::number(p + 1), font);
+						auto* label = mPartView->scene()->addSimpleText(QString::number(p + 1), font);
 						label->setPen(Qt::NoPen);
 						label->setBrush(QColor(255,255,255));
 						label->setScale(0.05 / 2);
@@ -270,42 +258,54 @@ void PartWidget::updatePartFrames(){
             updatePivots();
             updatePropertiesOverlays();
 
-            // Update draw tool type
             setDrawToolType(mDrawToolType);
 
-			const bool firstTime = !mSeenMode.contains(mModeName);
-			mSeenMode.insert(mModeName);
-			if (firstTime) triggerFitToWindow = true;
+			const bool seenMode = mSeenMode.contains(mModeName);			
+			if (!seenMode) {
+				mSeenMode.insert(mModeName);
+				triggerFitToWindow = true;
+			}
         }
         else {
             mModeName = QString();
             setWindowTitle(mPartName);
-            mPartView->scene()->addSimpleText(tr("no modes"));
         }
     }
     else {
         setWindowTitle(mPartName + tr("!"));
-        mPartView->scene()->addSimpleText(tr("invalid"));
     }
 
-    if (mFrameNumber >= numFrames()){
-        mFrameNumber = numFrames()-1;
-    }
-
+    mFrameNumber = std::min(mFrameNumber, numFrames() - 1);
     setFrame(mFrameNumber);
 
-	auto sceneRect = mPartView->scene()->sceneRect();
-	sceneRect.adjust(-sceneRect.width() * 0.125/2, -sceneRect.height() * 0.125/2, sceneRect.width() * 0.125/2, sceneRect.height() * 0.125/2);
+	// auto sceneRect = mPartView->scene()->sceneRect();
+	auto sceneRect = mPartView->scene()->itemsBoundingRect();
+	const float boundsPadding = (0.125f / 2) * std::max(sceneRect.width(), sceneRect.height());
+	sceneRect.adjust(-boundsPadding, -boundsPadding, boundsPadding, boundsPadding);
 	mPartView->setSceneRect(sceneRect);
 
 	if (triggerFitToWindow) fitToWindow();
+
+	const bool debugGraphicsView = false;
+	if (debugGraphicsView) {
+		QPen debugPen2(QColor(255, 255, 0), 0.1);
+		for (auto* it : mPartView->scene()->items()) {
+			if (it->isVisible()) {
+				auto rect = it->sceneTransform().mapRect(it->boundingRect());
+				mPartView->scene()->addRect(rect, debugPen2, Qt::NoBrush);
+			}
+		}
+
+		QPen debugPen1(QColor(255, 0, 255), 0.2);
+		mPartView->scene()->addRect(mPartView->sceneRect(), debugPen1, Qt::NoBrush);
+	}
 }
 
 void PartWidget::setFrame(int f){
     int oldf = mFrameNumber;    
     mFrameNumber = f;
     showFrame(mFrameNumber);
-    if (oldf!=f){
+    if (oldf != f){
         emit(frameChanged(mFrameNumber));
     }
 }
@@ -378,25 +378,10 @@ void PartWidget::setDrawToolType(DrawToolType type){
 }
 
 void PartWidget::setMode(const QString& mode){	
-	
-	if (mModeName != mode){
-		mModeName = mode;
-		updatePartFrames();
-	}
-
-	/*
-	mViewportCenter = QPointF(0, 0);
-	mPartView->centerOn(mViewportCenter);
-	mPartView->update();
-	*/
-
-
-	// mPartView->scene()->setSceneRect();
-	// recenterViewport();
-}
-
-void PartWidget::recenterViewport() {
-	// mViewportCenter = mPartView->mapToScene(mPartView->viewport()->rect().center());
+	// NB: Force a rebuild so the view centers appropriately
+	mModeName = mode;	
+	buildScene();
+	fitToWindow();
 }
 
 void PartWidget::partNameChanged(const QString& newPartName){
@@ -411,15 +396,13 @@ void PartWidget::partNameChanged(const QString& newPartName){
 
 void PartWidget::partFrameUpdated(AssetRef part, const QString& mode, int /*frame*/){
     if (part==mPartRef && mModeName==mode){
-        // update ..
-        updatePartFrames();
+        buildScene();
     }
 }
 
 void PartWidget::partFramesUpdated(AssetRef part, const QString& mode){
     if (part==mPartRef && mModeName==mode){
-        // update ..
-        updatePartFrames();
+        buildScene();
     }
 }
 
@@ -507,6 +490,7 @@ void PartWidget::updatePropertiesOverlays(){
     }
 
 	// Test: add bounds
+	/*
 	if (mPart && !mModeName.isEmpty() && mPart->modes.contains(mModeName)){
 		auto& mode = mPart->modes[mModeName];
 		auto& bounds = mode.bounds;
@@ -544,8 +528,9 @@ void PartWidget::updatePropertiesOverlays(){
 			bounds = mode.frames[0]->rect();
 		}
 
-		// mPropertyItems.append(mPartView->scene()->addRect(bounds, Qt::NoPen, QColor(0, 0, 0, 64)));
+		mPropertyItems.append(mPartView->scene()->addRect(bounds, Qt::NoPen, QColor(0, 0, 0, 64)));
 	}
+	*/
 }
 
 void PartWidget::partPropertiesChanged(AssetRef part){
@@ -600,7 +585,8 @@ void PartWidget::setPenColour(QColor colour){
 void PartWidget::fitToWindow(){
     if (mPartView){
 		if (mPart && !mModeName.isEmpty() && mPart->modes.contains(mModeName) && mPart->modes[mModeName].bounds.isValid()) {
-			mPartView->fitInView(mPart->modes[mModeName].bounds.adjusted(-2, -2, 2, 2), Qt::KeepAspectRatio);
+			const int boundsPadding = 2;
+			mPartView->fitInView(mPart->modes[mModeName].bounds.adjusted(-boundsPadding, -boundsPadding, boundsPadding, boundsPadding), Qt::KeepAspectRatio);
 		}
 		else {
 			mPartView->fitInView(mBoundsItem, Qt::KeepAspectRatio);
@@ -610,6 +596,7 @@ void PartWidget::fitToWindow(){
         mZoom = std::min((float) GlobalPreferences().maxZoom, (float) floor(scale.x()));
         setZoom(mZoom);
 		mViewportCenter = mPartView->mapToScene(mPartView->viewport()->rect().center());
+		qDebug() << "New viewport center: " << mViewportCenter;
         zoomChanged();
     }
 }
@@ -814,7 +801,8 @@ void PartWidget::partViewMouseMoveEvent(QMouseEvent *event){
     else if (middle && mMovingCanvas){
         QPointF diff = (mLastPoint - mMousePos) / mZoom;
 		mViewportCenter = mLastViewportCenter + diff;
-		mPartView->centerOn(mViewportCenter);
+		// qDebug() << "Moving viewport center: " << mLastViewportCenter << "->" << mViewportCenter;
+		mPartView->centerOn(mViewportCenter);		
 		mPartView->update();
     }
 
@@ -977,7 +965,7 @@ void PartWidget::partViewKeyPressEvent(QKeyEvent *event){
     }
 
     if (updatedAnchorOrPivots){
-        QPoint a = mAnchors.at(mFrameNumber);
+        QPoint a  = mAnchors.at(mFrameNumber);
         QPoint p1 = (mNumPivots>0)?mPivots[0].at(mFrameNumber):QPoint(0,0);
         QPoint p2 = (mNumPivots>1)?mPivots[1].at(mFrameNumber):QPoint(0,0);
         QPoint p3 = (mNumPivots>2)?mPivots[2].at(mFrameNumber):QPoint(0,0);
@@ -988,18 +976,16 @@ void PartWidget::partViewKeyPressEvent(QKeyEvent *event){
 
 void PartWidget::drawLineTo(const QPoint &endPoint)
 {
-    float offset = penSize()/2.;
+    const float offset = penSize()/2.0f;
     QPainter painter(mOverlayImage);
     painter.setPen(QPen(penColour(), penSize(), Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
-
-    if (endPoint==mLastPoint){
+    if (endPoint == mLastPoint){
         QPointF lastPointImageCoords = mPartView->mapToScene(mLastPoint.x()+offset,mLastPoint.y()+offset);
         lastPointImageCoords.setX(floor(lastPointImageCoords.x()));
         lastPointImageCoords.setY(floor(lastPointImageCoords.y()));
         painter.drawPoint(lastPointImageCoords);
     }
     else {
-        // map the points
         QPointF lastPointImageCoords = mPartView->mapToScene(mLastPoint.x()+offset,mLastPoint.y()+offset);
         lastPointImageCoords.setX(floor(lastPointImageCoords.x()));
         lastPointImageCoords.setY(floor(lastPointImageCoords.y()));
@@ -1008,14 +994,13 @@ void PartWidget::drawLineTo(const QPoint &endPoint)
         endPointImageCoords.setY(floor(endPointImageCoords.y()));
         painter.drawLine(lastPointImageCoords, endPointImageCoords);
     }
-    // modified
     updateOverlay();
     mLastPoint = endPoint;
 }
 
 void PartWidget::eraseLineTo(const QPoint &endPoint)
 {
-    float offset = penSize()/2.;
+    const float offset = penSize()/2.0f;
     QPainter painter(mOverlayImage);
     painter.setPen(QPen(mEraserColour, penSize(), Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
 
@@ -1043,8 +1028,8 @@ void PartWidget::eraseLineTo(const QPoint &endPoint)
 }
 
 void PartWidget::selectColourUnderPoint(QPointF pt){
-    int px = floor(pt.x());
-    int py = floor(pt.y());
+    int px = (int) floor(pt.x());
+    int py = (int) floor(pt.y());
     QGraphicsPixmapItem* pi = mPixmapItems.at(mFrameNumber%mPixmapItems.size());
 
     bool inBounds = px>=0 || px<pi->pixmap().width() || py>=0 || py<pi->pixmap().height();
@@ -1092,7 +1077,7 @@ void PartWidget::showFrame(int f){
 		for (auto* it : mAnchorItems.at(i)) {
 			it->hide();
 		}
-		for (int p = 0; p < MAX_PIVOTS; p++) {
+		for (int p = 0; p < Part::MaxPivots; p++) {
 			for (auto* it : mPivotItems[p].at(i)) {
 				it->hide();
 			}

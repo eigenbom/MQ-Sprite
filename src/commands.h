@@ -298,7 +298,7 @@ private:
     int mIndex;
     QSharedPointer<QImage> mImage;
     QPoint mAnchor;
-    QPoint mPivots[MAX_PIVOTS];
+    QPoint mPivots[Part::MaxPivots];
 };
 
 
@@ -315,8 +315,8 @@ private:
     AssetRef mPart;
     QString mModeName;
     int mIndex;
-    QPoint mAnchor, mPivots[MAX_PIVOTS];
-    QPoint mOldAnchor, mOldPivots[MAX_PIVOTS];
+    QPoint mAnchor, mPivots[Part::MaxPivots];
+    QPoint mOldAnchor, mOldPivots[Part::MaxPivots];
 };
 
 class CChangeNumPivots: public Command {

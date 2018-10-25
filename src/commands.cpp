@@ -48,7 +48,7 @@ void CNewPart::redo()
     mode.height = 8;
     mode.framesPerSecond = 8;
     mode.anchor.push_back(QPoint(0, 0));
-    for(int i=0;i<MAX_PIVOTS;i++){
+    for(int i=0;i<Part::MaxPivots;i++){
         mode.pivots[i].push_back(QPoint(0,0));
     }
     auto img = QSharedPointer<QImage>::create(mode.width, mode.width, QImage::Format_ARGB32);
@@ -103,7 +103,7 @@ void CCopyPart::redo(){
         
 		Part::Mode newMode = mode;
         newMode.anchor = mode.anchor;
-        for(int p=0;p<MAX_PIVOTS;p++)
+        for(int p=0;p<Part::MaxPivots;p++)
             newMode.pivots[p] = mode.pivots[p];
 		newMode.frames.clear();
         newMode.numFrames = mode.numFrames;
@@ -438,7 +438,7 @@ void CNewMode::redo(){
     m.numPivots = copyMode.numPivots;
     m.framesPerSecond = copyMode.framesPerSecond;
 	m.anchor = copyMode.anchor;
-	for (int i = 0; i < MAX_PIVOTS; i++) {
+	for (int i = 0; i < Part::MaxPivots; i++) {
 		m.pivots[i].push_back(QPoint(0, 0));
 	}
     auto img = QSharedPointer<QImage>::create(m.width, m.width, QImage::Format_ARGB32);
@@ -491,19 +491,19 @@ void CResetMode::redo(){
     mModeCopy = mode;
     mModeCopy.anchor = mode.anchor;
     mModeCopy.frames = mode.frames;
-    for(int p=0;p<MAX_PIVOTS;p++){
+    for(int p=0;p<Part::MaxPivots;p++){
         mModeCopy.pivots[p] = mode.pivots[p];
     }
     mode.frames.clear();
     mode.anchor.clear();
-    for(int p=0;p<MAX_PIVOTS;p++){
+    for(int p=0;p<Part::MaxPivots;p++){
         mode.pivots[p].clear();
     }
     auto newImage = QSharedPointer<QImage>::create(mode.width, mode.height, QImage::Format_ARGB32);
     newImage->fill(0x00FFFFFF);
 	mode.frames.push_back(newImage);
     mode.anchor.push_back(QPoint(0,0));
-    for(int p=0;p<MAX_PIVOTS;p++){
+    for(int p=0;p<Part::MaxPivots;p++){
         mode.pivots[p].push_back(QPoint(0,0));
     }
     mode.numPivots = 0;
@@ -545,7 +545,7 @@ void CCopyMode::redo(){
     m.height = copyMode.height;
     m.numPivots = copyMode.numPivots;
     m.framesPerSecond = copyMode.framesPerSecond;
-    for(int p=0;p<MAX_PIVOTS;p++)
+    for(int p=0;p<Part::MaxPivots;p++)
         m.pivots[p] = copyMode.pivots[p];
     m.anchor = copyMode.anchor;
     for(auto oldImage: copyMode.frames){
@@ -678,7 +678,7 @@ void CNewFrame::undo(){
     Part::Mode& mode = part->modes[mModeName];
     mode.frames.takeAt(mIndex);
     mode.anchor.removeAt(mIndex);
-    for(int i=0;i<MAX_PIVOTS;i++){
+    for(int i=0;i<Part::MaxPivots;i++){
         mode.pivots[i].removeAt(mIndex);
     }
     mode.numFrames--;
@@ -701,7 +701,7 @@ void CNewFrame::redo(){
     else
         mode.anchor.insert(mIndex, QPoint(0,0));
 
-    for(int i=0;i<MAX_PIVOTS;i++){
+    for(int i=0;i<Part::MaxPivots;i++){
         if (mIndex<mode.numFrames)
             mode.pivots[i].insert(mIndex, mode.pivots[i].at(mIndex));
         else if (mode.numFrames>0)
@@ -729,7 +729,7 @@ void CCopyFrame::undo(){
     Part::Mode& mode = part->modes[mModeName];
     mode.frames.takeAt(mIndex+1);
     mode.anchor.removeAt(mIndex+1);
-    for(int i=0;i<MAX_PIVOTS;i++){
+    for(int i=0;i<Part::MaxPivots;i++){
         mode.pivots[i].removeAt(mIndex+1);
     }
     mode.numFrames--;
@@ -757,7 +757,7 @@ void CCopyFrame::redo(){
     }
     mode.frames.insert(mIndex+1, image);
 
-    for(int i=0;i<MAX_PIVOTS;i++){
+    for(int i=0;i<Part::MaxPivots;i++){
         if (mIndex<mode.numFrames)
             mode.pivots[i].insert(mIndex+1, mode.pivots[i].at(mIndex));
         else if (mode.numFrames>0)
@@ -786,7 +786,7 @@ void CDeleteFrame::undo(){
     Part::Mode& mode = part->modes[mModeName];
     mode.frames.insert(mIndex, mImage);
     mode.anchor.insert(mIndex, mAnchor);
-    for(int i=0;i<MAX_PIVOTS;i++){
+    for(int i=0;i<Part::MaxPivots;i++){
         mode.pivots[i].insert(mIndex, mPivots[i]);
     }
     mode.numFrames++;
@@ -802,7 +802,7 @@ void CDeleteFrame::redo(){
     Part::Mode& mode = part->modes[mModeName];
     mImage = mode.frames.takeAt(mIndex);
     mAnchor = mode.anchor.takeAt(mIndex);
-    for(int i=0;i<MAX_PIVOTS;i++){
+    for(int i=0;i<Part::MaxPivots;i++){
         mPivots[i] = mode.pivots[i].takeAt(mIndex);
     }
     mode.numFrames--;
@@ -894,7 +894,7 @@ void CChangeModeSize::redo(){
 
     // make copy of old mode
     mOldMode = mode;
-	for (int p = 0; p < MAX_PIVOTS; p++) {
+	for (int p = 0; p < Part::MaxPivots; p++) {
 		mOldMode.pivots[p] = mOldMode.pivots[p];
 	}
     mOldMode.frames.clear();
@@ -1178,7 +1178,7 @@ void CDeleteCompositeChild::redo(){
     // Update root if necessary
     if (comp->root==mChildIndex){
         comp->root = -1;
-        foreach(const QString& cn, comp->children){
+        for(const QString& cn: comp->children){
             const Composite::Child& child = comp->childrenMap.value(cn);
             if (child.parent==-1){
                 comp->root = child.index;

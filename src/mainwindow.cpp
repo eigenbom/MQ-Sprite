@@ -85,7 +85,7 @@ MainWindow::MainWindow(QWidget *parent) :
     mMdiArea = findChild<QMdiArea*>(tr("mdiArea"));
     connect(mMdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(subWindowActivated(QMdiSubWindow*)));
 
-    auto* assetsWidget = findChild<QFrame*>("assets");
+    // auto* assetsWidget = findChild<QFrame*>("assets");
 	
     mUndoStack = new QUndoStack(this);
 	connect(mUndoStack, SIGNAL(indexChanged(int)), this, SLOT(undoStackIndexChanged(int)));
@@ -493,7 +493,7 @@ void MainWindow::savePreferences() {
 void MainWindow::updatePreferences() {
 	for (PartWidget* w : this->mPartWidgets.values()) {
 		w->updateBackgroundBrushes();
-		w->updatePartFrames();
+		w->buildScene();
 		w->updateDropShadow();
 		w->repaint();
 	}
@@ -704,7 +704,7 @@ void MainWindow::partRenamed(AssetRef ref, const QString& newName){
     }
     */
 
-    foreach(CompositeWidget* cw, mCompositeWidgets.values()){
+    for(CompositeWidget* cw: mCompositeWidgets.values()){
         cw->partNameChanged(ref, newName);
     }
 
@@ -728,7 +728,7 @@ void MainWindow::partFrameUpdated(AssetRef ref, const QString& mode, int frame){
 }
 
 void MainWindow::partFramesUpdated(AssetRef ref, const QString& mode){
-    foreach(PartWidget* p, mPartWidgets.values(ref)){
+    for(PartWidget* p: mPartWidgets.values(ref)){
         p->partFramesUpdated(ref, mode);
     }
 
@@ -739,7 +739,7 @@ void MainWindow::partFramesUpdated(AssetRef ref, const QString& mode){
 		}
 	}
 
-    foreach(CompositeWidget* cw, mCompositeWidgets.values()){
+    for(CompositeWidget* cw: mCompositeWidgets.values()){
         cw->partFramesUpdated(ref, mode);
     }
 
@@ -747,7 +747,7 @@ void MainWindow::partFramesUpdated(AssetRef ref, const QString& mode){
 }
 
 void MainWindow::partNumPivotsUpdated(AssetRef ref, const QString& mode){
-    foreach(PartWidget* p, mPartWidgets.values(ref)){
+    for(PartWidget* p: mPartWidgets.values(ref)){
         p->partNumPivotsUpdated(ref, mode);
     }
 
@@ -757,13 +757,13 @@ void MainWindow::partNumPivotsUpdated(AssetRef ref, const QString& mode){
 		}
 	}
 
-    foreach(CompositeWidget* cw, mCompositeWidgets.values()){
+    for(CompositeWidget* cw: mCompositeWidgets.values()){
         cw->partNumPivotsUpdated(ref, mode);
     }
 }
 
 void MainWindow::partPropertiesUpdated(AssetRef ref){
-    foreach(PartWidget* p, mPartWidgets.values(ref)){
+    for(PartWidget* p: mPartWidgets.values(ref)){
         p->partPropertiesChanged(ref);
     }
 
@@ -775,7 +775,7 @@ void MainWindow::partPropertiesUpdated(AssetRef ref){
 }
 
 void MainWindow::compPropertiesUpdated(AssetRef comp){
-    foreach(CompositeWidget* cw, mCompositeWidgets.values(comp)){
+    for(CompositeWidget* cw: mCompositeWidgets.values(comp)){
         cw->updateCompFrames();
     }
     if (mCompositeToolsWidget->isEnabled()){
@@ -787,14 +787,13 @@ void MainWindow::compPropertiesUpdated(AssetRef comp){
 
 void MainWindow::partModesChanged(AssetRef ref){
     const Part* part = PM()->getPart(ref);
-    foreach(PartWidget* p, mPartWidgets.values(ref)){
+    for(PartWidget* p: mPartWidgets.values(ref)){
         if (!part->modes.contains(p->modeName())){
-            // mode has disappeared, so set a new mode..
-            QString firstMode = *part->modes.keys().begin();
-            p->setMode(firstMode);
+            // Reset mode
+            p->setMode(part->modes.keys().front());
         }
         else {
-            p->updatePartFrames();
+			p->setMode(p->modeName());
         }
     }
 
@@ -805,7 +804,7 @@ void MainWindow::partModesChanged(AssetRef ref){
 	}
 
     // TODO: Tell composite widgets
-    // foreach(CompositeWidget* cw, mCompositeWidgets.values()){
+    // for(CompositeWidget* cw: mCompositeWidgets.values()){
         // cw->partModesChanged(part);
     // }
     //if (mCompositeToolsWidget->isEnabled()){
@@ -814,7 +813,7 @@ void MainWindow::partModesChanged(AssetRef ref){
 }
 
 void MainWindow::partModeRenamed(AssetRef ref, const QString& oldModeName, const QString& newModeName){
-    foreach(PartWidget* p, mPartWidgets.values(ref)){
+    for(PartWidget* p: mPartWidgets.values(ref)){
         if (p->modeName()==oldModeName){
            p->setMode(newModeName);
         }
@@ -841,7 +840,7 @@ void MainWindow::compositeRenamed(AssetRef ref, const QString& newName){
 }
 
 void MainWindow::compositeUpdated(AssetRef ref){
-    foreach(CompositeWidget* cw, mCompositeWidgets.values(ref)){
+    for(CompositeWidget* cw: mCompositeWidgets.values(ref)){
         cw->updateCompFrames();
     }
 
@@ -851,7 +850,7 @@ void MainWindow::compositeUpdated(AssetRef ref){
 }
 
 void MainWindow::compositeUpdatedMinorChanges(AssetRef ref){
-    foreach(CompositeWidget* cw, mCompositeWidgets.values(ref)){
+    for(CompositeWidget* cw: mCompositeWidgets.values(ref)){
         cw->updateCompFramesMinorChanges();
     }
 
