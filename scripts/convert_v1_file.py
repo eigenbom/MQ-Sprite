@@ -20,7 +20,26 @@ def process(filename, outputfilename):
 
     with tarfile.open(filename, "r") as tar:        
         print("Extracting tar to: %s" % temp_dir)
-        tar.extractall(path=temp_dir, members=None)
+        def is_within_directory(directory, target):
+            
+            abs_directory = os.path.abspath(directory)
+            abs_target = os.path.abspath(target)
+        
+            prefix = os.path.commonprefix([abs_directory, abs_target])
+            
+            return prefix == abs_directory
+        
+        def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+        
+            for member in tar.getmembers():
+                member_path = os.path.join(path, member.name)
+                if not is_within_directory(path, member_path):
+                    raise Exception("Attempted Path Traversal in Tar File")
+        
+            tar.extractall(path, members, numeric_owner=numeric_owner) 
+            
+        
+        safe_extract(tar, path=temp_dir, members="None")
         data_json_path = os.path.join(temp_dir, "data.json")
         data_obj = json.load(open(data_json_path))
 
